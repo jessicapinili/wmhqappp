@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getWeekKey } from '../lib/utils'
 import { format, startOfWeek, endOfWeek } from 'date-fns'
+import { EditIcon, DeleteIcon } from '../lib/icons'
 
 const BRAND = '#6B1010'
 
@@ -250,8 +251,8 @@ function ContentTracker({ userId }) {
                 {e.reflection && <p className="text-xs text-gray-500 mt-1 italic">{e.reflection}</p>}
               </div>
               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => { setEditId(e.id); setForm({ platform: e.platform||'', funnel_stage: e.funnel_stage||'', content_about: e.content_about||'', led_to_action: e.led_to_action||'', reflection: e.reflection||'' }) }} className="edit-btn">✏️</button>
-                <button onClick={() => handleDelete(e.id)} className="delete-btn">🗑️</button>
+                <button onClick={() => { setEditId(e.id); setForm({ platform: e.platform||'', funnel_stage: e.funnel_stage||'', content_about: e.content_about||'', led_to_action: e.led_to_action||'', reflection: e.reflection||'' }) }} className="edit-btn"><EditIcon /></button>
+                <button onClick={() => handleDelete(e.id)} className="delete-btn"><DeleteIcon /></button>
               </div>
             </div>
           ))}
@@ -438,7 +439,7 @@ export default function Visibility() {
     <div className="space-y-0">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
-          <span className="w-4 h-4 rounded-full bg-amber-400" />
+          <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#fcc799' }} />
           <h1 className="text-2xl font-black text-gray-900">Visibility</h1>
         </div>
         <p className="text-sm text-gray-500">

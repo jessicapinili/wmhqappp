@@ -6,10 +6,10 @@ import html2canvas from 'html2canvas'
 
 const BRAND = '#6B1010'
 const PILLAR_COLORS = {
-  Influence: '#3B82F6',
-  Visibility: '#F59E0B',
-  Cash: '#10B981',
-  Identity: '#8B5CF6',
+  Influence: '#c6def2',
+  Visibility: '#fcc799',
+  Cash: '#cdd5ae',
+  Identity: '#e7cee3',
 }
 const PILLARS = Object.keys(PILLAR_COLORS)
 const NS_OPTIONS = [

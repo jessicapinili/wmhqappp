@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getQuarterFromMonth } from '../lib/utils'
+import { EditIcon, DeleteIcon } from '../lib/icons'
 
 const BRAND = '#6B1010'
 
@@ -38,94 +39,92 @@ function EventForm({ onSave, onCancel, initial }) {
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
   return (
-    <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal-box p-6 max-w-2xl" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center mb-5">
-          <h3 className="font-bold text-gray-900">{initial ? 'Edit Revenue Event' : 'Add Revenue Event'}</h3>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+    <div className="form-card space-y-4">
+      <div className="flex justify-between items-center">
+        <p className="font-bold text-sm text-gray-900">{initial ? 'Edit Revenue Event' : 'Add Revenue Event'}</p>
+        <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="col-span-2">
+          <label className="label">Offer Name</label>
+          <input className="input-field" value={form.offer_name} onChange={e => set('offer_name', e.target.value)} placeholder="e.g. 12-Week Group Coaching" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <label className="label">Offer Name</label>
-            <input className="input-field" value={form.offer_name} onChange={e => set('offer_name', e.target.value)} placeholder="e.g. 12-Week Group Coaching" />
-          </div>
-
-          <div>
-            <label className="label">Type</label>
-            <select className="input-field" value={form.event_type} onChange={e => set('event_type', e.target.value)}>
-              <option value="">Select...</option>
-              {EVENT_TYPES.map(t => <option key={t}>{t}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="label">Status</label>
-            <select className="input-field" value={form.status} onChange={e => set('status', e.target.value)}>
-              {STATUSES.map(s => <option key={s}>{s}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="label">Year</label>
-            <select className="input-field" value={form.year} onChange={e => set('year', parseInt(e.target.value))}>
-              {YEARS.map(y => <option key={y}>{y}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="label">Quarter</label>
-            <select className="input-field" value={form.quarter} onChange={e => set('quarter', e.target.value)}>
-              {QUARTERS.map(q => <option key={q}>{q}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="label">Launch Start Date (dd/mm/yyyy)</label>
-            <input className="input-field" type="date" value={form.start_date} onChange={e => set('start_date', e.target.value)} />
-          </div>
-
-          <div>
-            <label className="label">Launch End Date (dd/mm/yyyy)</label>
-            <input className="input-field" type="date" value={form.end_date} onChange={e => set('end_date', e.target.value)} />
-          </div>
-
-          <div>
-            <label className="label">Currency</label>
-            <select className="input-field" value={form.currency} onChange={e => set('currency', e.target.value)}>
-              {CURRENCIES.map(c => <option key={c}>{c}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="label">Revenue Goal (AUD)</label>
-            <input className="input-field" type="number" value={form.revenue_goal} onChange={e => set('revenue_goal', e.target.value)} placeholder="0" />
-          </div>
-
-          <div className="col-span-2">
-            <label className="label">Primary Focus</label>
-            <select className="input-field" value={form.primary_focus} onChange={e => set('primary_focus', e.target.value)}>
-              <option value="">Select...</option>
-              {PRIMARY_FOCUS_OPTIONS.map(o => <option key={o}>{o}</option>)}
-            </select>
-          </div>
-
-          <div className="col-span-2">
-            <label className="label">Revenue Achieved at Close (AUD)</label>
-            <input className="input-field" type="number" value={form.revenue_achieved} onChange={e => set('revenue_achieved', e.target.value)} placeholder="Enter final revenue once the event is completed" />
-            <p className="text-xs text-gray-400 mt-1">Edit this at the end and input your revenue achieved.</p>
-          </div>
-
-          <div className="col-span-2">
-            <label className="label">Short Notes (optional)</label>
-            <textarea className="textarea-field" rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} />
-          </div>
+        <div>
+          <label className="label">Type</label>
+          <select className="input-field" value={form.event_type} onChange={e => set('event_type', e.target.value)}>
+            <option value="">Select...</option>
+            {EVENT_TYPES.map(t => <option key={t}>{t}</option>)}
+          </select>
         </div>
 
-        <div className="flex gap-3 mt-5">
-          <button onClick={onCancel} className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-          <button onClick={() => onSave(form)} className="flex-1 btn-brand" style={{ backgroundColor: BRAND }}>Save Event</button>
+        <div>
+          <label className="label">Status</label>
+          <select className="input-field" value={form.status} onChange={e => set('status', e.target.value)}>
+            {STATUSES.map(s => <option key={s}>{s}</option>)}
+          </select>
         </div>
+
+        <div>
+          <label className="label">Year</label>
+          <select className="input-field" value={form.year} onChange={e => set('year', parseInt(e.target.value))}>
+            {YEARS.map(y => <option key={y}>{y}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className="label">Quarter</label>
+          <select className="input-field" value={form.quarter} onChange={e => set('quarter', e.target.value)}>
+            {QUARTERS.map(q => <option key={q}>{q}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className="label">Launch Start Date (dd/mm/yyyy)</label>
+          <input className="input-field" type="date" value={form.start_date} onChange={e => set('start_date', e.target.value)} />
+        </div>
+
+        <div>
+          <label className="label">Launch End Date (dd/mm/yyyy)</label>
+          <input className="input-field" type="date" value={form.end_date} onChange={e => set('end_date', e.target.value)} />
+        </div>
+
+        <div>
+          <label className="label">Currency</label>
+          <select className="input-field" value={form.currency} onChange={e => set('currency', e.target.value)}>
+            {CURRENCIES.map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className="label">Revenue Goal (AUD)</label>
+          <input className="input-field" type="number" value={form.revenue_goal} onChange={e => set('revenue_goal', e.target.value)} placeholder="0" />
+        </div>
+
+        <div className="col-span-2">
+          <label className="label">Primary Focus</label>
+          <select className="input-field" value={form.primary_focus} onChange={e => set('primary_focus', e.target.value)}>
+            <option value="">Select...</option>
+            {PRIMARY_FOCUS_OPTIONS.map(o => <option key={o}>{o}</option>)}
+          </select>
+        </div>
+
+        <div className="col-span-2">
+          <label className="label">Revenue Achieved at Close (AUD)</label>
+          <input className="input-field" type="number" value={form.revenue_achieved} onChange={e => set('revenue_achieved', e.target.value)} placeholder="Enter final revenue once the event is completed" />
+          <p className="text-xs text-gray-400 mt-1">Edit this at the end and input your revenue achieved.</p>
+        </div>
+
+        <div className="col-span-2">
+          <label className="label">Short Notes (optional)</label>
+          <textarea className="textarea-field" rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} />
+        </div>
+      </div>
+
+      <div className="flex gap-3 pt-1">
+        <button onClick={onCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+        <button onClick={() => onSave(form)} className="btn-brand" style={{ backgroundColor: BRAND }}>Save Event</button>
       </div>
     </div>
   )
@@ -176,8 +175,8 @@ function EventCard({ event, onEdit, onDelete, onToggleClose }) {
         </div>
 
         <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={onEdit} className="edit-btn text-xs">✏️</button>
-          <button onClick={onDelete} className="delete-btn text-xs">🗑️</button>
+          <button onClick={onEdit} className="edit-btn"><EditIcon /></button>
+          <button onClick={onDelete} className="delete-btn"><DeleteIcon /></button>
         </div>
       </div>
 
@@ -256,7 +255,7 @@ export default function RevenueEvents() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="w-4 h-4 rounded-full bg-emerald-500" />
+            <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#cdd5ae' }} />
             <h1 className="text-2xl font-black text-gray-900">Revenue Events</h1>
           </div>
           <p className="text-sm text-gray-500">Track launches, drops, and revenue goals.</p>

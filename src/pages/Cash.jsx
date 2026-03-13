@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getCurrentQuarter } from '../lib/utils'
+import { EditIcon, DeleteIcon } from '../lib/icons'
 
 const BRAND = '#6B1010'
 
@@ -222,8 +223,8 @@ function ProductSuiteTier({ tier, userId }) {
                   </div>
                 </div>
                 <div className="flex gap-1 ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => { setEditId(offer.id); setShowForm(true) }} className="edit-btn">✏️</button>
-                  <button onClick={() => handleDelete(offer.id)} className="delete-btn">🗑️</button>
+                  <button onClick={() => { setEditId(offer.id); setShowForm(true) }} className="edit-btn"><EditIcon /></button>
+                  <button onClick={() => handleDelete(offer.id)} className="delete-btn"><DeleteIcon /></button>
                 </div>
               </div>
             </div>
@@ -309,7 +310,7 @@ function QuarterlyReview({ userId }) {
   return (
     <div className="card-section">
       <h2 className="section-title flex items-center gap-2">
-        <span className="w-3 h-3 rounded-full bg-emerald-500" />
+        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#cdd5ae' }} />
         Quarterly Revenue Review
       </h2>
       <p className="section-subtitle">Resets each quarter — past reviews saved below.</p>
@@ -320,7 +321,7 @@ function QuarterlyReview({ userId }) {
             <div className="flex justify-between items-start mb-3">
               <p className="font-bold text-gray-900">{current.quarter} {current.year} Review</p>
               <div className="flex gap-2">
-                <button onClick={() => { setShowForm(true); setAnswers({ q1: current.q1||'', q2: current.q2||'', q3: current.q3||'', q4: current.q4||'', q5: current.q5||'' }) }} className="edit-btn">✏️ Edit</button>
+                <button onClick={() => { setShowForm(true); setAnswers({ q1: current.q1||'', q2: current.q2||'', q3: current.q3||'', q4: current.q4||'', q5: current.q5||'' }) }} className="edit-btn"><EditIcon /></button>
                 <button onClick={handleReset} className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded">↺ Reset</button>
               </div>
             </div>
@@ -392,7 +393,7 @@ export default function Cash() {
     <div className="space-y-0">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
-          <span className="w-4 h-4 rounded-full bg-emerald-500" />
+          <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#cdd5ae' }} />
           <h1 className="text-2xl font-black text-gray-900">Cash</h1>
         </div>
         <p className="text-sm text-gray-500">
@@ -406,7 +407,7 @@ export default function Cash() {
       {/* Product Suite */}
       <div className="card-section">
         <h2 className="section-title flex items-center gap-2 mb-1">
-          <span className="w-3 h-3 rounded-full bg-emerald-500" />
+          <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#cdd5ae' }} />
           Product & Service Suite
         </h2>
         <p className="section-subtitle mb-4">Update every 30 days. Click a tier to expand.</p>

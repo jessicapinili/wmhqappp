@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { EditIcon, DeleteIcon } from '../lib/icons'
 
 const BRAND = '#6B1010'
 
@@ -11,8 +12,8 @@ function SingleCard({ value, onEdit, onDelete, renderContent }) {
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">{renderContent(value)}</div>
         <div className="flex gap-1 ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={onEdit} className="edit-btn" title="Edit">✏️</button>
-          <button onClick={onDelete} className="delete-btn" title="Delete">🗑️</button>
+          <button onClick={onEdit} className="edit-btn" title="Edit"><EditIcon /></button>
+          <button onClick={onDelete} className="delete-btn" title="Delete"><DeleteIcon /></button>
         </div>
       </div>
     </div>
@@ -48,7 +49,7 @@ function CoreOneLiner({ userId }) {
   return (
     <div className="card-section">
       <h2 className="section-title flex items-center gap-2">
-        <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" />
+        <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: '#c6def2' }} />
         Your Core One-Liner
       </h2>
       <p className="section-subtitle">One sentence that captures who you help, how you help them, and the transformation you create.</p>
@@ -116,7 +117,7 @@ function ProductOneLiners({ userId }) {
   return (
     <div className="card-section">
       <h2 className="section-title flex items-center gap-2">
-        <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" />
+        <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: '#c6def2' }} />
         Product / Service One-Liners
       </h2>
       <p className="section-subtitle">Add a one-liner for each of your core offers.</p>
@@ -132,8 +133,8 @@ function ProductOneLiners({ userId }) {
                   <p className="text-gray-700 text-sm mt-1 italic">"{item.offer_one_liner}"</p>
                 </div>
                 <div className="flex gap-1 ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => handleEdit(item)} className="edit-btn">✏️</button>
-                  <button onClick={() => handleDelete(item.id)} className="delete-btn">🗑️</button>
+                  <button onClick={() => handleEdit(item)} className="edit-btn"><EditIcon /></button>
+                  <button onClick={() => handleDelete(item.id)} className="delete-btn"><DeleteIcon /></button>
                 </div>
               </div>
             </div>
@@ -186,7 +187,7 @@ function BuyerAvatar({ userId }) {
   return (
     <div className="card-section">
       <h2 className="section-title flex items-center gap-2">
-        <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" />
+        <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: '#c6def2' }} />
         Your Ideal Buyer Avatar
       </h2>
       <p className="section-subtitle">Define the exact person your business is built for.</p>
@@ -259,7 +260,7 @@ function BuyerPsychology({ userId }) {
   return (
     <div className="card-section">
       <h2 className="section-title flex items-center gap-2">
-        <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" />
+        <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: '#c6def2' }} />
         Buyer Psychology Map
       </h2>
       <p className="section-subtitle">Map what your buyer feels, fears, and desires.</p>
@@ -313,7 +314,7 @@ export default function Influence() {
       {/* Page header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
-          <span className="w-4 h-4 rounded-full bg-blue-500" />
+          <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#c6def2' }} />
           <h1 className="text-2xl font-black text-gray-900">Influence</h1>
         </div>
         <p className="text-sm text-gray-500">

@@ -2,13 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Phase colour tokens ─────────────────────── */
+:root {
+  --phase-influence: #c6def2;
+  --phase-influence-text: #1e4d78;
+  --phase-visibility: #fcc799;
+  --phase-visibility-text: #7a3c0a;
+  --phase-cash: #cdd5ae;
+  --phase-cash-text: #3d4a1c;
+  --phase-identity: #e7cee3;
+  --phase-identity-text: #5a2d58;
+  --brand: #6B1010;
+  --card-bg: #fdf9f7;
+  --card-border: #ede6e1;
+  --form-bg: #fdf7f4;
+  --form-border: #e8ddd8;
+}
+
 @layer base {
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: #F5F5F3;
+    background-color: #F5F3F1;
     color: #1a1a1a;
     margin: 0;
     padding: 0;
@@ -25,68 +40,79 @@
   .btn-brand-outline {
     @apply border-2 border-brand text-brand font-semibold px-4 py-2 rounded-lg hover:bg-brand hover:text-white transition-colors duration-200 text-sm;
   }
-  .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-5;
-  }
+  /* Section wrapper — white bg */
   .card-section {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-5;
+    @apply bg-white rounded-xl p-6 mb-5;
+    border: 1px solid var(--card-border);
+  }
+  /* Saved content card — warm tinted bg */
+  .card {
+    @apply rounded-xl p-5;
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+  }
+  /* Inline form card */
+  .form-card {
+    @apply rounded-xl p-5;
+    background-color: var(--form-bg);
+    border: 1px solid var(--form-border);
   }
   .input-field {
-    @apply w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent bg-white;
+    @apply w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent bg-white;
+    border: 1px solid var(--card-border);
   }
   .textarea-field {
-    @apply w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent bg-white resize-none;
+    @apply w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent bg-white resize-none;
+    border: 1px solid var(--card-border);
   }
   .label {
-    @apply block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1;
+    @apply block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1;
   }
   .section-title {
     @apply text-lg font-bold text-gray-900 mb-1;
   }
   .section-subtitle {
-    @apply text-sm text-gray-500 mb-4;
+    @apply text-sm text-gray-400 mb-4;
   }
   .tag-btn {
     @apply px-3 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer;
   }
   .insight-box {
-    @apply bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800;
+    background-color: #fef9ee;
+    border: 1px solid #f0dfa0;
+    @apply rounded-lg p-3 text-sm;
+    color: #7a5c10;
   }
+  /* Identity wizard modal kept for the 7-step guided experience */
   .modal-overlay {
     @apply fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4;
   }
   .modal-box {
     @apply bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto;
   }
-  .pillar-influence {
-    @apply text-blue-600 bg-blue-50 border-blue-200;
+  /* Icon action buttons — SVG, no emoji */
+  .edit-btn {
+    @apply flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150;
+    color: #c4b5af;
   }
-  .pillar-visibility {
-    @apply text-amber-600 bg-amber-50 border-amber-200;
-  }
-  .pillar-cash {
-    @apply text-emerald-600 bg-emerald-50 border-emerald-200;
-  }
-  .pillar-identity {
-    @apply text-violet-600 bg-violet-50 border-violet-200;
+  .edit-btn:hover {
+    color: var(--brand);
+    background-color: #fdf0ec;
   }
   .delete-btn {
-    @apply text-gray-400 hover:text-red-500 transition-colors p-1 rounded;
+    @apply flex items-center justify-center w-7 h-7 rounded-lg transition-all duration-150;
+    color: #c4b5af;
   }
-  .edit-btn {
-    @apply text-gray-400 hover:text-brand transition-colors p-1 rounded;
+  .delete-btn:hover {
+    @apply text-red-400 bg-red-50;
   }
 }
 
 /* Sidebar scrollbar */
-.sidebar-scroll::-webkit-scrollbar {
-  width: 4px;
-}
-.sidebar-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
+.sidebar-scroll::-webkit-scrollbar { width: 3px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.12);
   border-radius: 2px;
 }
 
@@ -96,6 +122,48 @@ input[type="range"]::-webkit-slider-thumb {
 }
 input[type="range"]::-moz-range-thumb {
   background: #6B1010;
+}
+
+/* Capacity check-in slider */
+.capacity-slider {
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.capacity-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #6b1a1a;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(107, 26, 26, 0.25);
+  cursor: pointer;
+  margin-top: -7px;
+}
+.capacity-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #6b1a1a;
+  border: 2px solid white;
+  cursor: pointer;
+}
+.capacity-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+}
+.capacity-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #f0e0e0;
+}
+.capacity-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: #6b1a1a;
 }
 
 /* Print styles for download */
@@ -111,10 +179,10 @@ input[type="range"]::-moz-range-thumb {
 
 /* Footer copyright text */
 .footer-copyright {
-  font-size: 0.65rem;
-  line-height: 1.4;
-  color: #9ca3af;
+  font-size: 0.62rem;
+  line-height: 1.5;
+  color: #c4b8b2;
   text-align: center;
   padding: 1rem 1.5rem;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid #f0ebe8;
 }

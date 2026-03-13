@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { EditIcon, DeleteIcon } from '../lib/icons'
 
 const BRAND = '#6B1010'
 
@@ -486,8 +487,8 @@ function PatternCard({ pattern, onMarkNeutralised, onMarkActive, onEdit, onDelet
           )}
         </div>
         <div className="flex gap-1 flex-shrink-0">
-          <button onClick={onEdit} className="edit-btn">✏️</button>
-          <button onClick={onDelete} className="delete-btn">🗑️</button>
+          <button onClick={onEdit} className="edit-btn"><EditIcon /></button>
+          <button onClick={onDelete} className="delete-btn"><DeleteIcon /></button>
         </div>
       </div>
 
@@ -569,7 +570,7 @@ export default function Identity() {
     <div className="space-y-6">
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="w-4 h-4 rounded-full bg-violet-500" />
+          <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#e7cee3' }} />
           <h1 className="text-2xl font-black text-gray-900">Identity</h1>
         </div>
         <p className="text-sm text-gray-500">
