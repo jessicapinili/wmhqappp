@@ -468,8 +468,8 @@ function WeeklyTracker({ weekDays, weekLogs, todayKey }) {
 
 /* ─── Capacity Check-In component ─── */
 function CapacityCheckin() {
+  const { user } = useAuth()
   const dateKey = getDateKey()
-  const STORAGE_KEY = `wmhq_capacity_${dateKey}`
 
   const [mode, setMode] = useState(null)
   const [energy, setEnergy] = useState(5)
@@ -477,33 +477,46 @@ function CapacityCheckin() {
   const [lockFlash, setLockFlash] = useState(false)
   const [weekLogs, setWeekLogs] = useState({})
 
-  const loadWeekLogs = () => {
+  const loadWeekLogs = async () => {
     const days = getCurrentWeekDays()
-    const logs = {}
-    days.forEach(d => {
-      const key = `wmhq_capacity_${toLocalDateKey(d)}`
-      const val = localStorage.getItem(key)
-      if (val) { try { logs[toLocalDateKey(d)] = JSON.parse(val) } catch {} }
-    })
-    return logs
+    const keys = days.map(d => toLocalDateKey(d))
+    const { data } = await supabase
+      .from('capacity_checkins')
+      .select('date_key, mode, energy')
+      .eq('user_id', user.id)
+      .in('date_key', keys)
+    if (data) {
+      const logs = {}
+      data.forEach(row => { logs[row.date_key] = { mode: row.mode, energy: row.energy } })
+      setWeekLogs(logs)
+    }
   }
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setMode(parsed.mode || null)
-        setEnergy(parsed.energy || 5)
+    if (!user) return
+    const load = async () => {
+      const { data } = await supabase
+        .from('capacity_checkins')
+        .select('mode, energy')
+        .eq('user_id', user.id)
+        .eq('date_key', dateKey)
+        .single()
+      if (data) {
+        setMode(data.mode || null)
+        setEnergy(data.energy ?? 5)
         setLocked(true)
-      } catch {}
+      }
+      await loadWeekLogs()
     }
-    setWeekLogs(loadWeekLogs())
-  }, [])
+    load()
+  }, [user, dateKey])
 
-  const handleLockIn = () => {
+  const handleLockIn = async () => {
     const payload = { mode, energy }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    await supabase.from('capacity_checkins').upsert(
+      { user_id: user.id, date_key: dateKey, mode, energy },
+      { onConflict: 'user_id,date_key' }
+    )
     setLockFlash(true)
     setWeekLogs(prev => ({ ...prev, [dateKey]: payload }))
     setTimeout(() => { setLockFlash(false); setLocked(true) }, 2500)
@@ -923,6 +936,7 @@ export default function Dashboard() {
   const localMonthName = new Date().toLocaleString('default', { month: 'long' })
 
   const [season, setSeason] = useState(null)
+  const [seasonLocked, setSeasonLocked] = useState(false)
   const [seasonLoaded, setSeasonLoaded] = useState(false)
 
   const [businessFocuses, setBusinessFocuses] = useState([])
@@ -940,30 +954,42 @@ export default function Dashboard() {
   const todayDate = new Date()
   const dayOfYear = getDayOfYear(todayDate)
   const currentYear = todayDate.getFullYear()
+  const currentMonth = todayDate.getMonth() + 1
 
   useEffect(() => {
     supabase.from('season_selection')
-      .select('*').eq('user_id', user.id).eq('month_year', monthKey).single()
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('month', currentMonth)
+      .eq('year', currentYear)
+      .single()
       .then(({ data }) => {
-        if (data) setSeason(data.season)
+        if (data) {
+          setSeason(data.season)
+          setSeasonLocked(true)
+        }
         setSeasonLoaded(true)
       })
-  }, [user, monthKey])
+  }, [user, currentMonth, currentYear])
 
   const saveSeason = async (s) => {
+    if (seasonLocked) return
     setSeason(s)
+    setSeasonLocked(true)
     await supabase.from('season_selection').upsert(
-      { user_id: user.id, month_year: monthKey, season: s },
-      { onConflict: 'user_id,month_year' }
+      { user_id: user.id, month: currentMonth, year: currentYear, season: s },
+      { onConflict: 'user_id,month,year' }
     )
   }
 
   const resetSeason = async () => {
     setSeason(null)
+    setSeasonLocked(false)
     await supabase.from('season_selection')
       .delete()
       .eq('user_id', user.id)
-      .eq('month_year', monthKey)
+      .eq('month', currentMonth)
+      .eq('year', currentYear)
   }
 
   useEffect(() => {
@@ -984,10 +1010,12 @@ export default function Dashboard() {
   const saveBizFocus = async (item) => {
     if (businessFocuses.length >= 15 && !editBiz) return alert('Max 15 business focuses.')
     if (editBiz) {
-      const { data } = await supabase.from('business_focus').update(item).eq('id', editBiz.id).select().single()
+      const { data, error } = await supabase.from('business_focus').update(item).eq('id', editBiz.id).select().single()
+      if (error || !data) { console.error('Failed to update business focus:', error); return }
       setBusinessFocuses(prev => prev.map(x => x.id === editBiz.id ? data : x))
     } else {
-      const { data } = await supabase.from('business_focus').insert({ ...item, user_id: user.id }).select().single()
+      const { data, error } = await supabase.from('business_focus').insert({ ...item, user_id: user.id }).select().single()
+      if (error || !data) { console.error('Failed to save business focus:', error); return }
       setBusinessFocuses(prev => [...prev, data])
     }
     setShowBizForm(false); setEditBiz(null)
@@ -1026,10 +1054,12 @@ export default function Dashboard() {
   const saveLifeFocus = async (item) => {
     if (lifeFocuses.length >= 15 && !editLife) return alert('Max 15 life focuses.')
     if (editLife) {
-      const { data } = await supabase.from('life_focus').update(item).eq('id', editLife.id).select().single()
+      const { data, error } = await supabase.from('life_focus').update(item).eq('id', editLife.id).select().single()
+      if (error || !data) { console.error('Failed to update life focus:', error); return }
       setLifeFocuses(prev => prev.map(x => x.id === editLife.id ? data : x))
     } else {
-      const { data } = await supabase.from('life_focus').insert({ ...item, user_id: user.id }).select().single()
+      const { data, error } = await supabase.from('life_focus').insert({ ...item, user_id: user.id }).select().single()
+      if (error || !data) { console.error('Failed to save life focus:', error); return }
       setLifeFocuses(prev => [...prev, data])
     }
     setShowLifeForm(false); setEditLife(null)
@@ -1112,7 +1142,7 @@ export default function Dashboard() {
               Locks in for {localMonthName} — press Reset to change.
             </p>
           </div>
-          {season && (
+          {seasonLocked && (
             <button
               onClick={resetSeason}
               className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-lg transition-colors flex-shrink-0 mt-1"
@@ -1124,20 +1154,29 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          {Object.entries(SEASONS).map(([key, s]) => (
-            <button
-              key={key}
-              onClick={() => saveSeason(key)}
-              className="p-4 rounded-xl text-left transition-all"
-              style={season === key
-                ? { border: `2px solid ${s.color}`, backgroundColor: s.bg }
-                : { border: '2px solid #ede6e1', backgroundColor: '#fdf9f7' }}
-            >
-              <div className="w-3.5 h-3.5 rounded-full mb-2.5" style={{ backgroundColor: s.color }} />
-              <p className="font-bold text-xs text-gray-800 leading-tight">{s.label}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
-            </button>
-          ))}
+          {Object.entries(SEASONS).map(([key, s]) => {
+            const isSelected = season === key
+            const isDisabled = seasonLocked && !isSelected
+            return (
+              <button
+                key={key}
+                onClick={() => saveSeason(key)}
+                disabled={isDisabled}
+                className="p-4 rounded-xl text-left transition-all"
+                style={
+                  isSelected
+                    ? { border: `2px solid ${s.color}`, backgroundColor: s.bg }
+                    : isDisabled
+                    ? { border: '2px solid #ede6e1', backgroundColor: '#fafafa', opacity: 0.45, cursor: 'not-allowed' }
+                    : { border: '2px solid #ede6e1', backgroundColor: '#fdf9f7' }
+                }
+              >
+                <div className="w-3.5 h-3.5 rounded-full mb-2.5" style={{ backgroundColor: s.color }} />
+                <p className="font-bold text-xs text-gray-800 leading-tight">{s.label}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
+              </button>
+            )
+          })}
         </div>
 
         {season && (

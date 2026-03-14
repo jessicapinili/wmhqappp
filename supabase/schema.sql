@@ -38,9 +38,10 @@ CREATE TABLE IF NOT EXISTS season_selection (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   season TEXT,
-  month_year TEXT NOT NULL,
+  month INT NOT NULL,
+  year INT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, month_year)
+  UNIQUE(user_id, month, year)
 );
 
 ALTER TABLE season_selection ENABLE ROW LEVEL SECURITY;
@@ -228,6 +229,7 @@ CREATE TABLE IF NOT EXISTS product_suite (
   payment_plan_1 TEXT,
   payment_plan_2 TEXT,
   monthly_revenue TEXT,
+  offer_status TEXT DEFAULT 'Active',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
