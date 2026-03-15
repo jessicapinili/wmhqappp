@@ -1011,7 +1011,11 @@ export default function Dashboard() {
       .maybeSingle()
       .then(({ data, error }) => {
         console.log('[Season] Fetched row:', data, 'error:', error)
-        if (data?.season) {
+        if (error) {
+          console.error('[Season] Fetch FAILED — full error:', JSON.stringify(error))
+          setSeason(null)
+          setSeasonLocked(false)
+        } else if (data?.season) {
           console.log('[Season] DB record found — locking season:', data.season)
           setSeason(data.season)
           setSeasonLocked(true)
@@ -1021,6 +1025,12 @@ export default function Dashboard() {
           setSeasonLocked(false)
         }
         setSeasonLoaded(true)
+      })
+      .catch((err) => {
+        console.error('[Season] Fetch threw unexpectedly:', err)
+        setSeason(null)
+        setSeasonLocked(false)
+        setSeasonLoaded(true)  // unblock the UI even on hard failure
       })
   }, [user?.id])
 
@@ -1034,14 +1044,13 @@ export default function Dashboard() {
     const { error } = await supabase.from('season_selection')
       .upsert(payload, { onConflict: 'user_id,month,year' })
     setSeasonSaving(false)
-    console.log('[Season] Save error:', error)
     if (!error) {
       // Only update state AFTER DB confirms — season is DB-driven, not optimistic
       console.log('[Season] Save confirmed — setting locked season:', s)
       setSeason(s)
       setSeasonLocked(true)
     } else {
-      console.error('[Season] Save FAILED — season not persisted:', error)
+      console.error('[Season] Save FAILED — season not persisted. Full error:', JSON.stringify(error))
     }
   }
 
