@@ -8,6 +8,8 @@ import Influence from './pages/Influence'
 import Visibility from './pages/Visibility'
 import Cash from './pages/Cash'
 import RevenueEvents from './pages/RevenueEvents'
+import Launches from './pages/Launches'
+import OfferSuite from './pages/OfferSuite'
 import Identity from './pages/Identity'
 import WeeklyReview from './pages/WeeklyReview'
 import Profile from './pages/Profile'
@@ -50,6 +52,8 @@ function AppRoutes() {
         <Route path="visibility" element={<Visibility />} />
         <Route path="cash" element={<Cash />} />
         <Route path="cash/revenue-events" element={<RevenueEvents />} />
+        <Route path="cash/launches" element={<Launches />} />
+        <Route path="cash/offer-suite" element={<OfferSuite />} />
         <Route path="identity" element={<Identity />} />
         <Route path="weekly-review" element={<WeeklyReview />} />
         <Route path="profile" element={<Profile />} />

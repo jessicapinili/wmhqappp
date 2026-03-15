@@ -17,6 +17,9 @@
   --card-border: #ede6e1;
   --form-bg: #fdf7f4;
   --form-border: #e8ddd8;
+  --surface-soft: #F7F4F2;
+  --shadow-soft: 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.07);
 }
 
 @layer base {
@@ -40,20 +43,29 @@
   .btn-brand-outline {
     @apply border-2 border-brand text-brand font-semibold px-4 py-2 rounded-lg hover:bg-brand hover:text-white transition-colors duration-200 text-sm;
   }
-  /* Section wrapper — white bg */
+  /* Section wrapper */
   .card-section {
-    @apply bg-white rounded-xl p-6 mb-5;
-    border: 1px solid var(--card-border);
+    @apply rounded-[14px] p-6 mb-5;
+    background-color: var(--surface-soft);
+    box-shadow: var(--shadow-soft);
+    transition: box-shadow 0.15s ease;
+  }
+  .card-section:hover {
+    box-shadow: var(--shadow-hover);
   }
   /* Saved content card — warm tinted bg */
   .card {
-    @apply rounded-xl p-5;
-    background-color: var(--card-bg);
-    border: 1px solid var(--card-border);
+    @apply rounded-[14px] p-5;
+    background-color: var(--surface-soft);
+    box-shadow: var(--shadow-soft);
+    transition: box-shadow 0.15s ease;
+  }
+  .card:hover {
+    box-shadow: var(--shadow-hover);
   }
   /* Inline form card */
   .form-card {
-    @apply rounded-xl p-5;
+    @apply rounded-[14px] p-5;
     background-color: var(--form-bg);
     border: 1px solid var(--form-border);
   }
@@ -69,13 +81,24 @@
     @apply block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1;
   }
   .section-title {
-    @apply text-lg font-bold text-gray-900 mb-1;
+    @apply text-lg font-extrabold text-gray-900 mb-1;
   }
   .section-subtitle {
-    @apply text-sm text-gray-400 mb-4;
+    @apply text-sm mb-4;
+    color: #b0a9a4;
   }
   .tag-btn {
     @apply px-3 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer;
+  }
+  /* Launch row card */
+  .launch-card {
+    background-color: var(--surface-soft);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: box-shadow 0.15s ease;
+  }
+  .launch-card:hover {
+    box-shadow: var(--shadow-hover);
   }
   .insight-box {
     background-color: #fef9ee;

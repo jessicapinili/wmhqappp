@@ -29,10 +29,10 @@ const SERVICE_FORMATS = {
 }
 
 const PRODUCT_FORMATS = {
-  hero:         ['Online course', 'Digital product', 'Toolkit', 'Framework', 'Other'],
-  signature:    ['Workbook', 'Mini course', 'Bundle', 'Masterclass', 'Other'],
+  hero:         ['Flagship product', 'Signature collection', 'Premium release', 'Best-selling line', 'Exclusive drop', 'Other'],
+  signature:    ['Core collection', 'Best seller', 'Limited edition', 'Seasonal release', 'Bundle / set', 'Other'],
   subscription: ['Monthly', 'Quarterly', 'Annual', 'Lifetime'],
-  entry:        ['PDF / Guide', 'Template pack', 'Ebook', 'Mini course', 'Other'],
+  entry:        ['Ready-to-ship', 'Pre-order', 'Limited drop', 'Core item', 'Seasonal item', 'Other'],
 }
 
 const STATUS_OPTIONS = ['Active', 'Paused', 'Coming soon']
@@ -47,10 +47,6 @@ const INCOME_CATEGORIES = [
   { key: 'onetime',   label: 'One-Time / Launch',   sublabel: 'Revenue earned through single purchases, launches, or fixed-time sales periods.',                  color: '#a85050' },
   { key: 'passive',   label: 'Passive',             sublabel: 'Revenue generated without direct delivery each time, often through assets that sell repeatedly.',   color: '#d4a0a0' },
 ]
-
-const LAUNCH_TYPES    = ['Live launch', 'Evergreen', 'Workshop', 'Group program', '1:1 offer', 'Digital product', 'Other']
-const LAUNCH_STATUSES = ['Upcoming', 'Live', 'Closed', 'Evergreen']
-const LAUNCH_FILTERS  = ['All', 'Live', 'Upcoming', 'Closed', 'Evergreen']
 
 /* ── Revenue Snapshot ────────────────────────────────────── */
 function RevenueSnapshot({ userId }) {
@@ -234,22 +230,6 @@ function StatusTag({ status }) {
       className="text-xs px-2 py-0.5 rounded-full font-medium"
       style={{ backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}` }}
     >
-      {status}
-    </span>
-  )
-}
-
-/* ── Launch status tag ───────────────────────────────────── */
-function LaunchStatusTag({ status }) {
-  const map = {
-    'Live':      { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
-    'Closed':    { bg: '#f9fafb', color: '#6b7280', border: '#e5e7eb' },
-    'Upcoming':  { bg: '#faf5ff', color: '#7c3aed', border: '#ddd6fe' },
-    'Evergreen': { bg: '#fffbeb', color: '#b45309', border: '#fde68a' },
-  }
-  const s = map[status] || map['Closed']
-  return (
-    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
       {status}
     </span>
   )
@@ -639,7 +619,7 @@ function IncomeStructure({ userId }) {
 
   useEffect(() => {
     supabase.from('income_structure').select('*').eq('user_id', userId).single()
-      .then(({ data: d }) => {
+      .then(({ data: d, error }) => {
         if (d) {
           setData(d)
           setForm({
@@ -647,8 +627,11 @@ function IncomeStructure({ userId }) {
             onetime:   d.onetime_pct   ?? '',
             passive:   d.passive_pct   ?? '',
           })
-        } else {
+        } else if (!error || error.code === 'PGRST116') {
+          // PGRST116 = no rows found (first time user) — open blank form
           setEditing(true)
+        } else {
+          console.error('[IncomeStructure] load error:', error)
         }
       })
   }, [userId])
@@ -896,11 +879,15 @@ function CashForecast({ userId }) {
   const handleSave = async (year, month) => {
     const amount = parseFloat(editValue) || 0
     const key = `${year}-${month}`
-    const { data: saved } = await supabase.from('cash_forecast_months')
+    const { data: saved, error } = await supabase.from('cash_forecast_months')
       .upsert(
         { user_id: userId, year, month, planned_amount: amount, is_manual: true, updated_at: new Date().toISOString() },
         { onConflict: 'user_id,year,month' }
       ).select().single()
+    if (error) {
+      console.error('[CashForecast] save error:', error)
+      return // keep editing open so the user's value isn't lost
+    }
     if (saved) setForecastData(prev => ({ ...prev, [key]: saved }))
     setEditingKey(null)
     setEditValue('')
@@ -1104,6 +1091,30 @@ function CashForecast({ userId }) {
           <span className="text-xs text-gray-500">Manual override</span>
         </div>
       </div>
+
+      {/* Discrepancy notice */}
+      {(() => {
+        const mismatchedMonths = months.filter(({ year, month }) => {
+          if (isPast(year, month)) return false
+          const key = `${year}-${month}`
+          const saved = forecastData[key]
+          if (!saved?.is_manual) return false
+          const evtTotal = getEventsPlanned(year, month)
+          return Math.abs((saved.planned_amount || 0) - evtTotal) > 1
+        })
+        if (mismatchedMonths.length === 0) return null
+        const labels = mismatchedMonths.map(({ month }) => MONTH_NAMES[month - 1].slice(0, 3)).join(', ')
+        return (
+          <div
+            className="mb-3 rounded-lg px-3 py-2.5 text-xs leading-relaxed"
+            style={{ backgroundColor: '#FFF8ED', border: '1px solid #F0DFAA', color: '#7A5C10' }}
+          >
+            <span className="font-semibold">Heads up:</span> Your Cash Forecast includes a manual override for{' '}
+            <strong>{labels}</strong> that doesn't match your Revenue Events for that period.
+            Review your Revenue Events to keep your forecast and event planning aligned.
+          </div>
+        )
+      })()}
 
       {/* Footer */}
       <p className="text-sm font-semibold" style={{ color: '#1a1a1a' }}>
@@ -1573,12 +1584,12 @@ function LaunchOverview({ userId }) {
       )}
 
       {/* ── Launch table ── */}
-      <div className="rounded-[14px] overflow-hidden" style={{ border: '0.5px solid var(--card-border)' }}>
+      <div className="space-y-1.5">
 
         {/* Table header */}
         <div
-          className="grid px-4 py-2.5 bg-white"
-          style={{ gridTemplateColumns: COL, borderBottom: '1px solid var(--card-border)' }}
+          className="grid px-4 py-2.5"
+          style={{ gridTemplateColumns: COL }}
         >
           {['Offer', 'Status', 'Revenue', 'Enrolled', 'Goal %', 'Avg / client', ''].map((h, i) => (
             <p
@@ -1593,7 +1604,7 @@ function LaunchOverview({ userId }) {
 
         {/* Rows */}
         {filtered.length === 0 ? (
-          <div className="px-4 py-8 text-center bg-white">
+          <div className="px-4 py-8 text-center">
             <p className="text-sm text-gray-400">
               {yearLaunches.length === 0
                 ? 'No launches recorded for this year. Add your first launch above.'
@@ -1601,7 +1612,7 @@ function LaunchOverview({ userId }) {
             </p>
           </div>
         ) : (
-          filtered.map((launch, idx) => {
+          filtered.map((launch) => {
             const revenue      = parseFloat(launch.revenue_achieved) || 0
             const goal         = parseFloat(launch.revenue_goal)     || 0
             const enrolled     = parseFloat(launch.enrolled_count)   || 0
@@ -1614,7 +1625,7 @@ function LaunchOverview({ userId }) {
             return (
               <div
                 key={launch.id}
-                style={{ borderTop: idx > 0 ? '1px solid var(--card-border)' : 'none' }}
+                className="launch-card"
               >
                 {/* ── Edit form row ── */}
                 {isEditing ? (
@@ -1680,7 +1691,7 @@ function LaunchOverview({ userId }) {
                 ) : (
                   /* ── Normal row ── */
                   <div
-                    className="group grid items-center px-4 py-3 bg-white"
+                    className="group grid items-center px-4 py-3"
                     style={{ gridTemplateColumns: COL }}
                   >
                     {/* Offer */}
@@ -1896,16 +1907,12 @@ export default function Cash() {
       </div>
 
       <RevenueSnapshot userId={user.id} />
-      <InsightCard />
-      <ProductServiceSuite userId={user.id} />
 
       {/* Income Structure + Cash Forecast — 2-col grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <IncomeStructure userId={user.id} />
         <CashForecast userId={user.id} />
       </div>
-
-      <LaunchOverview userId={user.id} />
 
       <QuarterlyReview userId={user.id} />
     </div>

@@ -121,6 +121,28 @@ export default function Sidebar() {
                 <span style={{ color: 'rgba(255,255,255,0.2)' }}>└</span>
                 Revenue Events
               </NavLink>
+              <NavLink
+                to="/cash/launches"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={({ isActive }) => ({
+                  color: isActive ? '#ffffff' : 'rgba(255,255,255,0.5)',
+                  backgroundColor: isActive ? 'rgba(255,240,236,0.1)' : 'transparent',
+                })}
+              >
+                <span style={{ color: 'rgba(255,255,255,0.2)' }}>└</span>
+                Launches
+              </NavLink>
+              <NavLink
+                to="/cash/offer-suite"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={({ isActive }) => ({
+                  color: isActive ? '#ffffff' : 'rgba(255,255,255,0.5)',
+                  backgroundColor: isActive ? 'rgba(255,240,236,0.1)' : 'transparent',
+                })}
+              >
+                <span style={{ color: 'rgba(255,255,255,0.2)' }}>└</span>
+                Offer Suite
+              </NavLink>
             </div>
           )}
         </div>
