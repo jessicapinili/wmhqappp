@@ -978,6 +978,7 @@ export default function Dashboard() {
   const [seasonLocked, setSeasonLocked] = useState(false)
   const [seasonLoaded, setSeasonLoaded] = useState(false)
   const [seasonSaving, setSeasonSaving] = useState(false)
+  const [seasonError, setSeasonError] = useState(null)
 
   const [businessFocuses, setBusinessFocuses] = useState([])
   const [lifeFocuses, setLifeFocuses] = useState([])
@@ -1045,12 +1046,13 @@ export default function Dashboard() {
       .upsert(payload, { onConflict: 'user_id,month,year' })
     setSeasonSaving(false)
     if (!error) {
-      // Only update state AFTER DB confirms — season is DB-driven, not optimistic
       console.log('[Season] Save confirmed — setting locked season:', s)
+      setSeasonError(null)
       setSeason(s)
       setSeasonLocked(true)
     } else {
-      console.error('[Season] Save FAILED — season not persisted. Full error:', JSON.stringify(error))
+      console.error('[Season] Save FAILED. Full error:', JSON.stringify(error, null, 2))
+      setSeasonError(error.message || JSON.stringify(error))
     }
   }
 
@@ -1258,6 +1260,12 @@ export default function Dashboard() {
             )
           })}
         </div>
+
+        {seasonError && (
+          <p className="mt-3 text-xs text-red-600 font-medium">
+            Could not save monthly mode — {seasonError}
+          </p>
+        )}
 
         {season && (
           <div className="mt-4 p-3 rounded-lg text-sm text-gray-600"
