@@ -426,11 +426,21 @@ const MODE_ICON_MAP = {
   rest_mode: <MoonSvg />,
 }
 
+/* ─── Height mapping: score 1–10 → bar height 18–64px ─── */
+const MIN_BAR_H = 18
+const MAX_BAR_H = 64
+const BAR_CONTAINER_H = MAX_BAR_H + 8
+
+function scoreToBarHeight(score) {
+  if (!score || score < 1) return 0
+  const clamped = Math.min(10, Math.max(1, score))
+  return Math.round(MIN_BAR_H + ((clamped - 1) / 9) * (MAX_BAR_H - MIN_BAR_H))
+}
+
 /* ─── Weekly Tracker sub-component ─── */
 function WeeklyTracker({ weekDays, weekLogs, todayKey }) {
   const todayDate = new Date()
   todayDate.setHours(0, 0, 0, 0)
-  const MAX_BAR = 44
 
   return (
     <div>
@@ -442,11 +452,12 @@ function WeeklyTracker({ weekDays, weekLogs, todayKey }) {
           const isToday = dKey === todayKey
           const isFuture = d > todayDate
           const barColor = log ? (MODE_BAR_COLORS[log.mode] || '#d4b0b0') : null
-          const barH = log ? Math.max(6, Math.round((log.energy / 10) * MAX_BAR)) : 0
+          const barH = log ? scoreToBarHeight(log.energy) : 0
+          console.log(`[WeeklyTracker] ${DAY_LABELS[i]} (${dKey}): energy=${log?.energy ?? 'none'}, barH=${barH}px`)
 
           return (
             <div key={dKey} className="flex flex-col items-center gap-1">
-              <div className="flex items-end justify-center" style={{ height: `${MAX_BAR + 4}px`, width: '100%' }}>
+              <div className="flex items-end justify-center" style={{ height: `${BAR_CONTAINER_H}px`, width: '100%' }}>
                 {isFuture ? null : log ? (
                   <div className="w-full rounded-sm" style={{ height: `${barH}px`, backgroundColor: barColor }} />
                 ) : (
@@ -469,62 +480,90 @@ function WeeklyTracker({ weekDays, weekLogs, todayKey }) {
 /* ─── Capacity Check-In component ─── */
 function CapacityCheckin() {
   const { user } = useAuth()
-  const dateKey = getDateKey()
+  // todayKey is the actual calendar date for today's check-in record
+  const todayKey = toLocalDateKey(new Date())
+  const weekDays = getCurrentWeekDays()
+  const weekStartKey = toLocalDateKey(weekDays[0])
+  const weekEndKey = toLocalDateKey(weekDays[6])
 
   const [mode, setMode] = useState(null)
   const [energy, setEnergy] = useState(5)
   const [locked, setLocked] = useState(false)
   const [lockFlash, setLockFlash] = useState(false)
+  // weekLogs: keyed by YYYY-MM-DD, each day has its OWN saved record (or nothing)
   const [weekLogs, setWeekLogs] = useState({})
 
-  const loadWeekLogs = async () => {
-    const days = getCurrentWeekDays()
-    const keys = days.map(d => toLocalDateKey(d))
-    const { data } = await supabase
-      .from('capacity_checkins')
-      .select('date_key, mode, energy')
-      .eq('user_id', user.id)
-      .in('date_key', keys)
-    if (data) {
-      const logs = {}
-      data.forEach(row => { logs[row.date_key] = { mode: row.mode, energy: row.energy } })
-      setWeekLogs(logs)
-    }
-  }
-
   useEffect(() => {
-    if (!user) return
-    const load = async () => {
-      const { data } = await supabase
+    if (!user?.id) return
+    const fetchData = async () => {
+      // 1. Load TODAY's record to populate the check-in form
+      const { data: todayData, error: todayErr } = await supabase
         .from('capacity_checkins')
         .select('mode, energy')
         .eq('user_id', user.id)
-        .eq('date_key', dateKey)
-        .single()
-      if (data) {
-        setMode(data.mode || null)
-        setEnergy(data.energy ?? 5)
+        .eq('date_key', todayKey)
+        .maybeSingle()
+      console.log('[CapacityCheckin] today record:', todayData, 'error:', todayErr)
+
+      if (todayData) {
+        setMode(todayData.mode || null)
+        setEnergy(todayData.energy ?? 5)
         setLocked(true)
+      } else {
+        setMode(null)
+        setEnergy(5)
+        setLocked(false)
       }
-      await loadWeekLogs()
+
+      // 2. Load ALL records for the current week (Monday → Sunday range)
+      // Each day only shows a bar if a real record exists for that specific date.
+      const { data: weekData, error: weekErr } = await supabase
+        .from('capacity_checkins')
+        .select('date_key, mode, energy')
+        .eq('user_id', user.id)
+        .gte('date_key', weekStartKey)
+        .lte('date_key', weekEndKey)
+      console.log('[CapacityCheckin] week records fetched:', weekData, 'error:', weekErr)
+
+      if (weekData) {
+        const logs = {}
+        weekData.forEach(row => {
+          logs[row.date_key] = { mode: row.mode, energy: row.energy }
+          console.log(`[CapacityCheckin] mapped ${row.date_key}: energy=${row.energy}, mode=${row.mode}`)
+        })
+        const allDayKeys = weekDays.map(d => toLocalDateKey(d))
+        const emptyDays = allDayKeys.filter(k => !logs[k])
+        console.log('[CapacityCheckin] days with records:', Object.keys(logs))
+        console.log('[CapacityCheckin] days without records:', emptyDays)
+        setWeekLogs(logs)
+      } else {
+        setWeekLogs({})
+      }
     }
-    load()
-  }, [user, dateKey])
+    fetchData()
+  }, [user?.id])
 
   const handleLockIn = async () => {
-    const payload = { mode, energy }
-    await supabase.from('capacity_checkins').upsert(
-      { user_id: user.id, date_key: dateKey, mode, energy },
+    // Saves ONLY today's record — never touches other days
+    const savePayload = { user_id: user.id, date_key: todayKey, mode, energy }
+    console.log('[CapacityCheckin] saving today check-in:', savePayload)
+    const { error } = await supabase.from('capacity_checkins').upsert(
+      savePayload,
       { onConflict: 'user_id,date_key' }
     )
-    setLockFlash(true)
-    setWeekLogs(prev => ({ ...prev, [dateKey]: payload }))
-    setTimeout(() => { setLockFlash(false); setLocked(true) }, 2500)
+    console.log('[CapacityCheckin] save error:', error)
+    if (!error) {
+      // Update only today's entry in the tracker — other days are unchanged
+      setWeekLogs(prev => ({ ...prev, [todayKey]: { mode, energy } }))
+      setLockFlash(true)
+      setTimeout(() => { setLockFlash(false); setLocked(true) }, 2500)
+    } else {
+      console.error('[CapacityCheckin] Save failed:', error)
+    }
   }
 
   const selectedMode = CAPACITY_MODES.find(m => m.key === mode)
   const trackPct = ((energy - 1) / 9) * 100
-  const weekDays = getCurrentWeekDays()
 
   return (
     <div className="card-section">
@@ -563,7 +602,7 @@ function CapacityCheckin() {
             </div>
           </div>
           <div style={{ borderTop: '1px solid #f0ebe8', paddingTop: '16px' }}>
-            <WeeklyTracker weekDays={weekDays} weekLogs={weekLogs} todayKey={dateKey} />
+            <WeeklyTracker weekDays={weekDays} weekLogs={weekLogs} todayKey={todayKey} />
           </div>
         </div>
       ) : (
@@ -635,7 +674,7 @@ function CapacityCheckin() {
 
           {/* Section E: Weekly tracker */}
           <div style={{ borderTop: '1px solid #f0ebe8', paddingTop: '16px' }}>
-            <WeeklyTracker weekDays={weekDays} weekLogs={weekLogs} todayKey={dateKey} />
+            <WeeklyTracker weekDays={weekDays} weekLogs={weekLogs} todayKey={todayKey} />
           </div>
         </div>
       )}
@@ -935,9 +974,10 @@ export default function Dashboard() {
   const dateKey = getDateKey()
   const localMonthName = new Date().toLocaleString('default', { month: 'long' })
 
-  const [season, setSeason] = useState(null)
+  const [season, setSeason] = useState(null)       // value confirmed in DB — source of truth
   const [seasonLocked, setSeasonLocked] = useState(false)
   const [seasonLoaded, setSeasonLoaded] = useState(false)
+  const [seasonSaving, setSeasonSaving] = useState(false)
 
   const [businessFocuses, setBusinessFocuses] = useState([])
   const [lifeFocuses, setLifeFocuses] = useState([])
@@ -954,42 +994,70 @@ export default function Dashboard() {
   const todayDate = new Date()
   const dayOfYear = getDayOfYear(todayDate)
   const currentYear = todayDate.getFullYear()
-  const currentMonth = todayDate.getMonth() + 1
 
+  // Season fetch — runs once on mount (and again if user changes).
+  // Month/year computed fresh inside so there is no stale-closure risk.
+  // On a new month the user naturally refreshes the page and this runs again.
   useEffect(() => {
+    if (!user?.id) return
+    const month = new Date().getMonth() + 1
+    const year  = new Date().getFullYear()
+    console.log('[Season] Fetching — user:', user.id, 'month:', month, 'year:', year)
     supabase.from('season_selection')
-      .select('*')
+      .select('season')
       .eq('user_id', user.id)
-      .eq('month', currentMonth)
-      .eq('year', currentYear)
-      .single()
-      .then(({ data }) => {
-        if (data) {
+      .eq('month', month)
+      .eq('year', year)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        console.log('[Season] Fetched row:', data, 'error:', error)
+        if (data?.season) {
+          console.log('[Season] DB record found — locking season:', data.season)
           setSeason(data.season)
           setSeasonLocked(true)
+        } else {
+          console.log('[Season] No record for this month — blank unlocked state')
+          setSeason(null)
+          setSeasonLocked(false)
         }
         setSeasonLoaded(true)
       })
-  }, [user, currentMonth, currentYear])
+  }, [user?.id])
 
   const saveSeason = async (s) => {
-    if (seasonLocked) return
-    setSeason(s)
-    setSeasonLocked(true)
-    await supabase.from('season_selection').upsert(
-      { user_id: user.id, month: currentMonth, year: currentYear, season: s },
-      { onConflict: 'user_id,month,year' }
-    )
+    if (seasonLocked || !seasonLoaded || seasonSaving) return
+    const month = new Date().getMonth() + 1
+    const year  = new Date().getFullYear()
+    const payload = { user_id: user.id, month, year, season: s }
+    console.log('[Season] Saving payload:', payload)
+    setSeasonSaving(true)
+    const { error } = await supabase.from('season_selection')
+      .upsert(payload, { onConflict: 'user_id,month,year' })
+    setSeasonSaving(false)
+    console.log('[Season] Save error:', error)
+    if (!error) {
+      // Only update state AFTER DB confirms — season is DB-driven, not optimistic
+      console.log('[Season] Save confirmed — setting locked season:', s)
+      setSeason(s)
+      setSeasonLocked(true)
+    } else {
+      console.error('[Season] Save FAILED — season not persisted:', error)
+    }
   }
 
   const resetSeason = async () => {
+    const month = new Date().getMonth() + 1
+    const year  = new Date().getFullYear()
+    console.log('[Season] Resetting — user:', user.id, 'month:', month, 'year:', year)
     setSeason(null)
     setSeasonLocked(false)
-    await supabase.from('season_selection')
+    const { error } = await supabase.from('season_selection')
       .delete()
       .eq('user_id', user.id)
-      .eq('month', currentMonth)
-      .eq('year', currentYear)
+      .eq('month', month)
+      .eq('year', year)
+    if (error) console.error('[Season] Reset FAILED:', error)
+    else console.log('[Season] Reset complete')
   }
 
   useEffect(() => {
@@ -1156,7 +1224,10 @@ export default function Dashboard() {
         <div className="grid grid-cols-3 gap-3">
           {Object.entries(SEASONS).map(([key, s]) => {
             const isSelected = season === key
-            const isDisabled = seasonLocked && !isSelected
+            // Disable all non-selected cards while locked, loading, or mid-save.
+            // The selected card is intentionally NOT disabled so it keeps full visual styling.
+            // saveSeason() guards against re-clicking via seasonLocked check.
+            const isDisabled = !seasonLoaded || seasonSaving || (seasonLocked && !isSelected)
             return (
               <button
                 key={key}
