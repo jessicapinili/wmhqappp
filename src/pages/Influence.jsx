@@ -97,15 +97,17 @@ function ProductOneLiners({ userId }) {
   const handleSave = async () => {
     if (!offerName.trim() || !offerLine.trim()) return
     if (editId) {
-      const { data } = await supabase.from('product_one_liners')
+      const { data, error } = await supabase.from('product_one_liners')
         .update({ offer_name: offerName, offer_one_liner: offerLine })
         .eq('id', editId).select().single()
+      if (error || !data) { console.error('Failed to update one-liner:', error); return }
       setItems(prev => prev.map(x => x.id === editId ? data : x))
       setEditId(null)
     } else {
-      const { data } = await supabase.from('product_one_liners')
+      const { data, error } = await supabase.from('product_one_liners')
         .insert({ user_id: userId, offer_name: offerName, offer_one_liner: offerLine })
         .select().single()
+      if (error || !data) { console.error('Failed to save one-liner:', error); return }
       setItems(prev => [...prev, data])
     }
     setOfferName(''); setOfferLine(''); setShowForm(false)
@@ -219,15 +221,17 @@ function ObjectionBank({ userId }) {
   const handleSave = async () => {
     if (!objection.trim() || !reframe.trim()) return
     if (editId) {
-      const { data } = await supabase.from('objection_bank')
+      const { data, error } = await supabase.from('objection_bank')
         .update({ objection: objection.trim(), reframe: reframe.trim() })
         .eq('id', editId).select().single()
+      if (error || !data) { console.error('Failed to update objection:', error); return }
       setItems(prev => prev.map(x => x.id === editId ? data : x))
       setEditId(null)
     } else {
-      const { data } = await supabase.from('objection_bank')
+      const { data, error } = await supabase.from('objection_bank')
         .insert({ user_id: userId, objection: objection.trim(), reframe: reframe.trim() })
         .select().single()
+      if (error || !data) { console.error('Failed to save objection:', error); return }
       setItems(prev => [...prev, data])
     }
     setObjection(''); setReframe(''); setShowForm(false)

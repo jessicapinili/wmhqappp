@@ -136,7 +136,8 @@ export default function WeeklyReview() {
     if (dbId) {
       await supabase.from('weekly_reviews').update({ data }).eq('id', dbId)
     } else {
-      const { data: created } = await supabase.from('weekly_reviews').insert({ user_id: user.id, week_key: weekKey, data, is_completed: false }).select().single()
+      const { data: created, error } = await supabase.from('weekly_reviews').insert({ user_id: user.id, week_key: weekKey, data, is_completed: false }).select().single()
+      if (error || !created) { console.error('Failed to create weekly review:', error); return }
       setDbId(created.id)
     }
   }
