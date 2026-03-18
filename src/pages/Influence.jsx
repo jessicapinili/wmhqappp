@@ -72,7 +72,7 @@ function CoreOneLiner({ userId }) {
           />
           <div className="flex gap-2">
             {editing && <button onClick={() => setEditing(false)} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
-            <button onClick={handleSave} className="btn-brand" style={{ backgroundColor: BRAND }}>Save One-Liner</button>
+            <button onClick={handleSave} className="btn-brand">Save One-Liner</button>
           </div>
         </div>
       )}
@@ -139,7 +139,7 @@ function ProductOneLiners({ userId }) {
           Product / Service One-Liners
         </h2>
         {items.length > 0 && !showingForm && (
-          <button onClick={() => setShowForm(true)} className="btn-brand" style={{ backgroundColor: BRAND }}>
+          <button onClick={() => setShowForm(true)} className="btn-brand">
             Add Offer
           </button>
         )}
@@ -149,7 +149,7 @@ function ProductOneLiners({ userId }) {
       {items.length === 0 && !showingForm ? (
         <div className="flex flex-col items-center justify-center py-10 border border-dashed rounded-xl" style={{ borderColor: '#e8ddd8', backgroundColor: '#fdf9f7' }}>
           <p className="text-sm text-gray-400 mb-4">No offers added yet.</p>
-          <button onClick={() => setShowForm(true)} className="btn-brand" style={{ backgroundColor: BRAND }}>
+          <button onClick={() => setShowForm(true)} className="btn-brand">
             Add your first offer
           </button>
         </div>
@@ -192,7 +192,7 @@ function ProductOneLiners({ userId }) {
               />
               <div className="flex gap-2">
                 <button onClick={handleCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-                <button onClick={handleSave} className="btn-brand" style={{ backgroundColor: BRAND }}>
+                <button onClick={handleSave} className="btn-brand">
                   {editId ? 'Update Offer' : 'Save Offer'}
                 </button>
               </div>
@@ -263,7 +263,7 @@ function ObjectionBank({ userId }) {
           Objection Bank
         </h2>
         {items.length > 0 && !showingForm && (
-          <button onClick={() => setShowForm(true)} className="btn-brand" style={{ backgroundColor: BRAND }}>
+          <button onClick={() => setShowForm(true)} className="btn-brand">
             Add Objection
           </button>
         )}
@@ -273,7 +273,7 @@ function ObjectionBank({ userId }) {
       {items.length === 0 && !showingForm ? (
         <div className="flex flex-col items-center justify-center py-10 border border-dashed rounded-xl" style={{ borderColor: '#e8ddd8', backgroundColor: '#fdf9f7' }}>
           <p className="text-sm text-gray-400 mb-4">No objections added yet.</p>
-          <button onClick={() => setShowForm(true)} className="btn-brand" style={{ backgroundColor: BRAND }}>
+          <button onClick={() => setShowForm(true)} className="btn-brand">
             Add your first objection
           </button>
         </div>
@@ -322,7 +322,7 @@ function ObjectionBank({ userId }) {
               </div>
               <div className="flex gap-2">
                 <button onClick={handleCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
-                <button onClick={handleSave} className="btn-brand" style={{ backgroundColor: BRAND }}>
+                <button onClick={handleSave} className="btn-brand">
                   {editId ? 'Update' : 'Save'}
                 </button>
               </div>
@@ -415,7 +415,7 @@ function BuyerAvatar({ userId }) {
           </div>
           <div className="flex gap-2">
             {editing && <button onClick={() => setEditing(false)} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
-            <button onClick={handleSave} className="btn-brand" style={{ backgroundColor: BRAND }}>Save Avatar</button>
+            <button onClick={handleSave} className="btn-brand">Save Avatar</button>
           </div>
         </div>
       )}
@@ -489,7 +489,7 @@ function BuyerPsychology({ userId }) {
           </div>
           <div className="flex gap-2">
             {editing && <button onClick={() => setEditing(false)} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
-            <button onClick={handleSave} className="btn-brand" style={{ backgroundColor: BRAND }}>Save / Update</button>
+            <button onClick={handleSave} className="btn-brand">Save / Update</button>
           </div>
         </div>
       )}

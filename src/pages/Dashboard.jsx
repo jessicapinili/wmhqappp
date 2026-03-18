@@ -12,21 +12,21 @@ const SEASONS = {
     label: 'BLOOM SEASON',
     sub: 'Testing / Exploring',
     color: '#fbd2e2',
-    bg: '#fff5f9',
+    bg: '#f7f7f7',
     text: 'Bloom is where you test, explore and plant seeds. MODE: TESTING AND EXPLORING',
   },
   integration: {
     label: 'INTEGRATION SEASON',
     sub: 'Stabilising / Systemising',
     color: '#a6c6dd',
-    bg: '#f0f7fc',
+    bg: '#f7f7f7',
     text: 'Integration is where you stabilise and systemise. MODE: STABILISING AND SYSTEMISING',
   },
   sprint: {
     label: 'SPRINT SEASON',
     sub: 'Full Lock-In / Executing',
     color: '#d6d7ab',
-    bg: '#f6f7ed',
+    bg: '#f7f7f7',
     text: 'Sprint is where you lock in fully, knowing your base is strong enough to hold it. MODE: FULL LOCK-IN AND EXECUTION',
   },
 }
@@ -781,7 +781,7 @@ function BusinessFocusForm({ onSave, onClose, initial }) {
 
       <div className="flex gap-2 pt-1">
         <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 transition-colors font-medium">Cancel</button>
-        <button onClick={handleSave} className="flex-1 btn-brand py-2 rounded-lg" style={{ backgroundColor: BRAND }}>Save Focus</button>
+        <button onClick={handleSave} className="flex-1 btn-brand py-2 rounded-lg">Save Focus</button>
       </div>
     </div>
   )
@@ -858,7 +858,7 @@ function LifeFocusForm({ onSave, onClose, initial }) {
 
       <div className="flex gap-2 pt-1">
         <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 transition-colors font-medium">Cancel</button>
-        <button onClick={handleSave} className="flex-1 btn-brand py-2 rounded-lg" style={{ backgroundColor: BRAND }}>Save Focus</button>
+        <button onClick={handleSave} className="flex-1 btn-brand py-2 rounded-lg">Save Focus</button>
       </div>
     </div>
   )
@@ -873,6 +873,8 @@ const STATUS_STYLES = {
   'Not Completed': 'bg-rose-50 text-rose-700 border-rose-200',
 }
 
+const FOCUS_MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
+
 function FocusCard({ item, onEdit, onDelete, type, onStatusChange }) {
   const d = item.data || item
   const isLife = type === 'life'
@@ -883,22 +885,32 @@ function FocusCard({ item, onEdit, onDelete, type, onStatusChange }) {
 
   const currentStatus = d.status || 'Not Started'
 
-  const formatDisplayDate = (dateStr) => {
-    if (!dateStr) return null
-    const parts = dateStr.split('-')
-    if (parts.length !== 3) return dateStr
-    return `${parts[2]}/${parts[1]}/${parts[0]}`
+  // Build the compact "MARCH 2026 · Q1 · Offer Focus" meta line
+  const buildMetaLine = () => {
+    const parts = []
+    if (d.begin_date) {
+      const [y, m] = d.begin_date.split('-')
+      const mIdx = parseInt(m, 10) - 1
+      parts.push(`${FOCUS_MONTH_NAMES[mIdx].toUpperCase()} ${y}`)
+      parts.push(`Q${Math.ceil(parseInt(m, 10) / 3)}`)
+    } else if (d.month || d.year) {
+      if (d.month && d.year) parts.push(`${String(d.month).toUpperCase()} ${d.year}`)
+      else if (d.month) parts.push(String(d.month).toUpperCase())
+      else if (d.year) parts.push(String(d.year))
+      if (d.quarter) parts.push(d.quarter)
+    }
+    if (!isLife) parts.push(focusTypeLabel.toUpperCase())
+    return parts
   }
 
   return (
-    <div className="rounded-xl p-4 group" style={{ backgroundColor: '#fdf9f7', border: '1px solid #ede6e1' }}>
+    <div className="rounded-xl p-4 group" style={{ backgroundColor: '#faf7f5', border: '1px solid rgba(0,0,0,0.06)' }}>
       <div className="flex justify-between items-start gap-2">
         <div className="flex-1 min-w-0">
           {!isLife && (
-            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold mb-2"
-              style={{ backgroundColor: '#f0e6e0', color: BRAND }}>
-              {focusTypeLabel}
-            </span>
+            <p className="text-[10px] font-semibold tracking-wide mb-2" style={{ color: '#b0a9a4' }}>
+              {buildMetaLine().join(' · ')}
+            </p>
           )}
           {isLife && d.areas?.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
@@ -909,32 +921,20 @@ function FocusCard({ item, onEdit, onDelete, type, onStatusChange }) {
             </div>
           )}
 
-          {/* Dates — new format */}
-          {!isLife && (d.begin_date || d.completion_date) && (
-            <p className="text-xs text-gray-400 mb-1.5">
-              {d.begin_date && <span>From {formatDisplayDate(d.begin_date)}</span>}
-              {d.begin_date && d.completion_date && <span className="mx-1 text-gray-300">—</span>}
-              {d.completion_date && <span>Due {formatDisplayDate(d.completion_date)}</span>}
-            </p>
-          )}
-          {/* Legacy fallback for old records */}
-          {!isLife && !d.begin_date && !d.completion_date && d.month && (
-            <p className="text-xs text-gray-400 mb-1">
-              {d.month} {d.year}{d.quarter ? ` · ${d.quarter}` : ''}
-            </p>
-          )}
           {isLife && (d.month || d.year) && (
-            <p className="text-xs text-gray-400 mb-1">
-              {d.month} {d.year}{d.quarter ? ` · ${d.quarter}` : ''}
+            <p className="text-[10px] font-semibold tracking-wide mb-1" style={{ color: '#b0a9a4' }}>
+              {d.month && d.year ? `${String(d.month).toUpperCase()} ${d.year}` : (d.month || d.year)}
+              {d.quarter ? ` · ${d.quarter}` : ''}
             </p>
           )}
 
           {!isLife && d.offer && <p className="text-sm font-semibold text-gray-800">{d.offer}</p>}
           {!isLife && d.visibilityFocus && <p className="text-sm font-semibold text-gray-800">{d.visibilityFocus}</p>}
           {!isLife && d.revenueFocusType && <p className="text-sm font-semibold text-gray-800">{d.revenueFocusType}</p>}
-          {!isLife && d.revenueGoal && <p className="text-xs text-gray-500 mt-1">Goal: {d.revenueGoal}</p>}
-          {!isLife && d.targetNumber && <p className="text-xs text-gray-500 mt-1">Target: {d.targetNumber}</p>}
-          {!isLife && d.targetRevenue && <p className="text-xs text-gray-500 mt-1">Target: {d.targetRevenue}</p>}
+          {!isLife && d.revenueGoal && <p className="text-xs text-gray-500 mt-1">Revenue: {d.revenueGoal}</p>}
+          {!isLife && d.trafficNeeded && <p className="text-xs text-gray-500 mt-0.5">Traffic: {d.trafficNeeded}</p>}
+          {!isLife && d.targetNumber && <p className="text-xs text-gray-500 mt-0.5">Target: {d.targetNumber}</p>}
+          {!isLife && d.targetRevenue && <p className="text-xs text-gray-500 mt-0.5">Target: {d.targetRevenue}</p>}
           {isLife && d.notes && <p className="text-sm text-gray-600 mt-1">{d.notes}</p>}
         </div>
         <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1210,17 +1210,24 @@ export default function Dashboard() {
       <div className="card-section">
         <div className="flex items-start justify-between mb-5">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">SEASON</p>
-            <h2 className="text-lg font-bold text-gray-900 leading-tight">Your Monthly Mode</h2>
-            <p className="text-xs text-gray-400 mt-1">
-              Locks in for {localMonthName} — press Reset to change.
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">YOUR SEASON THIS MONTH</p>
+            {season ? (
+              <>
+                <h2 className="text-xl font-extrabold text-gray-900 leading-tight">{SEASONS[season].label}</h2>
+                <p className="text-sm italic mt-0.5" style={{ color: '#8a8a8a' }}>{SEASONS[season].sub}</p>
+              </>
+            ) : (
+              <h2 className="text-lg font-bold text-gray-900 leading-tight">Choose Your Monthly Mode</h2>
+            )}
+            <p className="text-xs text-gray-400 mt-1.5">
+              {localMonthName} {new Date().getFullYear()}. Select once and it locks for the month.
             </p>
           </div>
           {seasonLocked && (
             <button
               onClick={resetSeason}
               className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-lg transition-colors flex-shrink-0 mt-1"
-              style={{ border: '1px solid #ede6e1', backgroundColor: '#fdf9f7' }}
+              style={{ border: '1px solid rgba(0,0,0,0.08)', backgroundColor: '#faf7f5' }}
             >
               <span>↺</span> Reset
             </button>
@@ -1242,15 +1249,15 @@ export default function Dashboard() {
                 className="p-4 rounded-xl text-left transition-all"
                 style={
                   isSelected
-                    ? { border: `2px solid ${s.color}`, backgroundColor: s.bg }
+                    ? { border: `1px solid ${s.color}`, backgroundColor: s.bg, boxShadow: `0 2px 10px ${s.color}55` }
                     : isDisabled
-                    ? { border: '2px solid #ede6e1', backgroundColor: '#fafafa', opacity: 0.45, cursor: 'not-allowed' }
-                    : { border: '2px solid #ede6e1', backgroundColor: '#fdf9f7' }
+                    ? { border: '1px solid rgba(0,0,0,0.06)', backgroundColor: '#f9f7f5', opacity: 0.42, cursor: 'not-allowed' }
+                    : { border: '1px solid rgba(0,0,0,0.06)', backgroundColor: '#faf7f5' }
                 }
               >
-                <div className="w-3.5 h-3.5 rounded-full mb-2.5" style={{ backgroundColor: s.color }} />
-                <p className="font-bold text-xs text-gray-800 leading-tight">{s.label}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
+                <div className="w-3 h-3 rounded-full mb-2.5" style={{ backgroundColor: s.color }} />
+                <p className="font-bold text-xs leading-tight" style={{ color: isSelected ? '#2a2a2a' : '#6b6b6b' }}>{s.label}</p>
+                <p className="text-xs mt-0.5" style={{ color: isSelected ? '#5a5a5a' : '#b0b0b0' }}>{s.sub}</p>
               </button>
             )
           })}
@@ -1262,12 +1269,22 @@ export default function Dashboard() {
           </p>
         )}
 
-        {season && (
-          <div className="mt-4 p-3 rounded-lg text-sm text-gray-600"
-            style={{ backgroundColor: SEASONS[season].bg, borderLeft: `3px solid ${SEASONS[season].color}` }}>
-            {SEASONS[season].text}
-          </div>
-        )}
+        {season && (() => {
+          const text = SEASONS[season].text
+          const modeIdx = text.indexOf('MODE:')
+          const bodyText = modeIdx > -1 ? text.slice(0, modeIdx).trim() : text
+          const modeText = modeIdx > -1 ? text.slice(modeIdx) : null
+          return (
+            <div className="mt-4 p-4 rounded-xl" style={{ backgroundColor: SEASONS[season].bg }}>
+              <p className="text-sm text-gray-600 mb-2">{bodyText}</p>
+              {modeText && (
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: SEASONS[season].color }}>
+                  {modeText}
+                </p>
+              )}
+            </div>
+          )
+        })()}
       </div>
 
       {/* Today's Capacity Check-in */}
@@ -1278,7 +1295,7 @@ export default function Dashboard() {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="section-title">Business Focus</h2>
-            <p className="section-subtitle">Your active priorities, moving forward.</p>
+            <p className="section-subtitle">Up to 3 focuses at a time.</p>
           </div>
           {!showBizForm && businessFocuses.length < 15 && (
             <button
@@ -1402,7 +1419,7 @@ export default function Dashboard() {
             {checklistComplete ? (
               <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-emerald-100">✓ Done today</span>
             ) : (
-              <button onClick={completeChecklist} className="btn-brand text-xs" style={{ backgroundColor: BRAND }}>Complete Today</button>
+              <button onClick={completeChecklist} className="btn-brand text-xs">Complete Today</button>
             )}
             <button onClick={resetChecklist} title="Reset" className="edit-btn"><ResetIcon /></button>
           </div>

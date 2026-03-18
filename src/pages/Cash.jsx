@@ -8,17 +8,17 @@ const BRAND = '#6B1010'
 
 /* ── Tier config ────────────────────────────────────────── */
 const SERVICE_TIERS = [
-  { key: 'free',  label: 'Free',        descriptor: 'Lead magnets, freebies, discovery calls',    color: '#e8a8a8', bg: '#fdf7f7' },
-  { key: 'low',   label: 'Low Ticket',  descriptor: 'Workshops, templates, mini sessions',         color: '#c96868', bg: '#fdf3f3' },
-  { key: 'mid',   label: 'Mid Ticket',  descriptor: 'Group programs, courses, memberships',        color: '#a03838', bg: '#f9eded' },
-  { key: 'high',  label: 'High Ticket', descriptor: '1:1 coaching, VIP, premium containers',      color: '#6B1010', bg: '#f5e8e8' },
+  { key: 'free',  label: 'Free',        descriptor: 'Lead magnets, freebies, discovery calls',    color: '#e8a8a8', bg: '#f7f7f7' },
+  { key: 'low',   label: 'Low Ticket',  descriptor: 'Workshops, templates, mini sessions',         color: '#c96868', bg: '#f7f7f7' },
+  { key: 'mid',   label: 'Mid Ticket',  descriptor: 'Group programs, courses, memberships',        color: '#a03838', bg: '#f7f7f7' },
+  { key: 'high',  label: 'High Ticket', descriptor: '1:1 coaching, VIP, premium containers',      color: '#6B1010', bg: '#f7f7f7' },
 ]
 
 const PRODUCT_TIERS = [
-  { key: 'entry',        label: 'Entry Product',     descriptor: 'Low-cost intro; gets clients into the ecosystem', color: '#e8a8a8', bg: '#fdf7f7' },
-  { key: 'subscription', label: 'Subscription',      descriptor: 'Recurring access; community, content, tools',     color: '#c96868', bg: '#fdf3f3' },
-  { key: 'signature',    label: 'Signature Product', descriptor: 'Core transformation; their method in a box',      color: '#a03838', bg: '#f9eded' },
-  { key: 'hero',         label: 'Hero Product',      descriptor: "The flagship; the one they're known for",         color: '#6B1010', bg: '#f5e8e8' },
+  { key: 'entry',        label: 'Entry Product',     descriptor: 'Low-cost intro; gets clients into the ecosystem', color: '#e8a8a8', bg: '#f7f7f7' },
+  { key: 'subscription', label: 'Subscription',      descriptor: 'Recurring access; community, content, tools',     color: '#c96868', bg: '#f7f7f7' },
+  { key: 'signature',    label: 'Signature Product', descriptor: 'Core transformation; their method in a box',      color: '#a03838', bg: '#f7f7f7' },
+  { key: 'hero',         label: 'Hero Product',      descriptor: "The flagship; the one they're known for",         color: '#6B1010', bg: '#f7f7f7' },
 ]
 
 const SERVICE_FORMATS = {
@@ -1246,11 +1246,11 @@ function QuarterlyReview({ userId }) {
           ))}
           <div className="flex gap-2">
             <button onClick={() => setShowForm(false)} className="py-2 px-4 border border-gray-200 rounded-lg text-sm text-gray-600">Cancel</button>
-            <button onClick={handleSave} className="btn-brand" style={{ backgroundColor: BRAND }}>Save Review</button>
+            <button onClick={handleSave} className="btn-brand">Save Review</button>
           </div>
         </div>
       ) : (
-        <button onClick={() => setShowForm(true)} className="btn-brand" style={{ backgroundColor: BRAND }}>
+        <button onClick={() => setShowForm(true)} className="btn-brand">
           + Start {currentQ} {currentYear} Review
         </button>
       )}

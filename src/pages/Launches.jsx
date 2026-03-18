@@ -24,7 +24,7 @@ const PRIMARY_FOCUS_OPTIONS = [
 
 const STATUSES = ['Planning', 'Warming', 'Live', 'Closed', 'Evergreen']
 const STATUS_CONFIG = {
-  'Planning':  { color: '#7C3AED', bg: '#EDE9FE' },
+  'Planning':  { color: '#6B7280', bg: '#F3F4F6' },
   'Warming':   { color: '#D97706', bg: '#FEF3C7' },
   'Live':      { color: '#059669', bg: '#D1FAE5' },
   'Closed':    { color: '#6B7280', bg: '#F3F4F6' },
@@ -67,8 +67,8 @@ function StatusPill({ status }) {
   const cfg = STATUS_CONFIG[status] || { color: '#6B7280', bg: '#F3F4F6' }
   return (
     <span
-      className="inline-block text-[11px] font-semibold tracking-wide px-2.5 py-1 rounded-full whitespace-nowrap uppercase"
-      style={{ color: cfg.color, backgroundColor: cfg.bg, letterSpacing: '0.04em' }}
+      className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
+      style={{ color: cfg.color, backgroundColor: cfg.bg }}
     >
       {status}
     </span>
@@ -244,7 +244,7 @@ function LaunchForm({ onSave, onCancel }) {
         >
           Cancel
         </button>
-        <button onClick={handleSave} className="btn-brand" style={{ backgroundColor: BRAND }}>
+        <button onClick={handleSave} className="btn-brand">
           Save Launch
         </button>
       </div>
@@ -610,7 +610,6 @@ export default function Launches() {
           <button
             onClick={() => setShowForm(p => !p)}
             className="btn-brand text-sm"
-            style={{ backgroundColor: BRAND }}
           >
             + Add Launch
           </button>
@@ -687,14 +686,14 @@ export default function Launches() {
                       <React.Fragment key={launch.id}>
                         {/* Main row */}
                         <tr className={`border-b border-gray-50 transition-colors ${
-                          isOpen ? 'bg-[#fdf9f7]' : 'hover:bg-gray-50/50'
+                          isOpen ? 'bg-[#f7f7f7]' : 'hover:bg-gray-50/50'
                         }`}>
 
                           {/* Offer name + type */}
                           <td className="py-3.5 pr-4">
                             <p className="font-bold text-gray-900 leading-snug tracking-tight">{launch.offer_name}</p>
                             {launch.offer_type && (
-                              <span className="inline-block text-[11px] font-medium text-gray-400 bg-gray-100 rounded-md px-1.5 py-0.5 mt-1">
+                              <span className="inline-block text-[11px] font-medium text-gray-400 bg-[#f7f7f7] rounded-md px-1.5 py-0.5 mt-1">
                                 {launch.offer_type}
                               </span>
                             )}
@@ -760,7 +759,7 @@ export default function Launches() {
                               className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap"
                               style={isOpen
                                 ? { backgroundColor: BRAND, color: '#fff' }
-                                : { backgroundColor: '#F3F4F6', color: '#6B7280' }
+                                : { backgroundColor: '#f7f7f7', color: '#6B7280' }
                               }
                             >
                               {isOpen ? 'Close ▴' : 'Detail ▾'}
@@ -772,7 +771,7 @@ export default function Launches() {
                         {isOpen && (
                           <tr>
                             <td colSpan={8} className="pb-4 pt-0 px-0">
-                              <div className="mx-0 bg-[#fdf9f7] border-x border-b border-[#ede6e1] rounded-b-xl px-5 py-5 space-y-4">
+                              <div className="mx-0 bg-[#f7f7f7] border-x border-b border-[#ede6e1] rounded-b-xl px-5 py-5 space-y-4">
 
                                 {/* Read-only metric tiles */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -839,7 +838,6 @@ export default function Launches() {
                                   <button
                                     onClick={() => handleDetailSave(launch.id)}
                                     className="btn-brand"
-                                    style={{ backgroundColor: BRAND }}
                                   >
                                     Save Changes
                                   </button>

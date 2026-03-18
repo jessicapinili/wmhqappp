@@ -116,7 +116,7 @@ function ContentSystem({ userId }) {
                   <input className="input-field text-xs" value={col.topics[ti]} onChange={e => updateTopic(idx, ti, e.target.value)} placeholder={`Content topic ${ti + 1}`} />
                 </div>
               ))}
-              <button onClick={() => saveColumn(idx)} className="mt-2 btn-brand text-xs py-1.5 px-3 rounded-lg" style={{ backgroundColor: BRAND }}>Save Column</button>
+              <button onClick={() => saveColumn(idx)} className="mt-2 btn-brand text-xs py-1.5 px-3 rounded-lg">Save Column</button>
             </div>
           )
         })}
@@ -259,7 +259,7 @@ function ContentTracker({ userId }) {
               className="py-2 px-4 rounded-lg border text-sm text-gray-600"
               style={{ borderColor: 'var(--card-border)' }}>Cancel</button>
           )}
-          <button onClick={handleSave} className="btn-brand" style={{ backgroundColor: BRAND }}>Log post</button>
+          <button onClick={handleSave} className="btn-brand">Log post</button>
         </div>
       </div>
 
@@ -377,7 +377,7 @@ function VisibilityBlocks({ userId }) {
         <textarea className="textarea-field" rows={3} value={notes} onChange={e => { setNotes(e.target.value); setSaved(false) }} placeholder="What's coming up for you this week around visibility?" />
       </div>
 
-      <button onClick={handleLog} className="btn-brand" style={{ backgroundColor: BRAND }}>
+      <button onClick={handleLog} className="btn-brand">
         {saved ? '✓ Saved' : 'Log Entry'}
       </button>
     </div>

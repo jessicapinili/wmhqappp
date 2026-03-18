@@ -6,17 +6,17 @@ import { useAuth } from '../contexts/AuthContext'
 const BRAND = '#6B1010'
 
 const SERVICE_TIERS = [
-  { key: 'free', label: 'Free',        descriptor: 'Lead magnets, freebies, discovery calls',   color: '#e8a8a8', bg: '#fdf7f7' },
-  { key: 'low',  label: 'Low Ticket',  descriptor: 'Workshops, templates, mini sessions',        color: '#c96868', bg: '#fdf3f3' },
-  { key: 'mid',  label: 'Mid Ticket',  descriptor: 'Group programs, courses, memberships',       color: '#a03838', bg: '#f9eded' },
-  { key: 'high', label: 'High Ticket', descriptor: '1:1 coaching, VIP, premium containers',     color: '#6B1010', bg: '#f5e8e8' },
+  { key: 'free', label: 'Free',        descriptor: 'Lead magnets, freebies, discovery calls',   color: '#e8a8a8', bg: '#f7f7f7' },
+  { key: 'low',  label: 'Low Ticket',  descriptor: 'Workshops, templates, mini sessions',        color: '#c96868', bg: '#f7f7f7' },
+  { key: 'mid',  label: 'Mid Ticket',  descriptor: 'Group programs, courses, memberships',       color: '#a03838', bg: '#f7f7f7' },
+  { key: 'high', label: 'High Ticket', descriptor: '1:1 coaching, VIP, premium containers',     color: '#6B1010', bg: '#f7f7f7' },
 ]
 
 const PRODUCT_TIERS = [
-  { key: 'entry',        label: 'Entry Product',     descriptor: 'Low-cost intro; gets clients into the ecosystem', color: '#e8a8a8', bg: '#fdf7f7' },
-  { key: 'subscription', label: 'Subscription',      descriptor: 'Recurring access; community, content, tools',    color: '#c96868', bg: '#fdf3f3' },
-  { key: 'signature',    label: 'Signature Product', descriptor: 'Core transformation; their method in a box',     color: '#a03838', bg: '#f9eded' },
-  { key: 'hero',         label: 'Hero Product',      descriptor: "The flagship; the one they're known for",        color: '#6B1010', bg: '#f5e8e8' },
+  { key: 'entry',        label: 'Entry Product',     descriptor: 'Low-cost intro; gets clients into the ecosystem', color: '#e8a8a8', bg: '#f7f7f7' },
+  { key: 'subscription', label: 'Subscription',      descriptor: 'Recurring access; community, content, tools',    color: '#c96868', bg: '#f7f7f7' },
+  { key: 'signature',    label: 'Signature Product', descriptor: 'Core transformation; their method in a box',     color: '#a03838', bg: '#f7f7f7' },
+  { key: 'hero',         label: 'Hero Product',      descriptor: "The flagship; the one they're known for",        color: '#6B1010', bg: '#f7f7f7' },
 ]
 
 const SERVICE_FORMATS = {
@@ -62,7 +62,7 @@ function StatusPill({ status }) {
   const s = STATUS_STYLES[status] || STATUS_STYLES['Active']
   return (
     <span
-      className="text-xs font-medium px-2 py-0.5 rounded-full"
+      className="text-xs font-semibold px-2.5 py-1 rounded-full"
       style={{ backgroundColor: s.bg, color: s.color }}
     >
       {status}
@@ -76,7 +76,7 @@ function OfferCard({ offer, onDelete }) {
   const [confirming, setConfirming] = useState(false)
 
   return (
-    <div className="bg-white rounded-xl px-4 py-3.5 border border-[var(--card-border)]">
+    <div className="bg-[#f7f7f7] rounded-xl px-4 py-3.5 border border-[var(--card-border)]">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="font-bold text-sm text-gray-900 mb-0.5">{offer.name}</p>
@@ -214,7 +214,7 @@ function AddForm({ tierKey, isProduct, onSave, onCancel }) {
         >
           Cancel
         </button>
-        <button onClick={handleSave} className="btn-brand" style={{ backgroundColor: BRAND }}>
+        <button onClick={handleSave} className="btn-brand">
           Save {noun}
         </button>
       </div>
@@ -241,7 +241,7 @@ function TierSection({ tier, offers, isProduct, onAdd, onDelete }) {
       {/* Header — clicking expands/collapses */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center bg-white hover:bg-gray-50 transition-colors text-left"
+        className="w-full flex items-center bg-[#f7f7f7] hover:bg-[#f7f7f7] transition-colors text-left"
       >
         <div className="w-1 self-stretch flex-shrink-0" style={{ backgroundColor: tier.color }} />
         <div className="flex-1 flex items-center justify-between px-4 py-3.5">
@@ -295,7 +295,7 @@ function TierSection({ tier, offers, isProduct, onAdd, onDelete }) {
                 backgroundColor: 'transparent',
                 color: '#aaa',
               }}
-              onMouseEnter={e => { e.currentTarget.style.color = BRAND; e.currentTarget.style.borderColor = BRAND }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#7a2535'; e.currentTarget.style.borderColor = '#7a2535' }}
               onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.borderColor = 'var(--card-border)' }}
             >
               + Add {noun}
@@ -443,7 +443,7 @@ export default function OfferSuite() {
         </div>
 
         {/* Mode toggle */}
-        <div className="flex gap-1.5 p-1 rounded-xl bg-gray-100 flex-shrink-0">
+        <div className="flex gap-1.5 p-1 rounded-xl bg-[#f2f2f2] flex-shrink-0">
           {[
             { key: 'services', label: 'Services' },
             { key: 'products', label: 'Products' },
@@ -454,7 +454,7 @@ export default function OfferSuite() {
               onClick={() => handleModeChange(key)}
               className="px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors"
               style={mode === key
-                ? { backgroundColor: '#fff', color: BRAND, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
+                ? { backgroundColor: '#f7f7f7', color: BRAND, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
                 : { backgroundColor: 'transparent', color: '#9CA3AF' }
               }
             >

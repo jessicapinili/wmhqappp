@@ -79,7 +79,7 @@ export default function Profile() {
           </div>
 
           <div className="flex items-center gap-3 pt-2">
-            <button type="submit" className="btn-brand px-6 py-2.5 rounded-xl" style={{ backgroundColor: BRAND }}>
+            <button type="submit" className="btn-brand px-6 py-2.5 rounded-xl">
               Save Profile
             </button>
             {saved && (

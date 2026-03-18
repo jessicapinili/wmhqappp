@@ -6,7 +6,7 @@ const COPYRIGHT = "This work is the sole property of Jessica Pinili. You do not 
 
 export default function Layout() {
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100">
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f2f2f2' }}>
       {/* Sidebar — fixed width */}
       <div className="w-64 flex-shrink-0 h-full" style={{ backgroundColor: '#6B1010' }}>
         <Sidebar />
@@ -14,14 +14,17 @@ export default function Layout() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="max-w-5xl mx-auto px-6 py-8">
-            <Outlet />
+        <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#f2f2f2' }}>
+          {/* Flex column so footer is always pushed to the bottom */}
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+            <div style={{ flex: 1 }} className="max-w-5xl w-full mx-auto px-6 py-8">
+              <Outlet />
+            </div>
+            {/* Footer — pinned to bottom of scrollable area */}
+            <footer className="max-w-5xl w-full mx-auto px-6">
+              <p className="footer-copyright">{COPYRIGHT}</p>
+            </footer>
           </div>
-          {/* Footer copyright */}
-          <footer className="max-w-5xl mx-auto px-6">
-            <p className="footer-copyright">{COPYRIGHT}</p>
-          </footer>
         </main>
       </div>
     </div>

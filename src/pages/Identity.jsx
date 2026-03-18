@@ -591,7 +591,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
             onClick={handleNext}
             disabled={!canNext()}
             className="py-2.5 px-6 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-40"
-            style={{ backgroundColor: BRAND }}
+            style={{ backgroundColor: '#7a2535' }}
           >
             Next →
           </button>
@@ -609,7 +609,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
             <button
               onClick={handleSaveExit}
               className="py-2.5 px-5 rounded-xl text-sm font-bold text-white"
-              style={{ backgroundColor: BRAND }}
+              style={{ backgroundColor: '#7a2535' }}
             >
               Save & Return
             </button>
@@ -793,7 +793,6 @@ export default function Identity() {
           <button
             onClick={() => handleOpenWizard()}
             className="btn-brand"
-            style={{ backgroundColor: BRAND }}
           >
             + Start a new subconscious identity map
           </button>

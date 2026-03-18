@@ -13,7 +13,7 @@ const STATUS_CONFIG = {
   'Planning':  { color: '#6B7280', bg: '#F3F4F6' },
   'Warming':   { color: '#D97706', bg: '#FEF3C7' },
   'Live':      { color: '#059669', bg: '#D1FAE5' },
-  'Closed':    { color: '#DC2626', bg: '#FEE2E2' },
+  'Closed':    { color: '#9c3034', bg: '#FEE2E2' },
   'Evergreen': { color: '#2563EB', bg: '#DBEAFE' },
 }
 const STATUSES = Object.keys(STATUS_CONFIG)
@@ -151,7 +151,7 @@ function EventForm({ onSave, onCancel, initial, selectedYear }) {
         <button onClick={onCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
           Cancel
         </button>
-        <button onClick={() => onSave(form)} className="btn-brand" style={{ backgroundColor: BRAND }}>
+        <button onClick={() => onSave(form)} className="btn-brand">
           Save Event
         </button>
       </div>
@@ -164,7 +164,8 @@ function EventForm({ onSave, onCancel, initial, selectedYear }) {
 function StatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG['Planning']
   return (
-    <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ color: cfg.color, backgroundColor: cfg.bg }}>
+    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+      style={{ color: cfg.color, backgroundColor: cfg.bg, border: cfg.border || 'none' }}>
       {status}
     </span>
   )
@@ -181,42 +182,50 @@ function EventCard({ event, onEdit, onDelete, onToggleClose }) {
 
   const isClosed = event.status === 'Closed' || event.is_closed
 
+  // Build compact date range string without emojis
+  const dateRange = (event.start_date || event.end_date)
+    ? `${fmt(event.start_date)} – ${fmt(event.end_date)}`
+    : null
+
+  // Dot-separated meta line: type · dates · focus
+  const metaParts = [event.event_type, dateRange, event.primary_focus].filter(Boolean)
+
   return (
-    <div
-      className={`card group border-l-4 ${isClosed ? 'opacity-80' : ''}`}
-      style={{ borderLeftColor: STATUS_CONFIG[event.status]?.color || BRAND }}
-    >
+    <div className={`card group ${isClosed ? 'opacity-90' : ''}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           {/* Title row */}
-          <div className="flex flex-wrap items-center gap-2 mb-2">
+          <div className="flex flex-wrap items-center gap-2 mb-1.5">
             <p className="font-bold text-gray-900">{event.offer_name || 'Untitled Event'}</p>
             <StatusBadge status={event.status} />
-            {event.event_type && (
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{event.event_type}</span>
+            {isClosed && event.revenue_achieved && (
+              <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#059669' }}>
+                COMPLETED
+              </span>
             )}
           </div>
 
-          {/* Meta row */}
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-2">
-            {(event.start_date || event.end_date) && (
-              <span>📅 {fmt(event.start_date)} – {fmt(event.end_date)}</span>
-            )}
-            {event.primary_focus && <span>🎯 {event.primary_focus}</span>}
+          {/* Dot-separated meta line */}
+          {metaParts.length > 0 && (
+            <p className="text-xs text-gray-400 mb-2">{metaParts.join(' · ')}</p>
+          )}
+
+          {/* Revenue lines */}
+          <div className="space-y-0.5">
             {event.revenue_goal ? (
-              <span>💰 Goal: {event.currency || 'AUD'} ${Number(event.revenue_goal).toLocaleString()}</span>
+              <p className="text-xs text-gray-500">Goal: {event.currency || 'AUD'} ${Number(event.revenue_goal).toLocaleString()}</p>
             ) : null}
             {event.revenue_achieved ? (
-              <span className="text-emerald-600 font-semibold">
-                ✓ Achieved: {event.currency || 'AUD'} ${Number(event.revenue_achieved).toLocaleString()}
-              </span>
+              <p className="text-xs font-semibold" style={{ color: '#059669' }}>
+                Achieved: {event.currency || 'AUD'} ${Number(event.revenue_achieved).toLocaleString()} ✓
+              </p>
             ) : null}
           </div>
 
-          {event.notes && <p className="text-xs text-gray-500 italic">{event.notes}</p>}
+          {event.notes && <p className="text-xs text-gray-400 italic mt-1.5">{event.notes}</p>}
 
           {isClosed && !event.revenue_achieved && (
-            <p className="text-xs text-amber-600 mt-1">⚠️ Don't forget to log your final revenue.</p>
+            <p className="text-xs text-amber-600 mt-1.5">Don't forget to log your final revenue.</p>
           )}
         </div>
 
@@ -228,12 +237,12 @@ function EventCard({ event, onEdit, onDelete, onToggleClose }) {
       </div>
 
       {/* Bottom action */}
-      <div className="mt-3 pt-3 border-t border-gray-50 flex gap-2">
+      <div className="mt-3 pt-3 flex gap-2" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
         <button
           onClick={onToggleClose}
           className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
           style={isClosed
-            ? { backgroundColor: '#D1FAE5', color: '#059669' }
+            ? { border: '1px solid rgba(0,0,0,0.1)', color: '#6b7280', backgroundColor: 'transparent' }
             : { backgroundColor: '#FEE2E2', color: '#DC2626' }
           }
         >
@@ -549,10 +558,13 @@ export default function RevenueEvents() {
       {/* ── Main list card ── */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <p className="font-bold text-sm text-gray-700">
-            {viewMode === 'year' ? `${selectedYear} Events` : `${selectedQuarter} ${selectedYear}`}
+          <p className="font-medium text-sm text-gray-600">
+            {viewMode === 'year'
+              ? `${yearEvents.length} revenue event${yearEvents.length !== 1 ? 's' : ''} in ${selectedYear}.`
+              : `${quarterEvents.length} revenue event${quarterEvents.length !== 1 ? 's' : ''} in ${selectedQuarter}.`
+            }
           </p>
-          <button onClick={openAdd} className="btn-brand text-sm" style={{ backgroundColor: BRAND }}>
+          <button onClick={openAdd} className="btn-brand text-sm">
             + Add Revenue Event
           </button>
         </div>
@@ -565,7 +577,7 @@ export default function RevenueEvents() {
           quartersToShow.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-400 text-sm mb-3">No events for {selectedYear} yet.</p>
-              <button onClick={openAdd} className="btn-brand" style={{ backgroundColor: BRAND }}>
+              <button onClick={openAdd} className="btn-brand">
                 Add First Event
               </button>
             </div>
@@ -600,7 +612,7 @@ export default function RevenueEvents() {
           quarterEvents.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-400 text-sm mb-3">No events for {selectedQuarter} {selectedYear} yet.</p>
-              <button onClick={openAdd} className="btn-brand" style={{ backgroundColor: BRAND }}>
+              <button onClick={openAdd} className="btn-brand">
                 Add First Event
               </button>
             </div>

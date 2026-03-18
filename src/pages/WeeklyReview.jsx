@@ -37,7 +37,7 @@ function PillarRatingBox({ pillar, value, onChange }) {
       <button
         onClick={() => setShowPad(!showPad)}
         className="w-full rounded-xl p-4 text-left border-2 transition-all"
-        style={value ? { borderColor: color, backgroundColor: color + '15' } : { borderColor: '#E5E7EB', backgroundColor: 'white' }}
+        style={value ? { borderColor: color, backgroundColor: color + '15' } : { borderColor: '#E5E7EB', backgroundColor: '#f7f7f7' }}
       >
         <div className="flex items-center gap-2 mb-1">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
@@ -48,7 +48,7 @@ function PillarRatingBox({ pillar, value, onChange }) {
         </p>
       </button>
       {showPad && (
-        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-10 w-full">
+        <div className="absolute top-full left-0 mt-2 bg-[#f7f7f7] border border-gray-200 rounded-xl shadow-lg p-3 z-10 w-full">
           <div className="grid grid-cols-5 gap-1.5">
             {[1,2,3,4,5,6,7,8,9,10].map(n => (
               <button
@@ -69,7 +69,7 @@ function PillarRatingBox({ pillar, value, onChange }) {
 const ReviewDownloadCard = React.forwardRef(({ review, weekKey, monday, sunday, year }, ref) => {
   const nsLabel = NS_OPTIONS.find(x => x.key === review.nervous_system)?.label || ''
   return (
-    <div ref={ref} className="bg-white p-8" style={{ width: '800px', fontFamily: 'Inter, sans-serif' }}>
+    <div ref={ref} className="bg-[#f7f7f7] p-8" style={{ width: '800px', fontFamily: 'Inter, sans-serif' }}>
       <div className="border-b-4 pb-4 mb-6" style={{ borderColor: BRAND }}>
         <p className="font-black text-2xl" style={{ color: BRAND }}>WOMAN MASTERY HQ</p>
         <p className="text-gray-500 text-sm tracking-widest uppercase">Weekly Review</p>
@@ -188,7 +188,7 @@ export default function WeeklyReview() {
           Week of {monday} to {sunday}, {year}
         </p>
         <p className="text-xs text-gray-400 mb-6">Your review autosaves as you type. A new review opens each Monday.</p>
-        <button onClick={handleStart} className="btn-brand px-8 py-3 text-base rounded-xl" style={{ backgroundColor: BRAND }}>
+        <button onClick={handleStart} className="btn-brand px-8 py-3 text-base rounded-xl">
           Start Weekly Review
         </button>
       </div>
@@ -207,7 +207,7 @@ export default function WeeklyReview() {
           <button onClick={handleDownload} className="py-2 px-4 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">
             ↓ Download
           </button>
-          <button onClick={() => setShowDoneModal(true)} className={`py-2 px-4 rounded-xl text-sm font-bold transition-colors ${doneSaved ? 'bg-emerald-500 text-white' : 'text-white'}`} style={!doneSaved ? { backgroundColor: BRAND } : {}}>
+          <button onClick={() => setShowDoneModal(true)} className={`py-2 px-4 rounded-xl text-sm font-bold transition-colors ${doneSaved ? 'bg-emerald-500 text-white' : 'text-white'}`} style={!doneSaved ? { backgroundColor: '#7a2535' } : {}}>
             {doneSaved ? '✓ Review Done' : 'Mark as Done'}
           </button>
         </div>
@@ -299,7 +299,7 @@ export default function WeeklyReview() {
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowDoneModal(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600">Cancel</button>
-              <button onClick={handleConfirmDone} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: BRAND }}>Yes, I'm done</button>
+              <button onClick={handleConfirmDone} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#7a2535' }}>Yes, I'm done</button>
             </div>
           </div>
         </div>
