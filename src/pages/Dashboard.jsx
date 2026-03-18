@@ -1001,14 +1001,12 @@ export default function Dashboard() {
   // On a new month the user naturally refreshes the page and this runs again.
   useEffect(() => {
     if (!user?.id) return
-    const month = new Date().getMonth() + 1
-    const year  = new Date().getFullYear()
-    console.log('[Season] Fetching — user:', user.id, 'month:', month, 'year:', year)
+    const month_year = new Date().toISOString().slice(0, 7)
+    console.log('[Season] Fetching — user:', user.id, 'month_year:', month_year)
     supabase.from('season_selection')
       .select('season')
       .eq('user_id', user.id)
-      .eq('month', month)
-      .eq('year', year)
+      .eq('month_year', month_year)
       .maybeSingle()
       .then(({ data, error }) => {
         console.log('[Season] Fetched row:', data, 'error:', error)
@@ -1037,13 +1035,12 @@ export default function Dashboard() {
 
   const saveSeason = async (s) => {
     if (seasonLocked || !seasonLoaded || seasonSaving) return
-    const month = new Date().getMonth() + 1
-    const year  = new Date().getFullYear()
-    const payload = { user_id: user.id, month, year, season: s }
+    const month_year = new Date().toISOString().slice(0, 7)
+    const payload = { user_id: user.id, month_year, season: s }
     console.log('[Season] Saving payload:', payload)
     setSeasonSaving(true)
     const { error } = await supabase.from('season_selection')
-      .upsert(payload, { onConflict: 'user_id,month,year' })
+      .upsert(payload, { onConflict: 'user_id,month_year' })
     setSeasonSaving(false)
     if (!error) {
       console.log('[Season] Save confirmed — setting locked season:', s)
@@ -1057,16 +1054,14 @@ export default function Dashboard() {
   }
 
   const resetSeason = async () => {
-    const month = new Date().getMonth() + 1
-    const year  = new Date().getFullYear()
-    console.log('[Season] Resetting — user:', user.id, 'month:', month, 'year:', year)
+    const month_year = new Date().toISOString().slice(0, 7)
+    console.log('[Season] Resetting — user:', user.id, 'month_year:', month_year)
     setSeason(null)
     setSeasonLocked(false)
     const { error } = await supabase.from('season_selection')
       .delete()
       .eq('user_id', user.id)
-      .eq('month', month)
-      .eq('year', year)
+      .eq('month_year', month_year)
     if (error) console.error('[Season] Reset FAILED:', error)
     else console.log('[Season] Reset complete')
   }
