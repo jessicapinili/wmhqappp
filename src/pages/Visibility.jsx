@@ -90,16 +90,16 @@ function ContentSystem({ userId }) {
 
           if (saved[idx] && !editing[idx]) {
             return (
-              <div key={idx} className={`rounded-xl p-4 ${isMyStory ? 'text-white' : 'bg-white border border-gray-100'}`} style={isMyStory ? { backgroundColor: BRAND } : {}}>
+              <div key={idx} className={`rounded-xl p-4 ${isMyStory ? 'text-white' : 'border'}`} style={isMyStory ? { backgroundColor: BRAND } : { backgroundColor: '#FFF8F8', borderColor: 'rgba(107,16,16,0.15)' }}>
                 <p className={`font-black text-sm mb-3 ${isMyStory ? 'text-white' : 'text-gray-900'}`}>{col.theme_name || colDef.name}</p>
                 <div className="space-y-2">
                   {col.topics.map((t, ti) => (
                     <p key={ti} className={`text-sm leading-relaxed ${isMyStory ? 'text-white/90' : 'text-gray-700'}`}>
-                      <span className={`font-bold ${isMyStory ? 'text-white/60' : 'text-gray-400'}`}>{ti + 1}. </span>{t}
+                      <span className="font-bold" style={isMyStory ? { color: 'rgba(255,255,255,0.6)' } : { color: '#9a4a52' }}>{ti + 1}. </span>{t}
                     </p>
                   ))}
                 </div>
-                <button onClick={() => editColumn(idx)} className={`mt-3 text-xs px-3 py-1.5 rounded-lg font-semibold ${isMyStory ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} transition-colors`}>Edit</button>
+                <button onClick={() => editColumn(idx)} className={`mt-3 text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors ${isMyStory ? 'bg-white/20 text-white hover:bg-white/30' : ''}`} style={isMyStory ? {} : { backgroundColor: 'rgba(107,16,16,0.07)', color: '#7a2535' }}>Edit</button>
               </div>
             )
           }
@@ -134,18 +134,18 @@ const todayDayName = format(now, 'EEE')
 
 // Funnel stage: soft editorial palette — each has a selected-pill colour and a tag treatment
 const STAGE_COLORS = {
-  Attract:  { sel: '#B8804A', bg: '#FAF0E6', text: '#7A4E20', border: '#E5C49A' },
-  Nurture:  { sel: '#6A9070', bg: '#EEF4EF', text: '#3E6645', border: '#B2CEBC' },
-  Position: { sel: '#9A6070', bg: '#F5EEF0', text: '#6A3848', border: '#D8B4C0' },
-  Convert:  { sel: '#607A8E', bg: '#EDF1F5', text: '#364E60', border: '#B4C4D2' },
+  Attract:  { sel: '#EDD5BA', bg: '#FAF0E6', text: '#7A4E20', border: '#E5C49A' },
+  Nurture:  { sel: '#BEDEC6', bg: '#EEF4EF', text: '#3E6645', border: '#B2CEBC' },
+  Position: { sel: '#DDBECE', bg: '#F5EEF0', text: '#6A3848', border: '#D8B4C0' },
+  Convert:  { sel: '#BCD0E0', bg: '#EDF1F5', text: '#364E60', border: '#B4C4D2' },
 }
 
 // Action generated: distinct soft tones, cohesive with stage palette
 const ACTION_COLORS = {
-  'DM/Enquiry':       { sel: '#7A6898', bg: '#F0EEF8', text: '#4E3C6E', border: '#C8BEE0' },
-  'Link Click':       { sel: '#4E8880', bg: '#ECF4F3', text: '#2E5E58', border: '#A8CCCA' },
-  'Sale/Sign Up':     { sel: '#8E6848', bg: '#F5EEE6', text: '#5E3E22', border: '#D4B898' },
-  'No Direct Action': { sel: '#7A7470', bg: '#F2F0EE', text: '#524E4A', border: '#CEC8C2' },
+  'DM/Enquiry':       { sel: '#CEC4E4', bg: '#F0EEF8', text: '#4E3C6E', border: '#C8BEE0' },
+  'Link Click':       { sel: '#BEDADA', bg: '#ECF4F3', text: '#2E5E58', border: '#A8CCCA' },
+  'Sale/Sign Up':     { sel: '#DCC0A4', bg: '#F5EEE6', text: '#5E3E22', border: '#D4B898' },
+  'No Direct Action': { sel: '#D2CCCA', bg: '#F2F0EE', text: '#524E4A', border: '#CEC8C2' },
 }
 
 function ContentTracker({ userId }) {
@@ -191,9 +191,8 @@ function ContentTracker({ userId }) {
   return (
     <div>
       {/* Week status bar */}
-      <div className="flex items-center justify-between px-4 py-3 rounded-xl border mb-5" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
-        <span className="text-sm font-medium text-gray-700">Current week: {weekStart} – {weekEnd}</span>
-        <span className="text-xs text-gray-400">Resets Sunday midnight</span>
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5 text-sm text-amber-800 font-medium">
+        ⚠️ Resets every Sunday at midnight. Current week: {weekStart} – {weekEnd}
       </div>
 
       {/* Day selector */}
@@ -236,8 +235,8 @@ function ContentTracker({ userId }) {
           <div className="flex flex-wrap gap-2">
             {FUNNEL_STAGES.map(s => (
               <button key={s} onClick={() => toggleField('funnel_stage', s)}
-                className={`tag-btn ${form.funnel_stage === s ? 'text-white border-transparent' : 'border-gray-200 text-gray-600 bg-white'}`}
-                style={form.funnel_stage === s ? { backgroundColor: STAGE_COLORS[s].sel, borderColor: STAGE_COLORS[s].sel } : {}}>{s}</button>
+                className={`tag-btn ${form.funnel_stage === s ? '' : 'border-gray-200 text-gray-600 bg-white'}`}
+                style={form.funnel_stage === s ? { backgroundColor: STAGE_COLORS[s].sel, borderColor: STAGE_COLORS[s].border, color: STAGE_COLORS[s].text } : {}}>{s}</button>
             ))}
           </div>
         </div>
@@ -247,13 +246,13 @@ function ContentTracker({ userId }) {
           <div className="flex flex-wrap gap-2">
             {ACTIONS.map(a => (
               <button key={a} onClick={() => toggleField('led_to_action', a)}
-                className={`tag-btn ${form.led_to_action === a ? 'text-white border-transparent' : 'border-gray-200 text-gray-600 bg-white'}`}
-                style={form.led_to_action === a ? { backgroundColor: ACTION_COLORS[a].sel, borderColor: ACTION_COLORS[a].sel } : {}}>{a}</button>
+                className={`tag-btn ${form.led_to_action === a ? '' : 'border-gray-200 text-gray-600 bg-white'}`}
+                style={form.led_to_action === a ? { backgroundColor: ACTION_COLORS[a].sel, borderColor: ACTION_COLORS[a].border, color: ACTION_COLORS[a].text } : {}}>{a}</button>
             ))}
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex justify-end gap-2">
           {editId && (
             <button onClick={() => { setEditId(null); resetForm() }}
               className="py-2 px-4 rounded-lg border text-sm text-gray-600"
@@ -279,14 +278,14 @@ function ContentTracker({ userId }) {
                       <span className="tag-btn text-white border-transparent text-[10px] py-0.5 px-2" style={{ backgroundColor: BRAND }}>{e.platform}</span>
                     )}
                     {e.funnel_stage && (
-                      <span className="tag-btn text-[10px] py-0.5 px-2" style={{ backgroundColor: STAGE_COLORS[e.funnel_stage]?.bg || '#F5F0ED', color: STAGE_COLORS[e.funnel_stage]?.text || '#6B5A50', borderColor: STAGE_COLORS[e.funnel_stage]?.border || '#D8D0CA' }}>{e.funnel_stage}</span>
+                      <span className="tag-btn text-[10px] py-0.5 px-2" style={{ backgroundColor: STAGE_COLORS[e.funnel_stage]?.bg || '#F5F0ED', color: '#1a1a1a', borderColor: STAGE_COLORS[e.funnel_stage]?.border || '#D8D0CA' }}>{e.funnel_stage}</span>
                     )}
                     {e.led_to_action && (
-                      <span className="tag-btn text-[10px] py-0.5 px-2" style={{ backgroundColor: ACTION_COLORS[e.led_to_action]?.bg || '#F2F0EE', color: ACTION_COLORS[e.led_to_action]?.text || '#524E4A', borderColor: ACTION_COLORS[e.led_to_action]?.border || '#CEC8C2' }}>{e.led_to_action}</span>
+                      <span className="tag-btn text-[10px] py-0.5 px-2" style={{ backgroundColor: ACTION_COLORS[e.led_to_action]?.bg || '#F2F0EE', color: '#1a1a1a', borderColor: ACTION_COLORS[e.led_to_action]?.border || '#CEC8C2' }}>{e.led_to_action}</span>
                     )}
                   </div>
                   <span className="text-xs text-gray-400 font-medium shrink-0">{entryDay}</span>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <div className="flex gap-1 transition-opacity shrink-0">
                     <button onClick={() => { setEditId(e.id); setForm({ platform: e.platform||'', funnel_stage: e.funnel_stage||'', content_about: e.content_about||'', led_to_action: e.led_to_action||'', reflection: e.reflection||'' }) }} className="edit-btn"><EditIcon /></button>
                     <button onClick={() => handleDelete(e.id)} className="delete-btn"><DeleteIcon /></button>
                   </div>
@@ -299,87 +298,6 @@ function ContentTracker({ userId }) {
       {entries.length === 0 && !loading && (
         <p className="text-sm text-gray-400 italic mt-2">No posts logged this week yet.</p>
       )}
-    </div>
-  )
-}
-
-/* ══════════════════ VISIBILITY BLOCKS ══════════════════ */
-const BLOCKS = [
-  { key: 'judged', label: 'Fear of being judged', insight: 'Visibility fear is rarely about content. It is about identity. Head to your Identity pillar and revisit your self-concept work.' },
-  { key: 'imposter', label: 'Imposter syndrome', insight: 'Imposter syndrome is your nervous system protecting an old identity. The real you already has the answers.' },
-  { key: 'perfectionism', label: 'Perfectionism holding me back', insight: 'Perfectionism is the most socially acceptable form of self-sabotage. Done beats perfect every time.' },
-  { key: 'notsure', label: 'Not sure what to say', insight: 'When you\'re not sure what to say, go back to your buyer psychology. Speak to one pain. One desire. That\'s enough.' },
-  { key: 'worried', label: 'Worried about what people think', insight: 'People are thinking about themselves far more than they\'re thinking about you. Show up anyway.' },
-  { key: 'inconsistent', label: 'Feeling inconsistent / no momentum', insight: 'Momentum isn\'t a feeling — it\'s a decision. One post. Then another. That\'s how it starts.' },
-  { key: 'comparison', label: 'Comparison spiral', insight: 'Comparison is your subconscious pointing to an unlived desire. Use it as data, not evidence of inadequacy.' },
-  { key: 'tired', label: 'Tired / capacity issue', insight: 'Rest is not optional at the higher levels. Your nervous system needs recovery to hold more.' },
-  { key: 'showed', label: 'Nothing, I showed up fully', insight: 'That\'s the energy. Keep going. Consistency compounds.' },
-]
-
-function VisibilityBlocks({ userId }) {
-  const [selected, setSelected] = useState([])
-  const [notes, setNotes] = useState('')
-  const [saved, setSaved] = useState(false)
-
-  useEffect(() => {
-    supabase.from('visibility_blocks_entries').select('*').eq('user_id', userId).eq('week_key', weekKey).single()
-      .then(({ data }) => { if (data) { setSelected(data.selected_blocks || []); setNotes(data.notes || ''); setSaved(true) } })
-  }, [userId])
-
-  const toggle = (key) => {
-    setSelected(prev => prev.includes(key) ? prev.filter(x => x !== key) : [...prev, key])
-    setSaved(false)
-  }
-
-  const handleLog = async () => {
-    await supabase.from('visibility_blocks_entries').upsert(
-      { user_id: userId, week_key: weekKey, selected_blocks: selected, notes },
-      { onConflict: 'user_id,week_key' }
-    )
-    setSaved(true)
-  }
-
-  const activeInsights = BLOCKS.filter(b => selected.includes(b.key) && b.insight)
-
-  return (
-    <div>
-      {WEEKLY_RESET_NOTICE}
-
-      <p className="text-sm font-semibold text-gray-700 mb-3">
-        Visibility Blocks Check-in — What's stopping you from showing up fully right now? Select all that apply.
-      </p>
-
-      <div className="space-y-2 mb-4">
-        {BLOCKS.map(b => (
-          <label key={b.key}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors border ${selected.includes(b.key) ? 'border-brand/40 text-white' : 'border-gray-100 bg-white hover:bg-gray-50 text-gray-700'}`}
-            style={selected.includes(b.key) ? { backgroundColor: BRAND } : {}}
-          >
-            <input type="checkbox" checked={selected.includes(b.key)} onChange={() => toggle(b.key)} className="flex-shrink-0" style={{ accentColor: selected.includes(b.key) ? 'white' : BRAND }} />
-            <span className="text-sm font-medium">{b.label}</span>
-          </label>
-        ))}
-      </div>
-
-      {activeInsights.length > 0 && (
-        <div className="space-y-2 mb-4">
-          {activeInsights.map(b => (
-            <div key={b.key} className="insight-box">
-              <p className="font-semibold text-xs mb-1">WMHQ Insight ✦</p>
-              <p>{b.insight}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="mb-4">
-        <label className="label">Add a Note</label>
-        <textarea className="textarea-field" rows={3} value={notes} onChange={e => { setNotes(e.target.value); setSaved(false) }} placeholder="What's coming up for you this week around visibility?" />
-      </div>
-
-      <button onClick={handleLog} className="btn-brand">
-        {saved ? '✓ Saved' : 'Log Entry'}
-      </button>
     </div>
   )
 }
@@ -467,7 +385,7 @@ function FunnelView({ userId }) {
 }
 
 /* ══════════════════ PAGE ══════════════════ */
-const TABS = ['Content System', 'Content Tracker', 'Visibility Blocks', 'Funnel View']
+const TABS = ['Content System', 'Content Tracker', 'Funnel View']
 
 export default function Visibility() {
   const { user } = useAuth()
@@ -486,19 +404,21 @@ export default function Visibility() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl mb-6">
+      <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ backgroundColor: '#fff8f8' }}>
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors ${tab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            className="flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors"
+            style={tab === t
+              ? { backgroundColor: '#6b1010', color: 'white' }
+              : { backgroundColor: '#fff8f8', color: '#5a3a3c' }}>
             {t}
           </button>
         ))}
       </div>
 
-      <div className="card-section">
+      <div className="card-section" style={{ marginTop: '16px' }}>
         {tab === 'Content System' && <ContentSystem userId={user.id} />}
         {tab === 'Content Tracker' && <ContentTracker userId={user.id} />}
-        {tab === 'Visibility Blocks' && <VisibilityBlocks userId={user.id} />}
         {tab === 'Funnel View' && <FunnelView userId={user.id} />}
       </div>
     </div>

@@ -230,7 +230,7 @@ function EventCard({ event, onEdit, onDelete, onToggleClose }) {
         </div>
 
         {/* Action icons — visible on hover */}
-        <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex flex-col gap-1 transition-opacity">
           <button onClick={onEdit} className="edit-btn"><EditIcon /></button>
           <button onClick={onDelete} className="delete-btn"><DeleteIcon /></button>
         </div>

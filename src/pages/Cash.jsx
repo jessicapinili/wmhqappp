@@ -262,7 +262,7 @@ function OfferCard({ offer, onEdit, onDelete }) {
             {offer.offer_status && <StatusTag status={offer.offer_status} />}
           </div>
         </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        <div className="flex gap-1 transition-opacity shrink-0">
           <button onClick={onEdit} className="edit-btn"><EditIcon /></button>
           <button onClick={onDelete} className="delete-btn"><DeleteIcon /></button>
         </div>
@@ -1760,7 +1760,7 @@ function LaunchOverview({ userId }) {
 
                     {/* Actions */}
                     <div className="flex items-center justify-end gap-1 pl-2">
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1 transition-opacity">
                         <button
                           onClick={() => { setEditingId(launch.id); setEditForm({ ...launch }); setExpandedId(null) }}
                           className="edit-btn"

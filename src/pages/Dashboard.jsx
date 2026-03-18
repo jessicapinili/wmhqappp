@@ -937,7 +937,7 @@ function FocusCard({ item, onEdit, onDelete, type, onStatusChange }) {
           {!isLife && d.targetRevenue && <p className="text-xs text-gray-500 mt-0.5">Target: {d.targetRevenue}</p>}
           {isLife && d.notes && <p className="text-sm text-gray-600 mt-1">{d.notes}</p>}
         </div>
-        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-0.5 transition-opacity">
           <button onClick={onEdit} className="edit-btn"><EditIcon /></button>
           <button onClick={onDelete} className="delete-btn"><DeleteIcon /></button>
         </div>

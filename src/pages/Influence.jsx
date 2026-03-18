@@ -11,7 +11,7 @@ function SingleCard({ value, onEdit, onDelete, renderContent }) {
     <div className="card group">
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">{renderContent(value)}</div>
-        <div className="flex gap-1 ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-1 ml-3 transition-opacity">
           <button onClick={onEdit} className="edit-btn" title="Edit"><EditIcon /></button>
           <button onClick={onDelete} className="delete-btn" title="Delete"><DeleteIcon /></button>
         </div>
@@ -164,7 +164,7 @@ function ProductOneLiners({ userId }) {
                       <p className="font-semibold text-sm text-gray-900">{item.offer_name}</p>
                       <p className="text-gray-600 text-sm mt-1 italic">"{item.offer_one_liner}"</p>
                     </div>
-                    <div className="flex gap-1 ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1 ml-3 transition-opacity">
                       <button onClick={() => handleEdit(item)} className="edit-btn"><EditIcon /></button>
                       <button onClick={() => handleDelete(item.id)} className="delete-btn"><DeleteIcon /></button>
                     </div>
@@ -288,7 +288,7 @@ function ObjectionBank({ userId }) {
                       <p className="text-sm font-semibold text-gray-900">{item.objection}</p>
                       <p className="text-sm text-gray-500 mt-1 italic">{item.reframe}</p>
                     </div>
-                    <div className="flex gap-1 ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1 ml-3 transition-opacity">
                       <button onClick={() => handleEdit(item)} className="edit-btn"><EditIcon /></button>
                       <button onClick={() => handleDelete(item.id)} className="delete-btn"><DeleteIcon /></button>
                     </div>
