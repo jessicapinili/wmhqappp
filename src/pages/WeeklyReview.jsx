@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import ReactDOM from 'react-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getWeekKey, getWeekBounds } from '../lib/utils'
@@ -29,13 +30,14 @@ const emptyReview = () => ({
 })
 
 /* ── Pillar Rating Box ── */
-function PillarRatingBox({ pillar, value, onChange }) {
+function PillarRatingBox({ pillar, value, onChange, disabled }) {
   const [showPad, setShowPad] = useState(false)
   const color = PILLAR_COLORS[pillar]
   return (
     <div className="relative">
       <button
-        onClick={() => setShowPad(!showPad)}
+        onClick={() => !disabled && setShowPad(!showPad)}
+        disabled={disabled}
         className="w-full rounded-xl p-4 text-left border-2 transition-all"
         style={value ? { borderColor: color, backgroundColor: color + '15' } : { borderColor: '#E5E7EB', backgroundColor: '#f7f7f7' }}
       >
@@ -47,7 +49,7 @@ function PillarRatingBox({ pillar, value, onChange }) {
           {value !== null ? `${value}/10` : '—'}
         </p>
       </button>
-      {showPad && (
+      {showPad && !disabled && (
         <div className="absolute top-full left-0 mt-2 bg-[#f7f7f7] border border-gray-200 rounded-xl shadow-lg p-3 z-10 w-full">
           <div className="grid grid-cols-5 gap-1.5">
             {[1,2,3,4,5,6,7,8,9,10].map(n => (
@@ -66,21 +68,23 @@ function PillarRatingBox({ pillar, value, onChange }) {
 }
 
 /* ── Download card ── */
-const ReviewDownloadCard = React.forwardRef(({ review, weekKey, monday, sunday, year }, ref) => {
+const ReviewDownloadCard = React.forwardRef(({ review, monday, sunday, year }, ref) => {
   const nsLabel = NS_OPTIONS.find(x => x.key === review.nervous_system)?.label || ''
   return (
-    <div ref={ref} className="bg-[#f7f7f7] p-8" style={{ width: '800px', fontFamily: 'Inter, sans-serif' }}>
-      <div className="border-b-4 pb-4 mb-6" style={{ borderColor: BRAND }}>
-        <p className="font-black text-2xl" style={{ color: BRAND }}>WOMAN MASTERY HQ</p>
-        <p className="text-gray-500 text-sm tracking-widest uppercase">Weekly Review</p>
-        <p className="text-gray-700 text-sm mt-1">Week of {monday} – {sunday}, {year}</p>
+    <div ref={ref} style={{ width: '800px', fontFamily: 'Inter, sans-serif', backgroundColor: '#f7f7f7', padding: '32px' }}>
+      <div style={{ borderBottom: `4px solid ${BRAND}`, paddingBottom: '16px', marginBottom: '24px' }}>
+        <p style={{ fontWeight: 900, fontSize: '24px', color: BRAND, margin: 0 }}>WOMAN MASTERY HQ</p>
+        <p style={{ color: '#6B7280', fontSize: '12px', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '4px 0 0' }}>Weekly Review</p>
+        <p style={{ color: '#374151', fontSize: '14px', margin: '4px 0 0' }}>Week of {monday} – {sunday}, {year}</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
         {PILLARS.map(p => (
-          <div key={p} className="rounded-xl p-3 text-center" style={{ backgroundColor: PILLAR_COLORS[p] + '15', border: `2px solid ${PILLAR_COLORS[p]}40` }}>
-            <p className="text-xs font-bold uppercase text-gray-600">{p}</p>
-            <p className="text-2xl font-black" style={{ color: PILLAR_COLORS[p] }}>{review.pillar_ratings?.[p] ?? '—'}{review.pillar_ratings?.[p] ? '/10' : ''}</p>
+          <div key={p} style={{ borderRadius: '12px', padding: '12px', textAlign: 'center', backgroundColor: PILLAR_COLORS[p] + '15', border: `2px solid ${PILLAR_COLORS[p]}40` }}>
+            <p style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#4B5563', margin: '0 0 4px' }}>{p}</p>
+            <p style={{ fontSize: '24px', fontWeight: 900, color: PILLAR_COLORS[p], margin: 0 }}>
+              {review.pillar_ratings?.[p] ?? '—'}{review.pillar_ratings?.[p] ? '/10' : ''}
+            </p>
           </div>
         ))}
       </div>
@@ -94,13 +98,13 @@ const ReviewDownloadCard = React.forwardRef(({ review, weekKey, monday, sunday, 
         ['What I Avoided', review.what_avoided],
         ['Nervous System', nsLabel],
       ].filter(([, v]) => v).map(([label, val]) => (
-        <div key={label} className="mb-4">
-          <p className="font-black text-xs uppercase tracking-wide text-gray-500 mb-1">{label}</p>
-          <p className="text-sm text-gray-800">{val}</p>
+        <div key={label} style={{ marginBottom: '16px' }}>
+          <p style={{ fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6B7280', margin: '0 0 4px' }}>{label}</p>
+          <p style={{ fontSize: '14px', color: '#1F2937', margin: 0 }}>{val}</p>
         </div>
       ))}
 
-      <p className="text-[10px] text-gray-400 mt-8 border-t border-gray-100 pt-4">
+      <p style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '32px', borderTop: '1px solid #F3F4F6', paddingTop: '16px' }}>
         This work is the sole property of Jessica Pinili. All rights reserved.
       </p>
     </div>
@@ -113,24 +117,33 @@ export default function WeeklyReview() {
   const [review, setReview] = useState(emptyReview())
   const [dbId, setDbId] = useState(null)
   const [started, setStarted] = useState(false)
+  const [isCompleted, setIsCompleted] = useState(false)
   const [showDoneModal, setShowDoneModal] = useState(false)
-  const [doneSaved, setDoneSaved] = useState(false)
   const downloadRef = useRef(null)
   const [showDownload, setShowDownload] = useState(false)
 
   useEffect(() => {
     supabase.from('weekly_reviews').select('*').eq('user_id', user.id).eq('week_key', weekKey).single()
       .then(({ data }) => {
-        if (data && !data.is_completed) {
+        if (data) {
           setReview(data.data || emptyReview())
           setDbId(data.id)
           setStarted(true)
+          if (data.is_completed) {
+            setIsCompleted(true)
+          }
         }
       })
   }, [user])
 
-  const setField = (k, v) => setReview(prev => ({ ...prev, [k]: v }))
-  const setPillar = (pillar, val) => setReview(prev => ({ ...prev, pillar_ratings: { ...prev.pillar_ratings, [pillar]: val } }))
+  const setField = (k, v) => {
+    if (isCompleted) return
+    setReview(prev => ({ ...prev, [k]: v }))
+  }
+  const setPillar = (pillar, val) => {
+    if (isCompleted) return
+    setReview(prev => ({ ...prev, pillar_ratings: { ...prev.pillar_ratings, [pillar]: val } }))
+  }
 
   const save = async (data) => {
     if (dbId) {
@@ -142,25 +155,18 @@ export default function WeeklyReview() {
     }
   }
 
-  // Autosave on change
+  // Autosave on change (only while not completed)
   useEffect(() => {
-    if (!started) return
+    if (!started || isCompleted) return
     const t = setTimeout(() => save(review), 800)
     return () => clearTimeout(t)
-  }, [review, started])
+  }, [review, started, isCompleted])
 
   const handleStart = () => setStarted(true)
 
-  const handleDone = async () => {
-    await supabase.from('weekly_reviews').update({ is_completed: true }).eq('id', dbId)
-    setDoneSaved(true)
-  }
-
   const handleConfirmDone = async () => {
-    await handleDone()
-    setStarted(false)
-    setReview(emptyReview())
-    setDbId(null)
+    await supabase.from('weekly_reviews').update({ is_completed: true }).eq('id', dbId)
+    setIsCompleted(true)
     setShowDoneModal(false)
   }
 
@@ -168,7 +174,16 @@ export default function WeeklyReview() {
     setShowDownload(true)
     await new Promise(r => setTimeout(r, 300))
     try {
-      const canvas = await html2canvas(downloadRef.current, { scale: 2, backgroundColor: '#ffffff' })
+      const el = downloadRef.current
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        width: el.scrollWidth,
+        height: el.scrollHeight,
+        windowWidth: el.scrollWidth,
+        windowHeight: el.scrollHeight,
+      })
       const link = document.createElement('a')
       link.download = `WMHQ-Weekly-Review-${weekKey}.png`
       link.href = canvas.toDataURL('image/png')
@@ -188,7 +203,7 @@ export default function WeeklyReview() {
           Week of {monday} to {sunday}, {year}
         </p>
         <p className="text-xs text-gray-400 mb-6">Your review autosaves as you type. A new review opens each Monday.</p>
-        <button onClick={handleStart} className="btn-brand px-8 py-3 text-base rounded-xl">
+        <button onClick={handleStart} className="btn-brand px-5 rounded-lg">
           Start Weekly Review
         </button>
       </div>
@@ -197,18 +212,18 @@ export default function WeeklyReview() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {/* Header — Download only */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-black text-2xl text-gray-900">Weekly Review</h1>
           <p className="text-sm text-gray-500">Week of {monday} – {sunday}, {year}</p>
-          <p className="text-xs text-gray-400 mt-0.5">Autosaving as you type...</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {isCompleted ? '✓ Review completed and locked' : 'Autosaving as you type...'}
+          </p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={handleDownload} className="py-2 px-4 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50">
+        <div>
+          <button onClick={handleDownload} className="py-1.5 px-3.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50">
             ↓ Download
-          </button>
-          <button onClick={() => setShowDoneModal(true)} className={`py-2 px-4 rounded-xl text-sm font-bold transition-colors ${doneSaved ? 'bg-emerald-500 text-white' : 'text-white'}`} style={!doneSaved ? { backgroundColor: '#7a2535' } : {}}>
-            {doneSaved ? '✓ Review Done' : 'Mark as Done'}
           </button>
         </div>
       </div>
@@ -216,10 +231,12 @@ export default function WeeklyReview() {
       {/* Pillar ratings */}
       <div className="card-section">
         <h2 className="section-title">Pillar Ratings</h2>
-        <p className="text-xs text-gray-400 mb-4">Click a pillar to rate this week.</p>
+        <p className="text-xs text-gray-400 mb-4">
+          {isCompleted ? 'Completed.' : 'Click a pillar to rate this week.'}
+        </p>
         <div className="grid grid-cols-4 gap-3">
           {PILLARS.map(p => (
-            <PillarRatingBox key={p} pillar={p} value={review.pillar_ratings?.[p]} onChange={v => setPillar(p, v)} />
+            <PillarRatingBox key={p} pillar={p} value={review.pillar_ratings?.[p]} onChange={v => setPillar(p, v)} disabled={isCompleted} />
           ))}
         </div>
       </div>
@@ -239,7 +256,9 @@ export default function WeeklyReview() {
               rows={3}
               value={review[field]}
               onChange={e => setField(field, e.target.value)}
-              placeholder={`Type here...`}
+              placeholder="Type here..."
+              disabled={isCompleted}
+              readOnly={isCompleted}
             />
           </div>
         ))}
@@ -248,7 +267,9 @@ export default function WeeklyReview() {
           <label className="label">Strongest Phase This Week</label>
           <div className="flex flex-wrap gap-2">
             {PILLARS.map(p => (
-              <button key={p} onClick={() => setField('strongest_phase', review.strongest_phase === p ? '' : p)}
+              <button key={p}
+                onClick={() => !isCompleted && setField('strongest_phase', review.strongest_phase === p ? '' : p)}
+                disabled={isCompleted}
                 className={`tag-btn ${review.strongest_phase === p ? 'text-white border-transparent' : 'border-gray-200 text-gray-600 bg-white'}`}
                 style={review.strongest_phase === p ? { backgroundColor: PILLAR_COLORS[p] } : {}}>
                 {p}
@@ -261,7 +282,9 @@ export default function WeeklyReview() {
           <label className="label">Most Challenging Phase</label>
           <div className="flex flex-wrap gap-2">
             {PILLARS.map(p => (
-              <button key={p} onClick={() => setField('most_challenging_phase', review.most_challenging_phase === p ? '' : p)}
+              <button key={p}
+                onClick={() => !isCompleted && setField('most_challenging_phase', review.most_challenging_phase === p ? '' : p)}
+                disabled={isCompleted}
                 className={`tag-btn ${review.most_challenging_phase === p ? 'text-white border-transparent' : 'border-gray-200 text-gray-600 bg-white'}`}
                 style={review.most_challenging_phase === p ? { backgroundColor: PILLAR_COLORS[p] } : {}}>
                 {p}
@@ -278,7 +301,8 @@ export default function WeeklyReview() {
           {NS_OPTIONS.map(opt => (
             <button
               key={opt.key}
-              onClick={() => setField('nervous_system', review.nervous_system === opt.key ? '' : opt.key)}
+              onClick={() => !isCompleted && setField('nervous_system', review.nervous_system === opt.key ? '' : opt.key)}
+              disabled={isCompleted}
               className={`p-4 rounded-xl border-2 text-center transition-all ${review.nervous_system === opt.key ? 'border-brand shadow-md' : 'border-gray-100 bg-white hover:border-gray-200'}`}
               style={review.nervous_system === opt.key ? { borderColor: BRAND, backgroundColor: '#FFF8F8' } : {}}
             >
@@ -289,35 +313,52 @@ export default function WeeklyReview() {
         </div>
       </div>
 
+      {/* Bottom action row */}
+      <div className="flex justify-end pb-8">
+        {isCompleted ? (
+          <div className="py-1.5 px-4 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200">
+            ✓ Review Completed
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowDoneModal(true)}
+            className="py-1.5 px-4 rounded-lg text-sm font-semibold text-white"
+            style={{ backgroundColor: '#6b1010' }}
+          >
+            Review Done
+          </button>
+        )}
+      </div>
+
       {/* Done Modal */}
       {showDoneModal && (
         <div className="modal-overlay" onClick={() => setShowDoneModal(false)}>
           <div className="modal-box p-6" onClick={e => e.stopPropagation()}>
             <h3 className="font-bold text-gray-900 text-lg mb-2">Mark this week as done?</h3>
             <p className="text-sm text-gray-500 mb-5">
-              This will clear your review. Make sure you have downloaded it first.
+              Your review will be locked and saved. You can still view and download it anytime this week.
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setShowDoneModal(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600">Cancel</button>
-              <button onClick={handleConfirmDone} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style={{ backgroundColor: '#7a2535' }}>Yes, I'm done</button>
+              <button onClick={() => setShowDoneModal(false)} className="flex-1 py-1.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600">Cancel</button>
+              <button onClick={handleConfirmDone} className="flex-1 py-1.5 rounded-lg text-sm font-semibold text-white" style={{ backgroundColor: '#6b1010' }}>Yes, I'm done</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Hidden download template */}
-      <div className="fixed -left-[9999px] -top-[9999px]" aria-hidden="true">
-        {showDownload && (
+      {/* Download template — rendered via portal directly into body to avoid any parent clipping */}
+      {showDownload && ReactDOM.createPortal(
+        <div style={{ position: 'absolute', top: 0, left: '-9999px', overflow: 'visible' }} aria-hidden="true">
           <ReviewDownloadCard
             ref={downloadRef}
             review={review}
-            weekKey={weekKey}
             monday={monday}
             sunday={sunday}
             year={year}
           />
-        )}
-      </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

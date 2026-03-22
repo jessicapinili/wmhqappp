@@ -38,16 +38,16 @@
 
 @layer components {
   .btn-brand {
-    @apply text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 text-sm;
-    background-color: #7a2535;
-    box-shadow: 0 1px 4px rgba(46, 10, 14, 0.18), 0 0 0 1px rgba(46, 10, 14, 0.06);
+    @apply text-white font-semibold px-3.5 py-1.5 rounded-lg transition-all duration-200 text-sm;
+    background-color: #6b1010;
+    box-shadow: 0 1px 2px rgba(46, 10, 14, 0.12), 0 0 0 1px rgba(46, 10, 14, 0.05);
   }
   .btn-brand:hover {
-    background-color: #8d2a3e;
-    box-shadow: 0 2px 6px rgba(46, 10, 14, 0.22), 0 0 0 1px rgba(46, 10, 14, 0.08);
+    background-color: #7a1212;
+    box-shadow: 0 2px 4px rgba(46, 10, 14, 0.16), 0 0 0 1px rgba(46, 10, 14, 0.07);
   }
   .btn-brand-outline {
-    @apply border-2 border-brand text-brand font-semibold px-4 py-2 rounded-lg hover:bg-brand hover:text-white transition-colors duration-200 text-sm;
+    @apply border border-brand text-brand font-semibold px-3.5 py-1.5 rounded-lg hover:bg-brand hover:text-white transition-colors duration-200 text-sm;
   }
 
   /* Section wrapper — main page card */

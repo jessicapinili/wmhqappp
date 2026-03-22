@@ -801,7 +801,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
                 </div>
                 <button
                   onClick={() => setReviewInProgress(true)}
-                  className="btn-brand px-5 py-2.5 text-sm font-bold flex-shrink-0"
+                  className="btn-brand flex-shrink-0"
                 >
                   Begin Weekly Review
                 </button>
@@ -843,7 +843,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
             <p className="text-xs text-gray-400">
               {lastSaved ? `Saved ${format(new Date(lastSaved), 'd MMM, h:mm a')}` : 'Not yet saved'}
             </p>
-            <button onClick={handleSaveEntry} disabled={savingEntry} className="btn-brand px-6 py-2.5 text-sm font-bold flex items-center gap-2">
+            <button onClick={handleSaveEntry} disabled={savingEntry} className="btn-brand flex items-center gap-2">
               {savingEntry ? 'Saving…' : editMode ? (
                 <>
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">

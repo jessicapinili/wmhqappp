@@ -1,10 +1,13 @@
 import React from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 
 const COPYRIGHT = "This work is the sole property of Jessica Pinili. You do not have permission to share, sublicense, distribute, duplicate, sell, licence, or create derivative works in any capacity. All rights on intellectual property of this digital product are proprietary and reserved for exclusive use by Jessica Pinili alone."
 
 export default function Layout() {
+  const location = useLocation()
+  const isMoneyDashboard = location.pathname === '/cash/money-dashboard'
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f2f2f2' }}>
       {/* Sidebar — fixed width */}
@@ -20,10 +23,12 @@ export default function Layout() {
             <div style={{ flex: 1 }} className="max-w-5xl w-full mx-auto px-6 py-8">
               <Outlet />
             </div>
-            {/* Footer — pinned to bottom of scrollable area */}
-            <footer className="max-w-5xl w-full mx-auto px-6">
-              <p className="footer-copyright">{COPYRIGHT}</p>
-            </footer>
+            {/* Footer — pinned to bottom of scrollable area; suppressed on Money Dashboard which has its own */}
+            {!isMoneyDashboard && (
+              <footer className="max-w-5xl w-full mx-auto px-6">
+                <p className="footer-copyright">{COPYRIGHT}</p>
+              </footer>
+            )}
           </div>
         </main>
       </div>

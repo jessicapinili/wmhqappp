@@ -289,7 +289,7 @@ function TierSection({ tier, offers, isProduct, onAdd, onDelete }) {
           ) : (
             <button
               onClick={() => setShowForm(true)}
-              className="w-full py-2.5 rounded-xl text-xs font-semibold text-center transition-colors"
+              className="w-full py-1.5 rounded-lg text-xs font-semibold text-center transition-colors"
               style={{
                 border: '1.5px dashed var(--card-border)',
                 backgroundColor: 'transparent',

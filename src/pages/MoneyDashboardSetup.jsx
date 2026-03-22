@@ -97,7 +97,7 @@ export default function MoneyDashboardSetup({ userId, onComplete }) {
         <button
           onClick={handleConfirm}
           disabled={!selected || saving}
-          className="btn-brand w-full py-3 text-base font-bold"
+          className="btn-brand w-full py-2"
           style={{ opacity: !selected || saving ? 0.5 : 1 }}
         >
           {saving ? 'Setting up your dashboard…' : 'Continue'}

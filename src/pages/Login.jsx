@@ -81,7 +81,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-brand py-3 text-base rounded-xl mt-2 disabled:opacity-60"
+              className="w-full btn-brand py-2 rounded-lg mt-2 disabled:opacity-60"
               style={{ backgroundColor: '#6B1010' }}
             >
               {loading ? 'Signing in...' : 'Sign In'}

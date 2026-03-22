@@ -580,7 +580,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
         {step > 1 && (
           <button
             onClick={() => setStep(s => s - 1)}
-            className="py-2.5 px-5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            className="py-1.5 px-3.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50"
           >
             ← Back
           </button>
@@ -590,8 +590,8 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
           <button
             onClick={handleNext}
             disabled={!canNext()}
-            className="py-2.5 px-6 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-40"
-            style={{ backgroundColor: '#7a2535' }}
+            className="py-1.5 px-4 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-40"
+            style={{ backgroundColor: '#6b1010' }}
           >
             Next →
           </button>
@@ -600,7 +600,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
             <button
               onClick={handleNeutralise}
               disabled={charge > 2}
-              className={`py-2.5 px-5 rounded-xl text-sm font-bold text-white transition-colors ${charge > 2 ? 'opacity-40 cursor-not-allowed' : ''}`}
+              className={`py-1.5 px-3.5 rounded-lg text-sm font-semibold text-white transition-colors ${charge > 2 ? 'opacity-40 cursor-not-allowed' : ''}`}
               style={{ backgroundColor: '#10B981' }}
               title={charge > 2 ? 'Charge must be 2 or below to neutralise' : ''}
             >
@@ -608,8 +608,8 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
             </button>
             <button
               onClick={handleSaveExit}
-              className="py-2.5 px-5 rounded-xl text-sm font-bold text-white"
-              style={{ backgroundColor: '#7a2535' }}
+              className="py-1.5 px-3.5 rounded-lg text-sm font-semibold text-white"
+              style={{ backgroundColor: '#6b1010' }}
             >
               Save & Return
             </button>
