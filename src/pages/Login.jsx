@@ -91,6 +91,16 @@ export default function Login() {
           <p className="text-xs text-gray-400 text-center mt-6">
             Access is by invitation only. Contact your administrator if you need access.
           </p>
+
+          <a
+            href="https://womanmasteryhq.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full btn-brand py-2 rounded-lg mt-4 text-center text-white font-semibold text-sm"
+            style={{ backgroundColor: '#6B1010' }}
+          >
+            Not a member? Join here →
+          </a>
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
