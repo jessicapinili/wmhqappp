@@ -30,7 +30,7 @@ export default function Login() {
             className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white shadow-lg"
             style={{ backgroundColor: '#6B1010' }}
           >
-            <span className="text-white font-black text-lg tracking-tight">WM</span>
+            <span className="text-white font-black text-sm tracking-tighter">WMHQ</span>
           </div>
           <h1 className="font-black text-xl text-gray-900 tracking-wide uppercase">
             Woman Mastery HQ
