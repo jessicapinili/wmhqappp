@@ -92,8 +92,14 @@ export default function MoneyDashboard() {
     })
   }, [user])
 
-  const handleSetupComplete = (newSettings) => {
-    setSettings(newSettings)
+  const handleSetupComplete = async (newSettings) => {
+    if (newSettings?.business_model) {
+      setSettings(newSettings)
+    } else {
+      // Fallback: upsert can return null in some RLS configurations — re-fetch directly
+      const s = await getMoneyDashboardSettings(user.id)
+      setSettings(s)
+    }
   }
 
   const handleModelChange = async () => {

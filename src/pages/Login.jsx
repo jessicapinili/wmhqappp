@@ -94,7 +94,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          © Woman Mastery HQ · All rights reserved
+          © JESSICA PINILI · WOMAN MASTERY HQ · All rights reserved
         </p>
       </div>
     </div>

@@ -165,7 +165,7 @@ export default function Sidebar() {
         <NavItem to="/weekly-review" icon="📋" label="Weekly Review" />
 
         <NavItem
-          to="https://wmhq-tools-dashboard.base44.app/"
+          to="https://tools.womanmasteryhqportal.com"
           icon="🔧"
           label="WMHQ Tools"
           external
