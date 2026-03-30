@@ -221,7 +221,23 @@ export default function WeeklyReview() {
             {isCompleted ? '✓ Review completed and locked' : 'Autosaving as you type...'}
           </p>
         </div>
-        <div>
+        <div className="flex items-center gap-2">
+          {isCompleted && (
+            <button
+              onClick={async () => {
+                if (!window.confirm('Unlock this review to edit it again?')) return
+                await supabase.from('weekly_reviews').update({ is_completed: false }).eq('id', dbId)
+                setIsCompleted(false)
+              }}
+              title="Unlock review"
+              className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+            </button>
+          )}
           <button onClick={handleDownload} className="py-1.5 px-3.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50">
             ↓ Download
           </button>

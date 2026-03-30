@@ -78,11 +78,36 @@ function ContentSystem({ userId }) {
     setSaved(prev => { const n = [...prev]; n[idx] = false; return n })
   }
 
+  const resetAll = async () => {
+    if (!window.confirm('Clear all columns? This cannot be undone.')) return
+    await supabase.from('content_system').delete().eq('user_id', userId)
+    setColumns([
+      { theme_name: '', topics: ['', '', '', ''] },
+      { theme_name: '', topics: ['', '', '', ''] },
+      { theme_name: '', topics: ['', '', '', ''] },
+      { theme_name: '', topics: ['', '', '', ''] },
+    ])
+    setSaved([false, false, false, false])
+    setEditing([false, false, false, false])
+  }
+
   return (
     <div>
-      <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 mb-4 font-medium">
-        ✓ Content System never resets — your framework stays here permanently.
-      </p>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 font-medium flex-1">
+          ✓ Content System never resets — your framework stays here permanently.
+        </p>
+        <button
+          onClick={resetAll}
+          title="Clear all columns"
+          className="ml-2 text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </button>
+      </div>
       <div className="grid grid-cols-4 gap-3">
         {columns.map((col, idx) => {
           const isMyStory = idx === 3
