@@ -19,7 +19,7 @@ export default function Layout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#f2f2f2' }}>
           {/* Flex column so footer is always pushed to the bottom */}
-          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div style={{ flex: 1 }} className="max-w-5xl w-full mx-auto px-6 py-8">
               <Outlet />
             </div>

@@ -108,6 +108,9 @@ function ContentSystem({ userId }) {
           </svg>
         </button>
       </div>
+      <div className="rounded-lg px-3 py-2.5 mb-4 text-sm font-medium" style={{ backgroundColor: '#FFF8F8', border: '1px solid rgba(107,16,16,0.18)', color: '#6B1010' }}>
+        ✦ Watch: CEO Visibility Training → Creating Content Pillars
+      </div>
       <div className="grid grid-cols-4 gap-3">
         {columns.map((col, idx) => {
           const isMyStory = idx === 3

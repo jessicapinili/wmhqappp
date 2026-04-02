@@ -7,7 +7,22 @@ import { EditIcon, DeleteIcon } from '../lib/icons'
 const BRAND = '#6B1010'
 const ACTIVE_STATUSES = ['Planning', 'Warming', 'Live', 'Evergreen']
 
-const EVENT_TYPES = ['Live Launch', 'Evergreen Push', 'Limited Drop', 'Waitlist Build', 'Relaunch']
+const EVENT_TYPES = [
+  'Launch (live or evergreen push)',
+  'Offer Relaunch / Reposition',
+  'New Offer Creation',
+  'Price Increase / Repackaging',
+  'Sales Campaign (non-launch push)',
+  'Lead Magnet Release',
+  'Email Nurture Build or Overhaul',
+  'Funnel Build / Optimisation',
+  'Paid Ads Campaign Launch',
+  'Audience Growth Sprint (visibility push tied to revenue)',
+  'Collaboration / Partnership Campaign',
+  'Webinar / Masterclass / Training Event',
+  'Waitlist Build + Conversion Push',
+  'Seasonal Campaign (EOFY, Black Friday, New Year etc)',
+]
 const CURRENCIES = ['AUD', 'NZD', 'USD', 'EUR', 'CAD', 'JPY', 'SEK', 'PLN']
 const STATUS_CONFIG = {
   'Planning':  { color: '#6B7280', bg: '#F3F4F6' },

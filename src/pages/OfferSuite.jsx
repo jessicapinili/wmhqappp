@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { DeleteIcon } from '../lib/icons'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -73,55 +74,32 @@ function StatusPill({ status }) {
 // ─── Offer card ────────────────────────────────────────────────────────────────
 
 function OfferCard({ offer, onDelete }) {
-  const [confirming, setConfirming] = useState(false)
-
   return (
-    <div className="bg-[#f7f7f7] rounded-xl px-4 py-3.5 border border-[var(--card-border)]">
-      <div className="flex items-start justify-between gap-3">
+    <div className="card group">
+      <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm text-gray-900 mb-0.5">{offer.name}</p>
+          <p className="font-semibold text-sm text-gray-900">{offer.name}</p>
           {offer.description && (
-            <p className="text-xs text-gray-500 leading-relaxed mb-1.5">{offer.description}</p>
+            <p className="text-gray-600 text-sm mt-1 italic">"{offer.description}"</p>
           )}
-          <div className="flex flex-wrap items-center gap-2 mt-1">
+          <div className="flex flex-wrap items-center gap-2 mt-2">
             {offer.price && (
-              <span className="text-sm font-bold" style={{ color: BRAND }}>{offer.price}</span>
+              <span className="text-xs font-bold" style={{ color: BRAND }}>{offer.price}</span>
             )}
             {offer.format && (
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-[var(--card-bg)] text-gray-500 border border-[var(--card-border)]">
-                {offer.format}
-              </span>
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500">{offer.format}</span>
             )}
             <StatusPill status={offer.status} />
           </div>
         </div>
-
-        {/* Delete button / inline confirm */}
-        <div className="flex-shrink-0 flex items-center gap-1.5">
-          {confirming ? (
-            <>
-              <button
-                onClick={() => onDelete(offer.id)}
-                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-              >
-                Confirm delete
-              </button>
-              <button
-                onClick={() => setConfirming(false)}
-                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-              >
-                Keep
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setConfirming(true)}
-              className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-colors text-base leading-none"
-              title="Delete offer"
-            >
-              ✕
-            </button>
-          )}
+        <div className="flex gap-1 ml-3 transition-opacity">
+          <button
+            onClick={() => onDelete(offer.id)}
+            className="delete-btn"
+            title="Delete offer"
+          >
+            <DeleteIcon />
+          </button>
         </div>
       </div>
     </div>
