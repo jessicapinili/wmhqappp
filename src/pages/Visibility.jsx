@@ -5,7 +5,7 @@ import { getWeekKey } from '../lib/utils'
 import { format, startOfWeek, endOfWeek } from 'date-fns'
 import { EditIcon, DeleteIcon } from '../lib/icons'
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 
 const weekKey = getWeekKey()
 const now = new Date()
@@ -13,8 +13,8 @@ const weekStart = format(startOfWeek(now, { weekStartsOn: 1 }), 'dd MMM')
 const weekEnd = format(endOfWeek(now, { weekStartsOn: 1 }), 'dd MMM yyyy')
 
 const WEEKLY_RESET_NOTICE = (
-  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm text-amber-800 font-medium">
-    ⚠️ This section resets every Sunday at midnight. Current week: {weekStart} – {weekEnd}
+  <div className="insight-box mb-4">
+    ⚠ This section resets every Sunday at midnight. Current week: {weekStart} – {weekEnd}
   </div>
 )
 
@@ -94,7 +94,7 @@ function ContentSystem({ userId }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 font-medium flex-1">
+        <p className="insight-box flex-1">
           ✓ Content System never resets — your framework stays here permanently.
         </p>
         <button
@@ -108,7 +108,7 @@ function ContentSystem({ userId }) {
           </svg>
         </button>
       </div>
-      <div className="rounded-lg px-3 py-2.5 mb-4 text-sm font-medium" style={{ backgroundColor: '#FFF8F8', border: '1px solid rgba(107,16,16,0.18)', color: '#6B1010' }}>
+      <div className="rounded-lg px-3 py-2.5 mb-4 text-sm font-medium" style={{ backgroundColor: '#FFF8F8', border: '1px solid rgba(61,12,12,0.18)', color: '#3d0c0c' }}>
         ✦ Watch: CEO Visibility Training → Creating Content Pillars
       </div>
       <div className="grid grid-cols-4 gap-3">
@@ -219,8 +219,8 @@ function ContentTracker({ userId }) {
   return (
     <div>
       {/* Week status bar */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5 text-sm text-amber-800 font-medium">
-        ⚠️ Resets every Sunday at midnight. Current week: {weekStart} – {weekEnd}
+      <div className="insight-box mb-5">
+        ⚠ Resets every Sunday at midnight. Current week: {weekStart} – {weekEnd}
       </div>
 
       {/* Day selector */}
@@ -374,7 +374,7 @@ function FunnelView({ userId }) {
           <div key={f.stage} className="rounded-xl p-4 text-center border" style={{ backgroundColor: f.bg, borderColor: f.color + '40' }}>
             <div className="w-3 h-3 rounded-full mx-auto mb-2" style={{ backgroundColor: f.dot }} />
             <p className="font-bold text-xs text-gray-900">{f.stage}</p>
-            <p className="text-2xl font-black mt-1" style={{ color: f.color }}>{pcts[f.stage]}%</p>
+            <p className="mt-1" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '28px', fontWeight: 300, fontStyle: 'italic', color: f.color }}>{pcts[f.stage]}%</p>
             <p className="text-xs text-gray-500">{counts[f.stage]} post{counts[f.stage] !== 1 ? 's' : ''}</p>
           </div>
         ))}
@@ -424,7 +424,7 @@ export default function Visibility() {
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
           <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#fcc799' }} />
-          <h1 className="text-2xl font-black text-gray-900">Visibility</h1>
+          <h1 className="page-title">Visibility</h1>
         </div>
         <p className="text-sm text-gray-500">
           How you show up: your content strategy, storytelling, and social presence that attracts and nurtures your audience.
@@ -437,7 +437,7 @@ export default function Visibility() {
           <button key={t} onClick={() => setTab(t)}
             className="flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors"
             style={tab === t
-              ? { backgroundColor: '#6b1010', color: 'white' }
+              ? { backgroundColor: '#3d0c0c', color: 'white' }
               : { backgroundColor: '#fff8f8', color: '#5a3a3c' }}>
             {t}
           </button>

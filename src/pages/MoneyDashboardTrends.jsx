@@ -17,7 +17,7 @@ import {
   fmt,
 } from '../lib/moneyDashboardCalc'
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 
 // ─── Comparison helpers ───────────────────────────────────────────────────────
 
@@ -55,7 +55,7 @@ function ComparisonCard({ title, metrics, period }) {
           <div key={label} className="flex items-center justify-between gap-2">
             <p className="text-xs text-gray-600">{label}</p>
             <div className="flex items-center gap-2">
-              <p className="text-sm font-bold text-gray-900">{current}</p>
+              <p className="section-title">{current}</p>
               {change !== null && change !== undefined && (
                 <span
                   className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
@@ -213,7 +213,7 @@ function TrendDebriefBlock({ strong, watch, nextMove }) {
 function ProfitLeverCard({ title, description }) {
   return (
     <div className="rounded-xl p-4" style={{ backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <p className="font-bold text-gray-900 text-sm mb-1">{title}</p>
+      <p className="section-title mb-1">{title}</p>
       <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
     </div>
   )
@@ -350,7 +350,7 @@ export default function MoneyDashboardTrends({ settings }) {
     return (
       <div className="card-section text-center py-12">
         <p className="text-2xl mb-3">📊</p>
-        <p className="font-bold text-gray-900 mb-1">No data yet</p>
+        <p className="section-title mb-1">No data yet</p>
         <p className="text-sm text-gray-500">Save your first weekly entry on the Weekly tab to start seeing trends.</p>
       </div>
     )
@@ -364,7 +364,7 @@ export default function MoneyDashboardTrends({ settings }) {
         <div className="flex flex-wrap gap-4 items-center">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Weeks Tracked</p>
-            <p className="text-sm font-bold text-gray-900">{entries.length}</p>
+            <p className="section-title">{entries.length}</p>
           </div>
           {streak > 0 && (
             <>
@@ -380,21 +380,21 @@ export default function MoneyDashboardTrends({ settings }) {
               <div className="w-px h-8 bg-gray-100" />
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Latest Entry</p>
-                <p className="text-sm font-bold text-gray-900">{format(parseISO(entries[0].entry_week_start_date), 'd MMM yyyy')}</p>
+                <p className="section-title">{format(parseISO(entries[0].entry_week_start_date), 'd MMM yyyy')}</p>
               </div>
             </>
           )}
           <div className="w-px h-8 bg-gray-100" />
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Model</p>
-            <p className="text-sm font-bold text-gray-900">{isProduct ? 'Product-Based' : 'Service-Based'}</p>
+            <p className="section-title">{isProduct ? 'Product-Based' : 'Service-Based'}</p>
           </div>
         </div>
       </div>
 
       {/* ── Period comparisons ── */}
       <div className="card-section">
-        <p className="font-black text-gray-900 text-base mb-1">Period Comparisons</p>
+        <p className="section-title mb-1">Period Comparisons</p>
         <p className="section-subtitle">Current period vs previous, based on your saved data.</p>
         <div className="grid grid-cols-2 gap-3">
           <ComparisonCard title="This Week vs Last Week" metrics={comparisons.weekly} />
@@ -440,14 +440,14 @@ export default function MoneyDashboardTrends({ settings }) {
 
       {/* ── WMHQ Trend Debrief ── */}
       <div className="card-section">
-        <p className="font-black text-gray-900 text-base mb-1">WMHQ Trend Debrief</p>
+        <p className="section-title mb-1">WMHQ Trend Debrief</p>
         <p className="section-subtitle">A read of your recent trajectory.</p>
         <TrendDebriefBlock {...trendDebrief} />
       </div>
 
       {/* ── Profit Levers ── */}
       <div className="card-section">
-        <p className="font-black text-gray-900 text-base mb-1">Profit Levers</p>
+        <p className="section-title mb-1">Profit Levers</p>
         <p className="section-subtitle">The highest-leverage moves for your business model right now.</p>
         <div className="grid grid-cols-1 gap-3 mt-3">
           {profitLevers.map((lever, i) => (

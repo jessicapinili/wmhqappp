@@ -22,7 +22,7 @@ import {
 } from '../lib/moneyDashboardCalc'
 import { EXPLANATIONS } from '../lib/wmhq-explanations'
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 const CURRENCIES = ['AUD', 'NZD', 'USD', 'EUR', 'CAD', 'GBP', 'SGD']
 
 // ─── Shared input components ──────────────────────────────────────────────────
@@ -88,7 +88,7 @@ function SnapshotCard({ label, value, metricKey, metricValue, explanation, simpl
     <div className="rounded-xl flex flex-col overflow-hidden" style={{ backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.07)' }}>
       <div className="p-4 flex flex-col gap-2">
         <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">{label}</p>
-        <p className="text-2xl font-black text-gray-900 leading-none">{value}</p>
+        <p className="stat-number">{value}</p>
         {tag && (
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full w-fit" style={{ color: tag.color, backgroundColor: tag.bg }}>
             {tag.label}
@@ -366,7 +366,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
     <div className="card-section">
       <div className="flex items-center justify-between mb-1">
         <div>
-          <p className="font-black text-gray-900 text-base">Your Baseline Numbers</p>
+          <p className="section-title">Your Baseline Numbers</p>
           <p className="text-sm text-gray-400">Semi-fixed costs and capacity settings. Only update when they change.</p>
         </div>
         <button
@@ -427,7 +427,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
     <>
       {/* Revenue */}
       <div className="card-section">
-        <p className="font-black text-gray-900 mb-0.5">Revenue</p>
+        <p className="section-title mb-0.5">Revenue</p>
         <p className="section-subtitle">Total income generated this week.</p>
         <div className="grid grid-cols-2 gap-4">
           <CurrencyInput label="Revenue" value={form.revenue} onChange={v => setField('revenue', v)} />
@@ -441,7 +441,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
 
       {/* COGS */}
       <div className="card-section">
-        <p className="font-black text-gray-900 mb-0.5">Cost of Goods</p>
+        <p className="section-title mb-0.5">Cost of Goods</p>
         <p className="section-subtitle">Direct product costs this week. Per-unit packaging and fulfilment come from your baseline.</p>
         <div className="grid grid-cols-1 gap-4">
           <CurrencyInput label="Total COGS (Cost of Goods Sold)" value={form.cogs} onChange={v => setField('cogs', v)} helper="Cost of the goods sold this week" />
@@ -455,7 +455,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
 
       {/* Operating Expenses */}
       <div className="card-section">
-        <p className="font-black text-gray-900 mb-0.5">Operating Expenses</p>
+        <p className="section-title mb-0.5">Operating Expenses</p>
         <p className="section-subtitle">Variable spend this week. Fixed costs from your baseline are included automatically.</p>
         <div className="grid grid-cols-1 gap-4">
           <CurrencyInput label="Marketing / Ad Spend" value={form.marketing_spend} onChange={v => setField('marketing_spend', v)} helper="Ads, sponsored posts, and paid marketing this week" />
@@ -470,7 +470,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
 
       {/* Customer Economics */}
       <div className="card-section">
-        <p className="font-black text-gray-900 mb-0.5">Customer Economics</p>
+        <p className="section-title mb-0.5">Customer Economics</p>
         <p className="section-subtitle">Who bought and what came back.</p>
         <div className="grid grid-cols-2 gap-4">
           <NumberInput label="New Customers Acquired" value={form.new_customers} onChange={v => setField('new_customers', v)} />
@@ -486,7 +486,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
 
       {/* Inventory */}
       <div className="card-section">
-        <p className="font-black text-gray-900 mb-0.5">Inventory & Cash Flow</p>
+        <p className="section-title mb-0.5">Inventory & Cash Flow</p>
         <p className="section-subtitle">How your stock moves and where cash sits.</p>
         <div className="grid grid-cols-3 gap-4">
           <CurrencyInput label="Opening Inventory Value" value={form.opening_inventory_value} onChange={v => setField('opening_inventory_value', v)} />
@@ -509,7 +509,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
     <>
       {/* Revenue */}
       <div className="card-section">
-        <p className="font-black text-gray-900 mb-0.5">Revenue</p>
+        <p className="section-title mb-0.5">Revenue</p>
         <p className="section-subtitle">Total income received this week.</p>
         <div className="grid grid-cols-1 gap-4">
           <CurrencyInput label="Revenue" value={form.revenue} onChange={v => setField('revenue', v)} />
@@ -521,7 +521,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
 
       {/* Sales Activity */}
       <div className="card-section">
-        <p className="font-black text-gray-900 mb-0.5">Sales Activity</p>
+        <p className="section-title mb-0.5">Sales Activity</p>
         <p className="section-subtitle">Calls, closes, and client movements this week.</p>
         <div className="grid grid-cols-2 gap-4">
           <NumberInput label="Sales Calls Booked" value={form.sales_calls_booked} onChange={v => setField('sales_calls_booked', v)} />
@@ -538,7 +538,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
 
       {/* Delivery Costs */}
       <div className="card-section">
-        <p className="font-black text-gray-900 mb-0.5">Delivery Costs</p>
+        <p className="section-title mb-0.5">Delivery Costs</p>
         <p className="section-subtitle">Direct cost to deliver your service this week.</p>
         <div className="grid grid-cols-2 gap-4">
           <CurrencyInput label="Delivery Costs" value={form.delivery_costs} onChange={v => setField('delivery_costs', v)} helper="Contractor, platform, or direct delivery costs" />
@@ -553,7 +553,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
 
       {/* Operating Expenses */}
       <div className="card-section">
-        <p className="font-black text-gray-900 mb-0.5">Operating Expenses</p>
+        <p className="section-title mb-0.5">Operating Expenses</p>
         <p className="section-subtitle">Variable spend this week. Fixed costs from your baseline are included automatically.</p>
         <div className="grid grid-cols-1 gap-4">
           <CurrencyInput label="Marketing / Ad Spend" value={form.marketing_spend} onChange={v => setField('marketing_spend', v)} helper="Ads, paid placements, and outbound marketing" />
@@ -567,7 +567,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
 
       {/* Capacity & Hours */}
       <div className="card-section">
-        <p className="font-black text-gray-900 mb-0.5">Capacity & Delivery Hours</p>
+        <p className="section-title mb-0.5">Capacity & Delivery Hours</p>
         <p className="section-subtitle">How your time was spent this week.</p>
         <div className="grid grid-cols-2 gap-4">
           <NumberInput label="Billable / Client Hours" value={form.billable_hours} onChange={v => setField('billable_hours', v)} />
@@ -584,7 +584,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
   // ── Reusable: notes block ──
   const notesBlock = (
     <div className="card-section">
-      <p className="font-black text-gray-900 mb-1">Week Notes</p>
+      <p className="section-title mb-1">Week Notes</p>
       <p className="section-subtitle">Optional context for this week.</p>
       <textarea
         className="textarea-field"
@@ -601,7 +601,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
     <div className="card-section">
       <div className="flex items-start justify-between gap-4 mb-1">
         <div>
-          <p className="font-black text-gray-900 text-base">
+          <p className="section-title">
             {isSubmitted ? 'This Week\'s Snapshot' : 'Financial Snapshot'}
           </p>
           <p className="section-subtitle">
@@ -713,7 +713,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
             <div className="flex items-start justify-between gap-4 mb-5">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400 mb-1">{week.label}</p>
-                <p className="text-xl font-black text-gray-900">This Week's Read</p>
+                <p className="section-title">This Week's Read</p>
                 <p className="text-sm text-gray-400 mt-0.5">Your numbers, interpreted.</p>
               </div>
               <button
@@ -740,7 +740,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
               className="flex items-center justify-between w-full"
             >
               <div className="text-left">
-                <p className="font-black text-gray-900 text-base">Week Details</p>
+                <p className="section-title">Week Details</p>
                 <p className="text-sm text-gray-400">Your entries for {week.label}.</p>
               </div>
               <svg
@@ -764,7 +764,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
           <div className="card-section">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="font-black text-gray-900 text-base mb-0.5">Revenue Trend</p>
+                <p className="section-title mb-0.5">Revenue Trend</p>
                 <p className="text-sm text-gray-400">
                   {recentEntries.length > 0
                     ? `Your last ${recentEntries.length} saved week${recentEntries.length !== 1 ? 's' : ''}.`
@@ -796,7 +796,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
             <div className="card-section !p-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-black text-gray-900 text-base">Ready when you are</p>
+                  <p className="section-title">Ready when you are</p>
                   <p className="text-sm text-gray-400 mt-0.5">Enter your numbers for {week.label}.</p>
                 </div>
                 <button
@@ -865,7 +865,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
             <div className="card-section">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="font-black text-gray-900 text-base mb-0.5">Revenue Trend</p>
+                  <p className="section-title mb-0.5">Revenue Trend</p>
                   <p className="text-sm text-gray-400">
                     {recentEntries.length > 0
                       ? `Your last ${recentEntries.length} saved week${recentEntries.length !== 1 ? 's' : ''}.`
@@ -887,7 +887,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
 
             {/* Weekly debrief */}
             <div className="card-section">
-              <p className="font-black text-gray-900 text-base mb-1">This Week's Debrief</p>
+              <p className="section-title mb-1">This Week's Debrief</p>
               <p className="section-subtitle">Your numbers as you've entered them.</p>
               <div className="mt-2">
                 <WeeklyDebrief points={debrief} />

@@ -28,7 +28,7 @@ export default function Login() {
         <div className="text-center mb-8">
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white shadow-lg"
-            style={{ backgroundColor: '#6B1010' }}
+            style={{ backgroundColor: '#3d0c0c' }}
           >
             <span className="text-white font-black text-sm tracking-tighter">WMHQ</span>
           </div>
@@ -41,8 +41,8 @@ export default function Login() {
         </div>
 
         {/* Card */}
-        <div className="bg-[#f7f7f7] rounded-2xl shadow-sm border border-gray-100 p-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-1">Welcome back</h2>
+        <div className="card" style={{ padding: '32px' }}>
+          <h2 className="section-title mb-1">Welcome back</h2>
           <p className="text-sm text-gray-500 mb-6">
             Sign in to access your portal.
           </p>
@@ -82,7 +82,7 @@ export default function Login() {
               type="submit"
               disabled={loading}
               className="w-full btn-brand py-2 rounded-lg mt-2 disabled:opacity-60"
-              style={{ backgroundColor: '#6B1010' }}
+              style={{ backgroundColor: '#3d0c0c' }}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
@@ -97,7 +97,7 @@ export default function Login() {
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full btn-brand py-2 rounded-lg mt-4 text-center text-white font-semibold text-sm"
-            style={{ backgroundColor: '#6B1010' }}
+            style={{ backgroundColor: '#3d0c0c' }}
           >
             Not a member? Join here →
           </a>

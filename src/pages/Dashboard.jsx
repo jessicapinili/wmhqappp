@@ -5,7 +5,7 @@ import { getMonthKey, getDateKey, todayFormatted, getDayOfYear } from '../lib/ut
 import { getTodaysInsight } from '../lib/insights'
 import { EditIcon, DeleteIcon, ResetIcon } from '../lib/icons'
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 
 const SEASONS = {
   bloom: {
@@ -596,7 +596,7 @@ function CapacityCheckin() {
             </div>
             <div className="w-px self-stretch" style={{ backgroundColor: '#e8d8d8' }} />
             <div>
-              <span className="text-2xl font-black" style={{ color: '#6b1a1a' }}>{energy}</span>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '28px', fontWeight: 300, fontStyle: 'italic', color: '#6b1a1a' }}>{energy}</span>
               <span className="text-sm text-gray-400"> / 10</span>
               <p className="text-[10px] text-gray-400 mt-0.5">{ENERGY_CAPTIONS[energy]}</p>
             </div>
@@ -642,7 +642,7 @@ function CapacityCheckin() {
               style={{ background: `linear-gradient(to right, #6b1a1a ${trackPct}%, #f0e0e0 ${trackPct}%)` }}
             />
             <div className="flex items-baseline gap-2 mt-3">
-              <span className="text-3xl font-black" style={{ color: '#6b1a1a' }}>{energy}</span>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '34px', fontWeight: 300, fontStyle: 'italic', color: '#6b1a1a' }}>{energy}</span>
               <span className="text-sm text-gray-400">/ 10</span>
               <span className="text-xs text-gray-500 ml-1">{ENERGY_CAPTIONS[energy]}</span>
             </div>
@@ -1173,8 +1173,7 @@ export default function Dashboard() {
         <img
           src="https://kajabi-storefronts-production.kajabi-cdn.com/kajabi-storefronts-production/file-uploads/themes/2162592122/settings_images/1622d17-4367-a434-f718-0be170584c6a_WMHQ_Community_Covers.png"
           alt="WMHQ"
-          className="w-full rounded-2xl object-cover"
-          style={{ maxHeight: '220px' }}
+          className="w-full rounded-2xl object-contain"
           onError={e => { e.target.style.display = 'none' }}
         />
       </div>
@@ -1182,7 +1181,7 @@ export default function Dashboard() {
       {/* Welcome + Date + Login button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">Welcome back, {firstName} 👋</h1>
+          <h1 className="page-title">Welcome back, {firstName} <span style={{ fontFamily: 'inherit', fontSize: '0.85em', opacity: 0.6 }}>✦</span></h1>
           <p className="text-sm text-gray-400 mt-0.5">{today}</p>
         </div>
         <a

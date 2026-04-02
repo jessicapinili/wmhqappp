@@ -11,7 +11,7 @@ export default function Layout() {
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f2f2f2' }}>
       {/* Sidebar — fixed width */}
-      <div className="w-64 flex-shrink-0 h-full" style={{ backgroundColor: '#6B1010' }}>
+      <div className="w-64 flex-shrink-0 h-full" style={{ backgroundColor: '#3d0c0c' }}>
         <Sidebar />
       </div>
 
@@ -20,12 +20,12 @@ export default function Layout() {
         <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#f2f2f2' }}>
           {/* Flex column so footer is always pushed to the bottom */}
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div style={{ flex: 1 }} className="max-w-5xl w-full mx-auto px-6 py-8">
+            <div style={{ flex: 1 }} className="max-w-7xl w-full mx-auto px-8 py-8">
               <Outlet />
             </div>
             {/* Footer — pinned to bottom of scrollable area; suppressed on Money Dashboard which has its own */}
             {!isMoneyDashboard && (
-              <footer className="max-w-5xl w-full mx-auto px-6">
+              <footer className="max-w-7xl w-full mx-auto px-8">
                 <p className="footer-copyright">{COPYRIGHT}</p>
               </footer>
             )}

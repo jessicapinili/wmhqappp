@@ -4,21 +4,21 @@ import { supabase } from '../lib/supabase'
 import { getCurrentQuarter } from '../lib/utils'
 import { EditIcon, DeleteIcon } from '../lib/icons'
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 
 /* ── Tier config ────────────────────────────────────────── */
 const SERVICE_TIERS = [
   { key: 'free',  label: 'Free',        descriptor: 'Lead magnets, freebies, discovery calls',    color: '#e8a8a8', bg: '#f7f7f7' },
   { key: 'low',   label: 'Low Ticket',  descriptor: 'Workshops, templates, mini sessions',         color: '#c96868', bg: '#f7f7f7' },
   { key: 'mid',   label: 'Mid Ticket',  descriptor: 'Group programs, courses, memberships',        color: '#a03838', bg: '#f7f7f7' },
-  { key: 'high',  label: 'High Ticket', descriptor: '1:1 coaching, VIP, premium containers',      color: '#6B1010', bg: '#f7f7f7' },
+  { key: 'high',  label: 'High Ticket', descriptor: '1:1 coaching, VIP, premium containers',      color: '#3d0c0c', bg: '#f7f7f7' },
 ]
 
 const PRODUCT_TIERS = [
   { key: 'entry',        label: 'Entry Product',     descriptor: 'Low-cost intro; gets clients into the ecosystem', color: '#e8a8a8', bg: '#f7f7f7' },
   { key: 'subscription', label: 'Subscription',      descriptor: 'Recurring access; community, content, tools',     color: '#c96868', bg: '#f7f7f7' },
   { key: 'signature',    label: 'Signature Product', descriptor: 'Core transformation; their method in a box',      color: '#a03838', bg: '#f7f7f7' },
-  { key: 'hero',         label: 'Hero Product',      descriptor: "The flagship; the one they're known for",         color: '#6B1010', bg: '#f7f7f7' },
+  { key: 'hero',         label: 'Hero Product',      descriptor: "The flagship; the one they're known for",         color: '#3d0c0c', bg: '#f7f7f7' },
 ]
 
 const SERVICE_FORMATS = {
@@ -101,7 +101,7 @@ function RevenueSnapshot({ userId }) {
   }
 
   return (
-    <div className="rounded-2xl p-6" style={{ backgroundColor: BRAND }}>
+    <div className="p-6" style={{ borderRadius: "5px", backgroundColor: BRAND }}>
       {/* Header row */}
       <div className="flex items-start justify-between mb-5">
         <div>
@@ -187,7 +187,7 @@ function RevenueSnapshot({ userId }) {
                 <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
                   {label}
                 </p>
-                <p className="text-xl font-black text-white">{value}</p>
+                <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '22px', fontWeight: 300, fontStyle: 'italic', color: '#ffffff' }}>{value}</p>
               </div>
             ))}
           </div>
@@ -960,7 +960,7 @@ function LaunchOverview({ userId }) {
       </div>
 
       {/* ── Snapshot card ── */}
-      <div className="rounded-2xl p-6" style={{ backgroundColor: BRAND }}>
+      <div className="p-6" style={{ borderRadius: "5px", backgroundColor: BRAND }}>
         <div className="grid grid-cols-4">
           {[
             {
@@ -992,7 +992,7 @@ function LaunchOverview({ userId }) {
               <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
                 {label}
               </p>
-              <p className="text-lg font-black text-white truncate">{value}</p>
+              <p className="truncate" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '20px', fontWeight: 300, fontStyle: 'italic', color: '#ffffff' }}>{value}</p>
               <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{sub}</p>
             </div>
           ))}
@@ -1398,7 +1398,7 @@ export default function Cash() {
       <div>
         <div className="flex items-center gap-2 mb-1">
           <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#cdd5ae' }} />
-          <h1 className="text-2xl font-black text-gray-900">Cash</h1>
+          <h1 className="page-title">Cash</h1>
         </div>
         <p className="text-sm text-gray-500">
           Your offers, systems, and conversion processes: how visibility translates into consistent, scalable income.

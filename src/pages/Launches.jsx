@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 
 const LAUNCH_TYPES = [
   'Live Launch',
@@ -493,7 +493,7 @@ export default function Launches() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#cdd5ae' }} />
-            <h1 className="text-2xl font-black text-gray-900">Launches</h1>
+            <h1 className="page-title">Launches</h1>
           </div>
           <p className="text-sm text-gray-500">
             Track every launch, see what's working, and plan what's next.
@@ -519,24 +519,24 @@ export default function Launches() {
 
       {/* Error banner */}
       {loadError && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-700">
+        <div className="insight-box">
           {loadError}
         </div>
       )}
 
       {/* Snapshot card */}
-      <div className="rounded-2xl p-5 text-white" style={{ backgroundColor: BRAND }}>
+      <div className="p-5 text-white" style={{ borderRadius: '5px', backgroundColor: BRAND }}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 
           {/* Total launches */}
           <div className="text-center">
-            <p className="text-3xl font-black">{snapshot.total}</p>
+            <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '30px', fontWeight: 300, fontStyle: 'italic' }}>{snapshot.total}</p>
             <p className="text-xs text-white/60 mt-1">Total Launches</p>
           </div>
 
           {/* Revenue secured */}
           <div className="text-center">
-            <p className="text-2xl font-black truncate">{fmtAUD(snapshot.revenueSecured)}</p>
+            <p className="truncate" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '26px', fontWeight: 300, fontStyle: 'italic' }}>{fmtAUD(snapshot.revenueSecured)}</p>
             <p className="text-xs text-white/60 mt-1">Revenue Secured</p>
           </div>
 
@@ -579,6 +579,11 @@ export default function Launches() {
           </div>
 
         </div>
+      </div>
+
+      {/* CEO training box */}
+      <div style={{ backgroundColor: '#fdf8f5', border: '0.5px solid rgba(240,208,208,0.5)', borderLeft: '2px solid rgba(240,208,208,0.7)', borderRadius: '4px', padding: '13px 16px', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '11px', fontWeight: 300, color: '#3d0c0c' }}>
+        ✦ Use: CEO Cash Dashboard → <a href="https://tools.womanmasteryhqportal.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#3d0c0c', textDecoration: 'underline', textUnderlineOffset: '3px' }}>Launch Campaign</a>
       </div>
 
       {/* Main content card */}
@@ -785,7 +790,7 @@ export default function Launches() {
                                       key={label}
                                       className="bg-white rounded-xl p-3 border border-gray-100 text-center"
                                     >
-                                      <p className="text-xl font-black text-gray-900">{val}</p>
+                                      <p className="stat-number">{val}</p>
                                       <p className="text-xs text-gray-400 mt-0.5">{label}</p>
                                     </div>
                                   ))}
@@ -873,7 +878,7 @@ export default function Launches() {
               ['Goal Hit Rate',        insights.goalHitRate],
             ].map(([label, val]) => (
               <div key={label}>
-                <p className="text-xl font-black text-gray-900">{val}</p>
+                <p className="stat-number">{val}</p>
                 <p className="text-xs text-gray-500 mt-1">{label}</p>
               </div>
             ))}

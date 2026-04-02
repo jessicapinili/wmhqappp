@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 
 export default function Profile() {
   const { user, refreshProfile } = useAuth()
@@ -38,7 +38,7 @@ export default function Profile() {
   return (
     <div className="max-w-lg">
       <div className="mb-6">
-        <h1 className="text-2xl font-black text-gray-900">My Profile</h1>
+        <h1 className="page-title">My Profile</h1>
         <p className="text-sm text-gray-500 mt-1">Your profile details appear in the sidebar.</p>
       </div>
 

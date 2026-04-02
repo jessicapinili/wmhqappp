@@ -2,17 +2,18 @@ import React, { useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
-// Deeper rich burgundy — editorial, feminine
-const SIDEBAR_BG = '#2E0A0E'
-const AVATAR_BG = '#1A0508'
+const SIDEBAR_BG = '#3d0c0c'
+const AVATAR_BG = '#2a0808'
 
-// Phase colours (new)
 const PHASE_COLORS = {
   influence: '#c6def2',
   visibility: '#fcc799',
   cash: '#cdd5ae',
   identity: '#e7cee3',
 }
+
+const NAV_FONT = "'DM Sans', system-ui, sans-serif"
+const DISPLAY_FONT = "'Cormorant Garamond', Georgia, serif"
 
 function NavItem({ to, icon, label, dot, dotColor, external }) {
   if (external) {
@@ -21,15 +22,22 @@ function NavItem({ to, icon, label, dot, dotColor, external }) {
         href={to}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors mx-2 group"
-        style={{ color: 'rgba(255,255,255,0.55)' }}
-        onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.85)'}
-        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.55)'}
+        className="flex items-center gap-2.5 px-3 py-2 transition-colors mx-2"
+        style={{
+          color: 'rgba(245,236,224,0.38)',
+          fontFamily: NAV_FONT,
+          fontSize: '11.5px',
+          fontWeight: 300,
+          borderRadius: '2px',
+          borderLeft: '1.5px solid transparent',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.10)' }}
+        onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}
       >
-        {icon && <span className="text-sm opacity-70">{icon}</span>}
+        {icon && <span style={{ fontSize: '13px', opacity: 0.6 }}>{icon}</span>}
         {dot && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: dotColor }} />}
-        <span className="flex-1 font-medium">{label}</span>
-        <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px' }}>↗</span>
+        <span className="flex-1">{label}</span>
+        <span style={{ color: 'rgba(245,236,224,0.20)', fontSize: '10px' }}>↗</span>
       </a>
     )
   }
@@ -37,14 +45,18 @@ function NavItem({ to, icon, label, dot, dotColor, external }) {
   return (
     <NavLink
       to={to}
-      className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all mx-2"
+      className="flex items-center gap-2.5 px-3 py-2 transition-all mx-2"
       style={({ isActive }) => ({
-        color: isActive ? '#ffffff' : 'rgba(255,255,255,0.65)',
-        backgroundColor: isActive ? 'rgba(255, 240, 236, 0.13)' : 'transparent',
-        borderLeft: isActive ? '2px solid rgba(255,220,210,0.4)' : '2px solid transparent',
+        color: isActive ? '#ffffff' : 'rgba(245,236,224,0.38)',
+        backgroundColor: isActive ? 'rgba(0,0,0,0.20)' : 'transparent',
+        borderLeft: isActive ? '1.5px solid #f0d0d0' : '1.5px solid transparent',
+        fontFamily: NAV_FONT,
+        fontSize: '11.5px',
+        fontWeight: isActive ? 400 : 300,
+        borderRadius: '2px',
       })}
     >
-      {icon && <span className="text-sm">{icon}</span>}
+      {icon && <span style={{ fontSize: '13px' }}>{icon}</span>}
       {dot && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: dotColor }} />}
       <span>{label}</span>
     </NavLink>
@@ -70,11 +82,26 @@ export default function Sidebar() {
       style={{ backgroundColor: SIDEBAR_BG }}
     >
       {/* Header */}
-      <div className="px-5 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        <p className="font-black text-xs tracking-[0.18em] uppercase leading-tight" style={{ color: 'rgba(255,255,255,0.92)' }}>
+      <div className="px-5 pt-6 pb-4" style={{ borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+        <p style={{
+          fontFamily: DISPLAY_FONT,
+          fontSize: '14px',
+          fontWeight: 400,
+          color: '#f5ece0',
+          lineHeight: 1.2,
+          letterSpacing: '0.02em',
+        }}>
           WOMAN MASTERY HQ
         </p>
-        <p className="text-[10px] tracking-[0.22em] uppercase mt-1" style={{ color: 'rgba(255,255,255,0.32)' }}>
+        <p style={{
+          fontFamily: NAV_FONT,
+          fontSize: '7px',
+          fontWeight: 400,
+          letterSpacing: '0.3em',
+          textTransform: 'uppercase',
+          color: 'rgba(245,236,224,0.30)',
+          marginTop: '4px',
+        }}>
           PERSONAL PORTAL
         </p>
       </div>
@@ -83,9 +110,16 @@ export default function Sidebar() {
       <nav className="flex-1 py-3 space-y-0.5">
         <NavItem to="/dashboard" icon="⊞" label="Dashboard" />
 
-        {/* Phases section */}
+        {/* Phases section label */}
         <div className="px-5 pt-5 pb-1.5">
-          <p className="text-[9px] font-bold tracking-[0.22em] uppercase" style={{ color: 'rgba(255,255,255,0.28)' }}>
+          <p style={{
+            fontFamily: NAV_FONT,
+            fontSize: '7px',
+            fontWeight: 400,
+            letterSpacing: '0.3em',
+            textTransform: 'uppercase',
+            color: 'rgba(245,236,224,0.18)',
+          }}>
             PHASES
           </p>
         </div>
@@ -97,70 +131,52 @@ export default function Sidebar() {
         <div className="mx-2">
           <button
             onClick={() => { setCashOpen(!cashOpen); navigate('/cash') }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+            className="w-full flex items-center gap-2.5 px-3 py-2 transition-all"
             style={{
-              color: cashActive ? '#ffffff' : 'rgba(255,255,255,0.65)',
-              backgroundColor: cashActive ? 'rgba(255,240,236,0.13)' : 'transparent',
-              borderLeft: cashActive ? '2px solid rgba(255,220,210,0.4)' : '2px solid transparent',
+              color: cashActive ? '#ffffff' : 'rgba(245,236,224,0.38)',
+              backgroundColor: cashActive ? 'rgba(0,0,0,0.20)' : 'transparent',
+              borderLeft: cashActive ? '1.5px solid #f0d0d0' : '1.5px solid transparent',
+              fontFamily: NAV_FONT,
+              fontSize: '11.5px',
+              fontWeight: cashActive ? 400 : 300,
+              borderRadius: '2px',
             }}
           >
             <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: PHASE_COLORS.cash }} />
             <span className="flex-1 text-left">Cash</span>
-            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px' }}>{cashOpen ? '▾' : '▸'}</span>
+            <span style={{ color: 'rgba(245,236,224,0.25)', fontSize: '9px' }}>{cashOpen ? '▾' : '▸'}</span>
           </button>
           {cashOpen && (
-            <div className="ml-4 mt-0.5 space-y-0.5">
-              <NavLink
-                to="/cash/money-dashboard"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={({ isActive }) => ({
-                  color: isActive ? '#ffffff' : 'rgba(255,255,255,0.5)',
-                  backgroundColor: isActive ? 'rgba(255,240,236,0.1)' : 'transparent',
-                })}
-              >
-                <span style={{ color: 'rgba(255,255,255,0.2)' }}>└</span>
-                Money Dashboard
-              </NavLink>
-              <NavLink
-                to="/cash/revenue-events"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={({ isActive }) => ({
-                  color: isActive ? '#ffffff' : 'rgba(255,255,255,0.5)',
-                  backgroundColor: isActive ? 'rgba(255,240,236,0.1)' : 'transparent',
-                })}
-              >
-                <span style={{ color: 'rgba(255,255,255,0.2)' }}>└</span>
-                Revenue Events
-              </NavLink>
-              <NavLink
-                to="/cash/launches"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={({ isActive }) => ({
-                  color: isActive ? '#ffffff' : 'rgba(255,255,255,0.5)',
-                  backgroundColor: isActive ? 'rgba(255,240,236,0.1)' : 'transparent',
-                })}
-              >
-                <span style={{ color: 'rgba(255,255,255,0.2)' }}>└</span>
-                Launches
-              </NavLink>
-              <NavLink
-                to="/cash/offer-suite"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={({ isActive }) => ({
-                  color: isActive ? '#ffffff' : 'rgba(255,255,255,0.5)',
-                  backgroundColor: isActive ? 'rgba(255,240,236,0.1)' : 'transparent',
-                })}
-              >
-                <span style={{ color: 'rgba(255,255,255,0.2)' }}>└</span>
-                Offer Suite
-              </NavLink>
+            <div className="mt-0.5 space-y-0.5" style={{ marginLeft: '42px' }}>
+              {[
+                { to: '/cash/money-dashboard', label: 'Money Dashboard' },
+                { to: '/cash/revenue-events',  label: 'Revenue Events' },
+                { to: '/cash/launches',         label: 'Launches' },
+                { to: '/cash/offer-suite',      label: 'Offer Suite' },
+              ].map(({ to, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className="flex items-center px-3 py-1.5 transition-all"
+                  style={({ isActive }) => ({
+                    fontFamily: NAV_FONT,
+                    fontSize: '10px',
+                    fontWeight: 300,
+                    color: isActive ? '#ffffff' : 'rgba(245,236,224,0.40)',
+                    backgroundColor: isActive ? 'rgba(0,0,0,0.15)' : 'transparent',
+                    borderRadius: '2px',
+                  })}
+                >
+                  {label}
+                </NavLink>
+              ))}
             </div>
           )}
         </div>
 
         <NavItem to="/identity" dot dotColor={PHASE_COLORS.identity} label="Identity" />
 
-        <div className="mx-2 my-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }} />
+        <div className="mx-2 my-2" style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)' }} />
 
         <NavItem to="/weekly-review" icon="📋" label="Weekly Review" />
 
@@ -179,23 +195,48 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom profile section */}
-      <div className="p-4 space-y-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="p-4 space-y-3" style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-3">
           <div
-            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
             style={{
               backgroundColor: AVATAR_BG,
-              border: '1.5px solid rgba(255,255,255,0.15)',
-              color: 'rgba(255,255,255,0.85)',
+              border: '0.5px solid rgba(245,236,224,0.15)',
+              color: 'rgba(245,236,224,0.85)',
+              fontFamily: NAV_FONT,
+              fontSize: '11px',
+              fontWeight: 500,
+              letterSpacing: '0.05em',
             }}
           >
             {initials}
           </div>
           <div className="min-w-0">
-            <p className="font-bold text-xs uppercase truncate leading-tight" style={{ color: 'rgba(255,255,255,0.88)' }}>
+            <p style={{
+              fontFamily: DISPLAY_FONT,
+              fontSize: '13px',
+              fontStyle: 'italic',
+              fontWeight: 300,
+              color: 'rgba(245,236,224,0.6)',
+              lineHeight: 1.2,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
               {displayName}
             </p>
-            <p className="text-[10px] truncate mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>
+            <p style={{
+              fontFamily: NAV_FONT,
+              fontSize: '7px',
+              fontWeight: 400,
+              textTransform: 'uppercase',
+              letterSpacing: '0.2em',
+              color: 'rgba(245,236,224,0.22)',
+              marginTop: '2px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
               {displayTitle}
             </p>
           </div>
@@ -204,20 +245,34 @@ export default function Sidebar() {
         <div className="flex gap-2">
           <NavLink
             to="/profile"
-            className="flex-1 text-center text-xs py-1.5 rounded-lg font-medium transition-colors"
+            className="flex-1 text-center py-1.5 transition-colors"
             style={({ isActive }) => ({
-              color: isActive ? '#ffffff' : 'rgba(255,255,255,0.55)',
-              backgroundColor: isActive ? 'rgba(255,240,236,0.13)' : 'transparent',
+              fontFamily: NAV_FONT,
+              fontSize: '8px',
+              fontWeight: 400,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: isActive ? '#ffffff' : 'rgba(245,236,224,0.38)',
+              backgroundColor: isActive ? 'rgba(0,0,0,0.20)' : 'transparent',
+              borderRadius: '2px',
             })}
           >
             Profile
           </NavLink>
           <button
             onClick={handleLogout}
-            className="flex-1 text-center text-xs py-1.5 rounded-lg font-medium transition-colors"
-            style={{ color: 'rgba(255,255,255,0.55)' }}
-            onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.85)'}
-            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.55)'}
+            className="flex-1 text-center py-1.5 transition-colors"
+            style={{
+              fontFamily: NAV_FONT,
+              fontSize: '8px',
+              fontWeight: 400,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'rgba(245,236,224,0.38)',
+              borderRadius: '2px',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'rgba(245,236,224,0.75)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(245,236,224,0.38)' }}
           >
             Logout
           </button>

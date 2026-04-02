@@ -9,7 +9,7 @@ import MoneyDashboardSetup from './MoneyDashboardSetup'
 import MoneyDashboardWeekly from './MoneyDashboardWeekly'
 import MoneyDashboardTrends from './MoneyDashboardTrends'
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 const CASH_DOT = '#cdd5ae'
 
 // ─── Change model confirmation modal ─────────────────────────────────────────
@@ -19,7 +19,7 @@ function ChangeModelModal({ currentModel, onConfirm, onCancel }) {
   return (
     <div className="modal-overlay">
       <div className="modal-box p-6 max-w-md">
-        <h2 className="text-xl font-black text-gray-900 mb-2">Change business model?</h2>
+        <h2 className="section-title mb-2">Change business model?</h2>
         <p className="text-sm text-gray-600 mb-6 leading-relaxed">
           Switching to <strong>{other}</strong> will reset your Money Dashboard history because your metrics, inputs, and formulas will change. This cannot be undone.
         </p>
@@ -160,7 +160,7 @@ export default function MoneyDashboard() {
             </p>
             <div className="flex items-center gap-2 mb-1">
               <span className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: CASH_DOT }} />
-              <h1 className="text-2xl font-black text-gray-900">Money Dashboard</h1>
+              <h1 className="page-title">Money Dashboard</h1>
             </div>
             <p className="text-sm text-gray-500">Track the financial health of your business based on how you actually sell.</p>
           </div>

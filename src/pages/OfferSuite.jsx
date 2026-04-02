@@ -4,20 +4,20 @@ import { DeleteIcon } from '../lib/icons'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 
 const SERVICE_TIERS = [
   { key: 'free', label: 'Free',        descriptor: 'Lead magnets, freebies, discovery calls',   color: '#e8a8a8', bg: '#f7f7f7' },
   { key: 'low',  label: 'Low Ticket',  descriptor: 'Workshops, templates, mini sessions',        color: '#c96868', bg: '#f7f7f7' },
   { key: 'mid',  label: 'Mid Ticket',  descriptor: 'Group programs, courses, memberships',       color: '#a03838', bg: '#f7f7f7' },
-  { key: 'high', label: 'High Ticket', descriptor: '1:1 coaching, VIP, premium containers',     color: '#6B1010', bg: '#f7f7f7' },
+  { key: 'high', label: 'High Ticket', descriptor: '1:1 coaching, VIP, premium containers',     color: '#3d0c0c', bg: '#f7f7f7' },
 ]
 
 const PRODUCT_TIERS = [
   { key: 'entry',        label: 'Entry Product',     descriptor: 'Low-cost intro; gets clients into the ecosystem', color: '#e8a8a8', bg: '#f7f7f7' },
   { key: 'subscription', label: 'Subscription',      descriptor: 'Recurring access; community, content, tools',    color: '#c96868', bg: '#f7f7f7' },
   { key: 'signature',    label: 'Signature Product', descriptor: 'Core transformation; their method in a box',     color: '#a03838', bg: '#f7f7f7' },
-  { key: 'hero',         label: 'Hero Product',      descriptor: "The flagship; the one they're known for",        color: '#6B1010', bg: '#f7f7f7' },
+  { key: 'hero',         label: 'Hero Product',      descriptor: "The flagship; the one they're known for",        color: '#3d0c0c', bg: '#f7f7f7' },
 ]
 
 const SERVICE_FORMATS = {
@@ -413,7 +413,7 @@ export default function OfferSuite() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#cdd5ae' }} />
-            <h1 className="text-2xl font-black text-gray-900">Product & Service Suite</h1>
+            <h1 className="page-title">Product & Service Suite</h1>
           </div>
           <p className="text-sm text-gray-500">
             Map your full offer stack across services and products.
@@ -444,11 +444,11 @@ export default function OfferSuite() {
 
       {/* Year reset notice */}
       {yearNotice && (
-        <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-          <p className="text-sm text-amber-800">{yearNotice}</p>
+        <div className="insight-box flex items-center justify-between gap-3">
+          <p>{yearNotice}</p>
           <button
             onClick={() => setYearNotice(null)}
-            className="text-amber-400 hover:text-amber-600 text-xl leading-none flex-shrink-0"
+            className="flex-shrink-0 opacity-40 hover:opacity-70 text-lg leading-none"
           >
             ×
           </button>

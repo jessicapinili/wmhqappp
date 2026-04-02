@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { EditIcon, DeleteIcon } from '../lib/icons'
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 
 const FEARS = [
   'Fear you\'ll be abandoned or outgrow people you love',
@@ -199,7 +199,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
   const charge = data.step7.charge
 
   return (
-    <div className="bg-white rounded-2xl" style={{ border: '1px solid var(--card-border)' }}>
+    <div className="card" style={{ padding: 0 }}>
 
       {/* Header */}
       <div className="p-6 border-b border-gray-100">
@@ -225,7 +225,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
 
         {step === 1 && (
           <div>
-            <h3 className="font-black text-gray-900 text-lg mb-1">The Undercurrent Theme</h3>
+            <h3 className="section-title mb-1">The Undercurrent Theme</h3>
             <p className="text-sm text-gray-500 mb-5">Choose the main fear or limitation that's currently running the show.</p>
             <label className="label">Select Your Primary Fear</label>
             <select
@@ -246,7 +246,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
 
         {step === 2 && (
           <div>
-            <h3 className="font-black text-gray-900 text-lg mb-1">The First Experience</h3>
+            <h3 className="section-title mb-1">The First Experience</h3>
             <p className="text-sm text-gray-500 mb-5">Choose what status your first significant memory around this fear holds.</p>
             <div className="grid grid-cols-2 gap-4">
               {[
@@ -294,9 +294,9 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
           <div>
             {data.step2.branchType === 'infatuation' ? (
               <>
-                <h3 className="font-black text-gray-900 text-lg mb-1">Future Fantasy</h3>
+                <h3 className="section-title mb-1">Future Fantasy</h3>
                 <p className="text-sm text-gray-500 mb-4">How did your mind fast-forward this experience into an idealised future?</p>
-                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 mb-4 text-sm text-amber-800">
+                <div className="insight-box mb-4">
                   <p className="font-bold mb-2">Future – Fantasy / Desire</p>
                   <p>• Pleasure-seeking, naivety, giddiness</p>
                   <p>• "I'll go over and above," "I love you"</p>
@@ -313,7 +313,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
               </>
             ) : (
               <>
-                <h3 className="font-black text-gray-900 text-lg mb-1">Future Fear</h3>
+                <h3 className="section-title mb-1">Future Fear</h3>
                 <p className="text-sm text-gray-500 mb-4">How did your mind project this experience into a feared future?</p>
                 <div className="p-4 rounded-xl mb-4 text-sm border" style={{ backgroundColor: '#FFF8F8', borderColor: BRAND + '40' }}>
                   <p className="font-bold mb-2">Future – Fear / Avoidance / Scepticism</p>
@@ -336,7 +336,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
 
         {step === 4 && (
           <div>
-            <h3 className="font-black text-gray-900 text-lg mb-1">How This Pattern Shows Up Now</h3>
+            <h3 className="section-title mb-1">How This Pattern Shows Up Now</h3>
             <p className="text-sm text-gray-500 mb-5">Map how this fear plays out in your present-day life and business.</p>
 
             <div className="mb-5">
@@ -363,7 +363,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
 
         {step === 5 && (
           <div>
-            <h3 className="font-black text-gray-900 text-lg mb-1">Identity / Self-Concept</h3>
+            <h3 className="section-title mb-1">Identity / Self-Concept</h3>
             <p className="text-sm text-gray-500 mb-5">Map the transition from your old identity through the in-between to your new identity.</p>
             <div className="grid grid-cols-3 gap-4">
               {[
@@ -408,7 +408,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
 
         {step === 6 && (
           <div>
-            <h3 className="font-black text-gray-900 text-lg mb-1">Your Capacity to Hold More</h3>
+            <h3 className="section-title mb-1">Your Capacity to Hold More</h3>
             <p className="text-sm text-gray-500 mb-5">Explore your nervous system's tolerance for change, growth, and expansion.</p>
             <div className="space-y-4">
               {[
@@ -429,7 +429,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
 
         {step === 7 && (
           <div>
-            <h3 className="font-black text-gray-900 text-lg mb-1">Your Subconscious Identity Review</h3>
+            <h3 className="section-title mb-1">Your Subconscious Identity Review</h3>
             <p className="text-sm text-gray-500 mb-5">A complete overview of your mapping session. Set your emotional charge.</p>
 
             {/* Charge slider */}
@@ -445,14 +445,14 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
               <div className="flex justify-between text-xs text-gray-400 mb-2">
                 <span>0 — Neutral</span><span>5</span><span>10 — Extremely Charged</span>
               </div>
-              <p className="text-3xl font-black text-center" style={{ color: '#8B5CF6' }}>{charge}/10</p>
+              <p className="text-center" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '34px', fontWeight: 300, fontStyle: 'italic', color: '#8B5CF6' }}>{charge}/10</p>
 
               {charge <= 2 ? (
-                <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-700 font-medium">
+                <div className="insight-box mt-3">
                   ✓ This emotional charge is under 2/10. You can now mark this as neutralised.
                 </div>
               ) : (
-                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-medium">
+                <div className="insight-box mt-3">
                   ✗ Your emotional charge is over 2/10. You cannot neutralise this pattern yet.
                 </div>
               )}
@@ -591,7 +591,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
             onClick={handleNext}
             disabled={!canNext()}
             className="py-1.5 px-4 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-40"
-            style={{ backgroundColor: '#6b1010' }}
+            style={{ backgroundColor: '#3d0c0c' }}
           >
             Next →
           </button>
@@ -609,7 +609,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
             <button
               onClick={handleSaveExit}
               className="py-1.5 px-3.5 rounded-lg text-sm font-semibold text-white"
-              style={{ backgroundColor: '#6b1010' }}
+              style={{ backgroundColor: '#3d0c0c' }}
             >
               Save & Return
             </button>
@@ -771,7 +771,7 @@ export default function Identity() {
       <div>
         <div className="flex items-center gap-2 mb-1">
           <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#e7cee3' }} />
-          <h1 className="text-2xl font-black text-gray-900">Identity</h1>
+          <h1 className="page-title">Identity</h1>
         </div>
         <p className="text-sm text-gray-500">
           The inner work: the mindset, regulation, and capacity that allow you to sustainably hold and expand your success.

@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { EditIcon, DeleteIcon } from '../lib/icons'
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 
 /* ─── Generic single-item save/display card ─── */
 function SingleCard({ value, onEdit, onDelete, renderContent }) {
@@ -507,7 +507,7 @@ export default function Influence() {
       <div className="mb-2">
         <div className="flex items-center gap-2 mb-1">
           <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#c6def2' }} />
-          <h1 className="text-2xl font-black text-gray-900">Influence</h1>
+          <h1 className="page-title">Influence</h1>
         </div>
         <p className="text-sm text-gray-500">
           Defining your brand voice, ethos, and positioning: who you are, what you stand for, and the transformation you help create.

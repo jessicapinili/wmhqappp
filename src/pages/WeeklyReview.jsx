@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import { getWeekKey, getWeekBounds } from '../lib/utils'
 import html2canvas from 'html2canvas'
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 const PILLAR_COLORS = {
   Influence: '#c6def2',
   Visibility: '#fcc799',
@@ -45,7 +45,7 @@ function PillarRatingBox({ pillar, value, onChange, disabled }) {
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
           <p className="text-xs font-black uppercase tracking-wide text-gray-700">{pillar}</p>
         </div>
-        <p className="text-3xl font-black" style={{ color: value ? color : '#D1D5DB' }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '32px', fontWeight: 300, fontStyle: 'italic', color: value ? color : '#D1D5DB' }}>
           {value !== null ? `${value}/10` : '—'}
         </p>
       </button>
@@ -198,7 +198,7 @@ export default function WeeklyReview() {
     return (
       <div className="max-w-lg mx-auto text-center py-12">
         <div className="text-5xl mb-4">📋</div>
-        <h1 className="font-black text-2xl text-gray-900 mb-1">WMHQ Weekly Review</h1>
+        <h1 className="page-title mb-1">WMHQ Weekly Review</h1>
         <p className="text-gray-500 mb-6">
           Week of {monday} to {sunday}, {year}
         </p>
@@ -215,7 +215,7 @@ export default function WeeklyReview() {
       {/* Header — Download only */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-black text-2xl text-gray-900">Weekly Review</h1>
+          <h1 className="page-title">Weekly Review</h1>
           <p className="text-sm text-gray-500">Week of {monday} – {sunday}, {year}</p>
           <p className="text-xs text-gray-400 mt-0.5">
             {isCompleted ? '✓ Review completed and locked' : 'Autosaving as you type...'}
@@ -332,14 +332,14 @@ export default function WeeklyReview() {
       {/* Bottom action row */}
       <div className="flex justify-end pb-8">
         {isCompleted ? (
-          <div className="py-1.5 px-4 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200">
+          <div className="insight-box" style={{ padding: '6px 16px' }}>
             ✓ Review Completed
           </div>
         ) : (
           <button
             onClick={() => setShowDoneModal(true)}
             className="py-1.5 px-4 rounded-lg text-sm font-semibold text-white"
-            style={{ backgroundColor: '#6b1010' }}
+            style={{ backgroundColor: '#3d0c0c' }}
           >
             Review Done
           </button>
@@ -356,7 +356,7 @@ export default function WeeklyReview() {
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowDoneModal(false)} className="flex-1 py-1.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600">Cancel</button>
-              <button onClick={handleConfirmDone} className="flex-1 py-1.5 rounded-lg text-sm font-semibold text-white" style={{ backgroundColor: '#6b1010' }}>Yes, I'm done</button>
+              <button onClick={handleConfirmDone} className="flex-1 py-1.5 rounded-lg text-sm font-semibold text-white" style={{ backgroundColor: '#3d0c0c' }}>Yes, I'm done</button>
             </div>
           </div>
         </div>

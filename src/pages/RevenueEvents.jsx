@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { getQuarterFromMonth } from '../lib/utils'
 import { EditIcon, DeleteIcon } from '../lib/icons'
 
-const BRAND = '#6B1010'
+const BRAND = '#3d0c0c'
 const ACTIVE_STATUSES = ['Planning', 'Warming', 'Live', 'Evergreen']
 
 const EVENT_TYPES = [
@@ -489,7 +489,7 @@ export default function RevenueEvents() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#cdd5ae' }} />
-            <h1 className="text-2xl font-black text-gray-900">Revenue Events</h1>
+            <h1 className="page-title">Revenue Events</h1>
           </div>
           <p className="text-sm text-gray-500">Plan and track your revenue-driving launches in one clear snapshot.</p>
         </div>
@@ -512,7 +512,7 @@ export default function RevenueEvents() {
       </div>
 
       {/* ── Snapshot card ── */}
-      <div className="rounded-2xl p-5 text-white" style={{ backgroundColor: BRAND }}>
+      <div className="p-5 text-white" style={{ borderRadius: '5px', backgroundColor: BRAND }}>
         {/* Year / Quarter toggle inside snapshot */}
         <div className="flex justify-end mb-4">
           <div className="flex bg-white/10 rounded-lg p-0.5 gap-0.5 flex-wrap">
@@ -555,7 +555,7 @@ export default function RevenueEvents() {
             ['Next Launch',        nextLaunch?.offer_name || '—'],
           ].map(([label, val]) => (
             <div key={label} className="text-center">
-              <p className="text-2xl font-black truncate">{val}</p>
+              <p className="truncate" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '26px', fontWeight: 300, fontStyle: 'italic' }}>{val}</p>
               <p className="text-xs text-white/60 mt-1">{label}</p>
             </div>
           ))}

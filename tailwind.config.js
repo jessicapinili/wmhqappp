@@ -5,9 +5,9 @@ export default {
     extend: {
       colors: {
         brand: {
-          DEFAULT: '#6B1010',
-          light: '#8B1515',
-          dark: '#4A0B0B',
+          DEFAULT: '#3d0c0c',
+          light: '#5c1414',
+          dark: '#2a0808',
         },
         influence: '#3B82F6',
         visibility: '#F59E0B',
@@ -16,7 +16,8 @@ export default {
         cream: '#FDF6EE',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
       },
     },
   },
