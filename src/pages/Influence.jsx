@@ -463,7 +463,7 @@ function BuyerPsychology({ userId }) {
           onEdit={() => { setForm({ pains: saved.pains||'', desires: saved.desires||'' }); setEditing(true) }}
           onDelete={handleDelete}
           renderContent={v => (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-wider text-red-600 mb-2">Buyer Pains</p>
                 <p className="text-sm text-gray-700 whitespace-pre-wrap">{v.pains}</p>

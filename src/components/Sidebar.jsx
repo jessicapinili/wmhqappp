@@ -15,7 +15,7 @@ const PHASE_COLORS = {
 const NAV_FONT = "'DM Sans', system-ui, sans-serif"
 const DISPLAY_FONT = "'Cormorant Garamond', Georgia, serif"
 
-function NavItem({ to, icon, label, dot, dotColor, external }) {
+function NavItem({ to, icon, label, dot, dotColor, external, onClose }) {
   if (external) {
     return (
       <a
@@ -45,6 +45,7 @@ function NavItem({ to, icon, label, dot, dotColor, external }) {
   return (
     <NavLink
       to={to}
+      onClick={onClose}
       className="flex items-center gap-2.5 px-3 py-2 transition-all mx-2"
       style={({ isActive }) => ({
         color: isActive ? '#ffffff' : 'rgba(245,236,224,0.38)',
@@ -63,7 +64,7 @@ function NavItem({ to, icon, label, dot, dotColor, external }) {
   )
 }
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }) {
   const { displayName, displayTitle, initials, logout } = useAuth()
   const [cashOpen, setCashOpen] = useState(false)
   const navigate = useNavigate()
@@ -108,7 +109,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 py-3 space-y-0.5">
-        <NavItem to="/dashboard" icon="⊞" label="Dashboard" />
+        <NavItem to="/dashboard" icon="⊞" label="Dashboard" onClose={onClose} />
 
         {/* Phases section label */}
         <div className="px-5 pt-5 pb-1.5">
@@ -124,8 +125,8 @@ export default function Sidebar() {
           </p>
         </div>
 
-        <NavItem to="/influence" dot dotColor={PHASE_COLORS.influence} label="Influence" />
-        <NavItem to="/visibility" dot dotColor={PHASE_COLORS.visibility} label="Visibility" />
+        <NavItem to="/influence" dot dotColor={PHASE_COLORS.influence} label="Influence" onClose={onClose} />
+        <NavItem to="/visibility" dot dotColor={PHASE_COLORS.visibility} label="Visibility" onClose={onClose} />
 
         {/* Cash with submenu */}
         <div className="mx-2">
@@ -157,6 +158,7 @@ export default function Sidebar() {
                 <NavLink
                   key={to}
                   to={to}
+                  onClick={onClose}
                   className="flex items-center px-3 py-1.5 transition-all"
                   style={({ isActive }) => ({
                     fontFamily: NAV_FONT,
@@ -174,11 +176,11 @@ export default function Sidebar() {
           )}
         </div>
 
-        <NavItem to="/identity" dot dotColor={PHASE_COLORS.identity} label="Identity" />
+        <NavItem to="/identity" dot dotColor={PHASE_COLORS.identity} label="Identity" onClose={onClose} />
 
         <div className="mx-2 my-2" style={{ borderTop: '0.5px solid rgba(255,255,255,0.06)' }} />
 
-        <NavItem to="/weekly-review" icon="📋" label="Weekly Review" />
+        <NavItem to="/weekly-review" icon="📋" label="Weekly Review" onClose={onClose} />
 
         <NavItem
           to="https://tools.womanmasteryhqportal.com"

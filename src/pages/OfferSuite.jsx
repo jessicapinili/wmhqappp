@@ -154,7 +154,7 @@ function AddForm({ tierKey, isProduct, onSave, onCancel }) {
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* Price */}
         <div>
           <label className="label">Price</label>

@@ -365,7 +365,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
           <div>
             <h3 className="section-title mb-1">Identity / Self-Concept</h3>
             <p className="text-sm text-gray-500 mb-5">Map the transition from your old identity through the in-between to your new identity.</p>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
                 {
                   col: 'old', label: 'Old Identity', bg: '#FAFAF9', border: '#E5E7EB',
@@ -529,7 +529,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
               {data.step5.oldQ1 && (
                 <div className="card">
                   <p className="font-bold text-xs text-gray-500 uppercase tracking-wide mb-3">Identity Map</p>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {[
                       { label: 'Old Identity', fields: [['oldQ1', 'Patterns still showing up'], ['oldQ2', 'Beliefs held'], ['oldQ3', 'Behaviours']] },
                       { label: 'In Between', fields: [['inQ1', 'Conflict & splits'], ['inQ2', 'New beliefs practising'], ['inQ3', 'Body/NS response']] },
@@ -801,7 +801,7 @@ export default function Identity() {
 
       {/* Two-column patterns grid */}
       {!loading && patterns.length > 0 && (
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
           {/* Neutralised Patterns */}
           <div>

@@ -608,7 +608,7 @@ function CapacityCheckin() {
       ) : (
         <div>
           {/* Section A: Mode selector */}
-          <div className="grid grid-cols-4 gap-2 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
             {CAPACITY_MODES.map(m => {
               const isSelected = mode === m.key
               return (
@@ -1233,7 +1233,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Object.entries(SEASONS).map(([key, s]) => {
             const isSelected = season === key
             // Disable all non-selected cards while locked, loading, or mid-save.
@@ -1440,7 +1440,7 @@ export default function Dashboard() {
           })}
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {COLS.map(col => {
             const prompts = getDailyPrompts(checklistTab, col, dayOfYear, currentYear)
             return (

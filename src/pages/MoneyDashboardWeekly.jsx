@@ -211,7 +211,7 @@ function ProductConstants({ constants, onChange }) {
     <div className="space-y-4">
       <div>
         <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">Per-Order Variable Costs</p>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <CurrencyInput label="Packaging Cost / Unit" value={constants.packaging_cost_per_unit} onChange={v => onChange('packaging_cost_per_unit', v)} />
           <CurrencyInput label="Fulfilment Cost / Unit" value={constants.fulfillment_cost_per_unit} onChange={v => onChange('fulfillment_cost_per_unit', v)} />
           <NumberInput label="Transaction Fee %" value={constants.transaction_fee_pct} onChange={v => onChange('transaction_fee_pct', v)} placeholder="2" helper="e.g. 2 for 2%" />
@@ -488,7 +488,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
       <div className="card-section">
         <p className="section-title mb-0.5">Inventory & Cash Flow</p>
         <p className="section-subtitle">How your stock moves and where cash sits.</p>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <CurrencyInput label="Opening Inventory Value" value={form.opening_inventory_value} onChange={v => setField('opening_inventory_value', v)} />
           <CurrencyInput label="Closing Inventory Value" value={form.closing_inventory_value} onChange={v => setField('closing_inventory_value', v)} />
           <CurrencyInput label="Inventory Purchased" value={form.inventory_purchased} onChange={v => setField('inventory_purchased', v)} />
@@ -633,7 +633,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
       </div>
 
       {isProduct ? (
-        <div className="grid grid-cols-3 gap-3 mt-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
           <SnapshotCard label="Revenue" value={fmtC(Math.round(snapshot.revenue))} metricKey="revenue" metricValue={snapshot.revenue} explanation={EXPLANATIONS.revenue} simpleMode={simpleMode} />
           <SnapshotCard label="Gross Profit" value={fmtC(Math.round(snapshot.grossProfit))} explanation={EXPLANATIONS.grossProfit} simpleMode={simpleMode} />
           <SnapshotCard label="Gross Margin" value={fmt.pct(snapshot.grossMargin)} metricKey="grossMargin" metricValue={snapshot.grossMargin} explanation={EXPLANATIONS.grossMargin} simpleMode={simpleMode} />
@@ -642,7 +642,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
           <SnapshotCard label="Inventory Pressure" value={snapshot.inventoryTurnover !== null ? fmt.x(snapshot.inventoryTurnover) : '—'} metricKey="inventoryTurnover" metricValue={snapshot.inventoryTurnover} explanation={EXPLANATIONS.inventoryTurnover} simpleMode={simpleMode} />
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-3 mt-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
           <SnapshotCard label="Revenue" value={fmtC(Math.round(snapshot.revenue))} metricKey="revenue" metricValue={snapshot.revenue} explanation={EXPLANATIONS.revenue} simpleMode={simpleMode} />
           <SnapshotCard label="Gross Profit" value={fmtC(Math.round(snapshot.grossProfit))} explanation={EXPLANATIONS.grossProfit} simpleMode={simpleMode} />
           <SnapshotCard label="Gross Margin" value={fmt.pct(snapshot.grossMargin)} metricKey="grossMargin" metricValue={snapshot.grossMargin} explanation={EXPLANATIONS.grossMargin} simpleMode={simpleMode} />

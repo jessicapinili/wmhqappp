@@ -176,7 +176,7 @@ function RevenueSnapshot({ userId }) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-4 gap-5 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mb-5">
             {[
               { label: 'Current MRR',  value: fmt(currentMrr) },
               { label: 'ILN (Monthly)', value: fmt(ilnTarget) },
@@ -961,7 +961,7 @@ function LaunchOverview({ userId }) {
 
       {/* ── Snapshot card ── */}
       <div className="p-6" style={{ borderRadius: "5px", backgroundColor: BRAND }}>
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4">
           {[
             {
               label: 'Total Launches',
@@ -1051,7 +1051,7 @@ function LaunchOverview({ userId }) {
               <input className="input-field" type="date" value={addForm.end_date} onChange={e => setAddForm(p => ({ ...p, end_date: e.target.value }))} />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="label">Revenue Goal (AUD)</label>
               <input className="input-field" type="number" value={addForm.revenue_goal} onChange={e => setAddForm(p => ({ ...p, revenue_goal: e.target.value }))} placeholder="0" />
@@ -1152,7 +1152,7 @@ function LaunchOverview({ userId }) {
                         <input className="input-field" type="date" value={editForm.end_date || ''} onChange={e => setEditForm(p => ({ ...p, end_date: e.target.value }))} />
                       </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
                         <label className="label">Revenue Achieved</label>
                         <input className="input-field" type="number" value={editForm.revenue_achieved || ''} onChange={e => setEditForm(p => ({ ...p, revenue_achieved: e.target.value }))} placeholder="0" />
@@ -1288,7 +1288,7 @@ function LaunchOverview({ userId }) {
                     style={{ backgroundColor: '#fdf8f8', borderTop: '1px solid var(--card-border)' }}
                   >
                     {/* Stats row */}
-                    <div className="grid grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       {[
                         { label: 'Revenue Secured', value: revenue > 0 ? fmt(revenue) : '$—' },
                         { label: 'Goal',            value: goal > 0 ? fmt(goal) : '$—' },
@@ -1369,7 +1369,7 @@ function LaunchOverview({ userId }) {
           style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
         >
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Year Insights</p>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               { label: 'Avg revenue / launch',   value: fmt(avgRevPerLaunch) },
               { label: 'Avg enrolments / launch', value: avgEnrolPerLaunch > 0 ? Math.round(avgEnrolPerLaunch).toString() : '—' },

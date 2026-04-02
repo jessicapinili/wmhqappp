@@ -51,7 +51,7 @@ function PillarRatingBox({ pillar, value, onChange, disabled }) {
       </button>
       {showPad && !disabled && (
         <div className="absolute top-full left-0 mt-2 bg-[#f7f7f7] border border-gray-200 rounded-xl shadow-lg p-3 z-10 w-full">
-          <div className="grid grid-cols-5 gap-1.5">
+          <div className="grid grid-cols-5 gap-1">
             {[1,2,3,4,5,6,7,8,9,10].map(n => (
               <button
                 key={n}
@@ -250,7 +250,7 @@ export default function WeeklyReview() {
         <p className="text-xs text-gray-400 mb-4">
           {isCompleted ? 'Completed.' : 'Click a pillar to rate this week.'}
         </p>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {PILLARS.map(p => (
             <PillarRatingBox key={p} pillar={p} value={review.pillar_ratings?.[p]} onChange={v => setPillar(p, v)} disabled={isCompleted} />
           ))}
@@ -313,7 +313,7 @@ export default function WeeklyReview() {
       {/* Nervous System Check-In */}
       <div className="card-section">
         <h2 className="section-title">Nervous System Check-In</h2>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {NS_OPTIONS.map(opt => (
             <button
               key={opt.key}

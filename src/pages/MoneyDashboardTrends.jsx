@@ -396,7 +396,7 @@ export default function MoneyDashboardTrends({ settings }) {
       <div className="card-section">
         <p className="section-title mb-1">Period Comparisons</p>
         <p className="section-subtitle">Current period vs previous, based on your saved data.</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <ComparisonCard title="This Week vs Last Week" metrics={comparisons.weekly} />
           <ComparisonCard title="This Month vs Last Month" metrics={comparisons.monthly} />
           <ComparisonCard title="This Quarter vs Last Quarter" metrics={comparisons.quarterly} />

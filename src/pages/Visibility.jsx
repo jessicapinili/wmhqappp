@@ -111,7 +111,7 @@ function ContentSystem({ userId }) {
       <div className="rounded-lg px-3 py-2.5 mb-4 text-sm font-medium" style={{ backgroundColor: '#FFF8F8', border: '1px solid rgba(61,12,12,0.18)', color: '#3d0c0c' }}>
         ✦ Watch: CEO Visibility Training → Creating Content Pillars
       </div>
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {columns.map((col, idx) => {
           const isMyStory = idx === 3
           const colDef = COLUMN_DEFAULTS[idx]
@@ -369,7 +369,7 @@ function FunnelView({ userId }) {
     <div>
       {WEEKLY_RESET_NOTICE}
 
-      <div className="grid grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         {FUNNEL_CARDS.map(f => (
           <div key={f.stage} className="rounded-xl p-4 text-center border" style={{ backgroundColor: f.bg, borderColor: f.color + '40' }}>
             <div className="w-3 h-3 rounded-full mx-auto mb-2" style={{ backgroundColor: f.dot }} />
