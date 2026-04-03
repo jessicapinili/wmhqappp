@@ -1195,6 +1195,11 @@ export default function Dashboard() {
         </a>
       </div>
 
+      {/* Portal video notice */}
+      <div style={{ backgroundColor: '#fdf8f5', border: '0.5px solid rgba(240,208,208,0.5)', borderLeft: '2px solid rgba(240,208,208,0.7)', borderRadius: '4px', padding: '13px 16px', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '11px', fontWeight: 300, color: '#3d0c0c' }}>
+        ✦ Please watch the WMHQ Personal Portal Video inside the WMHQ Vault
+      </div>
+
       {/* Insight of the Day */}
       <div className="card-section" style={{ borderLeft: `3px solid ${BRAND}` }}>
         <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: BRAND }}>
