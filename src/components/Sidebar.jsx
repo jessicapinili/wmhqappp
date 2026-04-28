@@ -229,7 +229,7 @@ export default function Sidebar({ onClose }) {
           external
         />
         <NavItem
-          to="https://wmhq-wheretostart.base44.app/"
+          to="https://jmpinili.notion.site/wmhq-onboarding-dashboard?source=copy_link"
           icon="🧭"
           label="Where Do I Start?"
           external
