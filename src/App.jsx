@@ -12,6 +12,7 @@ import RevenueEvents from './pages/RevenueEvents'
 import Launches from './pages/Launches'
 import OfferSuite from './pages/OfferSuite'
 import Identity from './pages/Identity'
+import ClearYourFears from './pages/ClearTheFears'
 import WeeklyReview from './pages/WeeklyReview'
 import Profile from './pages/Profile'
 
@@ -57,6 +58,7 @@ function AppRoutes() {
         <Route path="cash/launches" element={<Launches />} />
         <Route path="cash/offer-suite" element={<OfferSuite />} />
         <Route path="identity" element={<Identity />} />
+        <Route path="identity/clear-your-fears" element={<ClearYourFears />} />
         <Route path="weekly-review" element={<WeeklyReview />} />
         <Route path="profile" element={<Profile />} />
       </Route>
