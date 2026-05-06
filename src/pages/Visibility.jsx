@@ -154,7 +154,7 @@ function ContentSystem({ userId }) {
 }
 
 /* ══════════════════ CONTENT TRACKER ══════════════════ */
-const PLATFORMS = ['Instagram', 'TikTok/YouTube', 'Email']
+const PLATFORMS = ['Instagram', 'Instagram Stories', 'TikTok', 'TikTok Stories', 'YouTube', 'YouTube Shorts', 'Podcast', 'Email', 'Substack', 'Threads']
 const FUNNEL_STAGES = ['Attract', 'Nurture', 'Position', 'Convert']
 const ACTIONS = ['DM/Enquiry', 'Link Click', 'Sale/Sign Up', 'No Direct Action']
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
