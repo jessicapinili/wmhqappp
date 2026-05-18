@@ -1,8 +1,17 @@
 import { useState, useEffect, useMemo } from 'react'
-import { format, parseISO, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, subQuarters, subYears, subWeeks, startOfWeek, endOfWeek } from 'date-fns'
+import {
+  format, parseISO,
+  startOfMonth, endOfMonth,
+  startOfQuarter, endOfQuarter,
+  startOfYear, endOfYear,
+  startOfWeek, endOfWeek,
+  subMonths, subQuarters, subYears, subWeeks,
+  eachMonthOfInterval, eachWeekOfInterval,
+} from 'date-fns'
 import {
   getMoneyDashboardEntries,
   getMoneyDashboardConstants,
+  getBaselineFixedCosts,
   getWeekDates,
 } from '../lib/moneyDashboardService'
 import {
@@ -17,9 +26,10 @@ import {
   fmt,
 } from '../lib/moneyDashboardCalc'
 
-const BRAND = '#3d0c0c'
+const BRAND = '#6B1020'
+const BEIGE = '#FAF7F2'
 
-// ─── Comparison helpers ───────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmtDate = (d) => format(d, 'yyyy-MM-dd')
 
@@ -34,211 +44,235 @@ const getEntriesInRange = (entries, from, to) => {
 const sumMetric = (entries, key) =>
   entries.reduce((s, e) => s + Number(e.entry_json?.[key] || 0), 0)
 
-const avgMetric = (entries, key) => {
-  if (!entries.length) return 0
-  return entries.reduce((s, e) => s + Number(e.entry_json?.[key] || 0), 0) / entries.length
-}
-
 const pctChange = (curr, prev) => {
   if (!prev || prev === 0) return null
   return (curr - prev) / prev
 }
 
-// ─── Comparison card ──────────────────────────────────────────────────────────
+const n = (v) => Number(v) || 0
 
-function ComparisonCard({ title, metrics, period }) {
-  return (
-    <div className="rounded-xl p-4" style={{ backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400 mb-3">{title}</p>
-      <div className="space-y-2">
-        {metrics.map(({ label, current, change }) => (
-          <div key={label} className="flex items-center justify-between gap-2">
-            <p className="text-xs text-gray-600">{label}</p>
-            <div className="flex items-center gap-2">
-              <p className="section-title">{current}</p>
-              {change !== null && change !== undefined && (
-                <span
-                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                  style={
-                    change > 0
-                      ? { color: '#059669', backgroundColor: '#D1FAE5' }
-                      : change < 0
-                      ? { color: '#DC2626', backgroundColor: '#FEE2E2' }
-                      : { color: '#6B7280', backgroundColor: '#F3F4F6' }
-                  }
-                >
-                  {change > 0 ? '+' : ''}{(change * 100).toFixed(0)}%
-                </span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+// ─── Metric pill groups ───────────────────────────────────────────────────────
 
-// ─── SVG Bar chart ────────────────────────────────────────────────────────────
+const SERVICE_METRIC_GROUPS = [
+  {
+    group: 'MONEY',
+    metrics: [
+      { key: 'revenue', label: 'Revenue', type: 'line' },
+      { key: 'marketing_spend', label: 'Marketing spend', type: 'bar' },
+      { key: 'net_profit_calc', label: 'Net profit', type: 'line', computed: true },
+      { key: 'variable_expenses_total', label: 'Operating expenses', type: 'bar' },
+    ],
+  },
+  {
+    group: 'SALES',
+    metrics: [
+      { key: 'sales_closed', label: 'Sales closed', type: 'bar' },
+      { key: 'new_clients', label: 'New clients', type: 'bar' },
+      { key: 'active_clients', label: 'Active clients', type: 'line' },
+    ],
+  },
+  {
+    group: 'CAPACITY',
+    metrics: [
+      { key: 'billable_hours', label: 'Billable hours', type: 'bar' },
+      { key: 'utilisation_calc', label: 'Utilisation', type: 'line', computed: true },
+    ],
+  },
+]
 
-function TrendBarChart({ data, color = BRAND }) {
-  if (!data || data.length === 0) {
-    return <div className="flex items-center justify-center h-32 text-gray-300 text-sm">No data yet</div>
+const PRODUCT_METRIC_GROUPS = [
+  {
+    group: 'MONEY',
+    metrics: [
+      { key: 'revenue', label: 'Revenue', type: 'line' },
+      { key: 'marketing_spend', label: 'Marketing spend', type: 'bar' },
+      { key: 'net_profit_calc', label: 'Net profit', type: 'line', computed: true },
+      { key: 'variable_expenses_total', label: 'Operating expenses', type: 'bar' },
+    ],
+  },
+  {
+    group: 'SALES',
+    metrics: [
+      { key: 'num_orders', label: 'Orders', type: 'bar' },
+      { key: 'new_customers', label: 'New customers', type: 'bar' },
+      { key: 'active_customers', label: 'Active customers', type: 'line' },
+    ],
+  },
+  {
+    group: 'CAPACITY',
+    metrics: [
+      { key: 'stock_sold_units', label: 'Stock sold', type: 'bar' },
+      { key: 'inventory_turnover_calc', label: 'Inventory turnover', type: 'line', computed: true },
+    ],
+  },
+]
+
+// ─── Period definitions ───────────────────────────────────────────────────────
+
+const getPeriods = (today) => {
+  const thisWeekStart = startOfWeek(today, { weekStartsOn: 1 })
+  const thisWeekEnd = endOfWeek(today, { weekStartsOn: 1 })
+  const prevWeekStart = startOfWeek(subWeeks(today, 1), { weekStartsOn: 1 })
+  const prevWeekEnd = endOfWeek(subWeeks(today, 1), { weekStartsOn: 1 })
+
+  return {
+    wtd: {
+      label: `Week to date · ${format(thisWeekStart, 'd MMM')} – ${format(thisWeekEnd, 'd MMM yyyy')}`,
+      current: { start: thisWeekStart, end: thisWeekEnd },
+      previous: { start: prevWeekStart, end: prevWeekEnd },
+    },
+    mtd: {
+      label: `Month to date · ${format(startOfMonth(today), 'd MMM')} – ${format(today, 'd MMM yyyy')}`,
+      current: { start: startOfMonth(today), end: endOfMonth(today) },
+      previous: { start: startOfMonth(subMonths(today, 1)), end: endOfMonth(subMonths(today, 1)) },
+    },
+    qtd: {
+      label: `Quarter to date · ${format(startOfQuarter(today), 'd MMM')} – ${format(today, 'd MMM yyyy')}`,
+      current: { start: startOfQuarter(today), end: endOfQuarter(today) },
+      previous: { start: startOfQuarter(subQuarters(today, 1)), end: endOfQuarter(subQuarters(today, 1)) },
+    },
+    ytd: {
+      label: `Year to date · ${format(startOfYear(today), 'd MMM')} – ${format(today, 'd MMM yyyy')}`,
+      current: { start: startOfYear(today), end: endOfYear(today) },
+      previous: { start: startOfYear(subYears(today, 1)), end: endOfYear(subYears(today, 1)) },
+    },
   }
-
-  const values = data.map(d => Number(d.value || 0))
-  const max = Math.max(...values, 1)
-  const CHART_HEIGHT = 120
-  const LABEL_HEIGHT = 20
-  const totalH = CHART_HEIGHT + LABEL_HEIGHT
-
-  return (
-    <div style={{ overflowX: 'auto' }}>
-      <div style={{ minWidth: `${Math.max(data.length * 40, 320)}px` }}>
-        <svg viewBox={`0 0 ${Math.max(data.length * 40, 320)} ${totalH}`} style={{ width: '100%', height: '140px' }}>
-          {data.map((d, i) => {
-            const barW = Math.max((320 / data.length) * 0.6, 20)
-            const x = (320 / data.length) * i + (320 / data.length) * 0.2
-            const val = Number(d.value || 0)
-            const barH = max > 0 ? (val / max) * CHART_HEIGHT : 0
-            const y = CHART_HEIGHT - barH
-
-            return (
-              <g key={i}>
-                <rect
-                  x={x}
-                  y={y}
-                  width={barW}
-                  height={Math.max(barH, val > 0 ? 2 : 0)}
-                  rx={3}
-                  fill={color}
-                  opacity={0.85}
-                />
-                <text
-                  x={x + barW / 2}
-                  y={totalH - 2}
-                  textAnchor="middle"
-                  fontSize={9}
-                  fill="#9CA3AF"
-                >
-                  {d.label}
-                </text>
-              </g>
-            )
-          })}
-        </svg>
-      </div>
-    </div>
-  )
 }
 
-// ─── SVG Line chart ───────────────────────────────────────────────────────────
+// ─── Compute metric value from entry ─────────────────────────────────────────
+
+function getMetricValue(entry, metricKey, constants, isProduct) {
+  if (!metricKey.endsWith('_calc')) {
+    return n(entry.entry_json?.[metricKey] || 0)
+  }
+  const calc = isProduct ? calcProduct : calcService
+  const snap = calc(constants, entry.entry_json || {})
+  if (metricKey === 'net_profit_calc') return snap.netProfit
+  if (metricKey === 'utilisation_calc') return (snap.utilisation || 0) * 100
+  if (metricKey === 'inventory_turnover_calc') return snap.inventoryTurnover || 0
+  return 0
+}
+
+// ─── SVG Line chart (with gridlines + dotted markers) ────────────────────────
 
 function TrendLineChart({ data, color = BRAND }) {
-  if (!data || data.length < 2) {
-    return <div className="flex items-center justify-center h-32 text-gray-300 text-sm">Not enough data yet</div>
+  if (!data || data.length === 0) {
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '120px', color: '#d1d5db', fontSize: '14px' }}>No data for this period</div>
   }
 
-  const values = data.map(d => Number(d.value || 0))
+  const values = data.map(d => n(d.value))
   const max = Math.max(...values, 1)
   const min = Math.min(...values, 0)
   const range = max - min || 1
 
   const W = 600
-  const H = 100
-  const PAD = 16
+  const H = 120
+  const PAD = { top: 16, right: 16, bottom: 24, left: 16 }
+  const chartW = W - PAD.left - PAD.right
+  const chartH = H - PAD.top - PAD.bottom
 
-  const points = data.map((d, i) => ({
-    x: PAD + (i / (data.length - 1)) * (W - 2 * PAD),
-    y: PAD + (1 - (Number(d.value || 0) - min) / range) * (H - 2 * PAD),
-  }))
+  const xOf = (i) => PAD.left + (data.length > 1 ? (i / (data.length - 1)) * chartW : chartW / 2)
+  const yOf = (v) => PAD.top + (1 - (v - min) / range) * chartH
 
-  const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+  const path = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xOf(i)} ${yOf(n(d.value))}`).join(' ')
+
+  const gridLines = [0.25, 0.5, 0.75].map(f => min + f * range)
 
   return (
-    <svg viewBox={`0 0 ${W} ${H + 20}`} style={{ width: '100%', height: '120px' }}>
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: '140px' }}>
+      {/* Dashed gridlines */}
+      {gridLines.map((v, i) => (
+        <line key={i} x1={PAD.left} y1={yOf(v)} x2={W - PAD.right} y2={yOf(v)}
+          stroke="rgba(0,0,0,0.06)" strokeWidth="1" strokeDasharray="4,4" />
+      ))}
+      {/* Line */}
       <path d={path} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      {points.map((p, i) => (
+      {/* Dotted markers + labels */}
+      {data.map((d, i) => (
         <g key={i}>
-          <circle cx={p.x} cy={p.y} r={4} fill={color} />
-          <text x={p.x} y={H + 18} textAnchor="middle" fontSize={9} fill="#9CA3AF">
-            {data[i].label}
-          </text>
+          <circle cx={xOf(i)} cy={yOf(n(d.value))} r={4} fill="white" stroke={color} strokeWidth="2" strokeDasharray="2,2" />
+          <text x={xOf(i)} y={H - 4} textAnchor="middle" fontSize={9} fill="#9CA3AF">{d.label}</text>
         </g>
       ))}
     </svg>
   )
 }
 
-// ─── WMHQ Debrief ─────────────────────────────────────────────────────────────
+// ─── Comparison card (tiered) ────────────────────────────────────────────────
 
-function TrendDebriefBlock({ strong, watch, nextMove }) {
+function ComparisonCard({ title, subtitle, currentTotal, change, previousTotal, soft = false }) {
+  const hasChange = change !== null && change !== undefined
   return (
-    <div className="space-y-4">
-      {strong.length > 0 && (
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#059669' }}>What's Strong</p>
-          <div className="space-y-1.5">
-            {strong.map((s, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-xs font-black" style={{ color: '#059669' }}>↑</span>
-                <p className="text-sm text-gray-700">{s}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+    <div style={{
+      borderRadius: '12px', padding: '16px 18px',
+      background: soft ? BEIGE : '#FFFFFF',
+      border: '0.5px solid rgba(0,0,0,0.08)',
+    }}>
+      <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.14em', color: soft ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.45)', marginBottom: '8px' }}>
+        {title}
+      </p>
+      <p style={{ fontSize: '11px', color: 'rgba(0,0,0,0.4)', marginBottom: '8px' }}>{subtitle}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: soft ? '20px' : '24px', fontWeight: 500, color: soft ? 'rgba(0,0,0,0.55)' : '#1A1A1A' }}>
+          {currentTotal}
+        </p>
+        {hasChange && (
+          <span style={{
+            fontSize: '10px', fontWeight: 500, padding: '2px 7px', borderRadius: '14px',
+            color: change > 0 ? '#059669' : change < 0 ? '#DC2626' : '#6B7280',
+            background: change > 0 ? '#D1FAE5' : change < 0 ? '#FEE2E2' : '#F3F4F6',
+          }}>
+            {change > 0 ? '+' : ''}{(change * 100).toFixed(0)}%
+          </span>
+        )}
+      </div>
+      {previousTotal && (
+        <p style={{ fontSize: '11px', color: 'rgba(0,0,0,0.35)', marginTop: '4px' }}>from {previousTotal}</p>
       )}
+    </div>
+  )
+}
+
+// ─── Trend debrief block ──────────────────────────────────────────────────────
+
+function TrendDebriefBlock({ watch, nextMove }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {watch.length > 0 && (
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#D97706' }}>What Needs Attention</p>
-          <div className="space-y-1.5">
+        <div style={{ borderLeft: `3px solid #BA7517`, paddingLeft: '14px' }}>
+          <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#BA7517', marginBottom: '8px' }}>
+            What needs attention
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {watch.map((w, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-xs font-black" style={{ color: '#D97706' }}>→</span>
-                <p className="text-sm text-gray-700">{w}</p>
+              <div key={i}>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1A1A', marginBottom: '2px' }}>{w.headline}</p>
+                <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.6)', lineHeight: 1.6 }}>{w.detail}</p>
               </div>
             ))}
           </div>
         </div>
       )}
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: BRAND }}>Next Best Move</p>
-        <p className="text-sm text-gray-700">{nextMove}</p>
+      <div style={{ borderLeft: `3px solid ${BRAND}`, paddingLeft: '14px' }}>
+        <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: BRAND, marginBottom: '8px' }}>
+          Next best move
+        </p>
+        <p style={{ fontSize: '14px', color: '#1A1A1A', lineHeight: 1.6 }}>{nextMove}</p>
       </div>
     </div>
   )
 }
 
-// ─── Profit levers ────────────────────────────────────────────────────────────
+// ─── Profit lever card ────────────────────────────────────────────────────────
 
 function ProfitLeverCard({ title, description }) {
   return (
-    <div className="rounded-xl p-4" style={{ backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <p className="section-title mb-1">{title}</p>
-      <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
+    <div style={{ borderRadius: '12px', padding: '16px 18px', background: '#FFFFFF', border: '0.5px solid rgba(0,0,0,0.08)' }}>
+      <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500, marginBottom: '6px' }}>{title}</p>
+      <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.55)', lineHeight: 1.6 }}>{description}</p>
     </div>
   )
 }
-
-// ─── Metric options ───────────────────────────────────────────────────────────
-
-const PRODUCT_METRICS = [
-  { key: 'revenue', label: 'Revenue', type: 'bar' },
-  { key: 'marketing_spend', label: 'Marketing Spend', type: 'bar' },
-  { key: 'num_orders', label: 'Orders', type: 'bar' },
-  { key: 'new_customers', label: 'New Customers', type: 'bar' },
-  { key: 'refunds_value', label: 'Refunds', type: 'bar' },
-  { key: 'cogs', label: 'COGS', type: 'bar' },
-]
-
-const SERVICE_METRICS = [
-  { key: 'revenue', label: 'Revenue', type: 'bar' },
-  { key: 'marketing_spend', label: 'Marketing Spend', type: 'bar' },
-  { key: 'sales_closed', label: 'Sales Closed', type: 'bar' },
-  { key: 'new_clients', label: 'New Clients', type: 'bar' },
-  { key: 'active_clients', label: 'Active Clients', type: 'line' },
-  { key: 'delivery_costs', label: 'Delivery Costs', type: 'bar' },
-  { key: 'billable_hours', label: 'Billable Hours', type: 'bar' },
-]
 
 // ─── Main Trends page ─────────────────────────────────────────────────────────
 
@@ -249,207 +283,269 @@ export default function MoneyDashboardTrends({ settings }) {
 
   const [entries, setEntries] = useState([])
   const [constants, setConstants] = useState(isProduct ? PRODUCT_CONSTANT_DEFAULTS : SERVICE_CONSTANT_DEFAULTS)
+  const [fixedCosts, setFixedCosts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedMetric, setSelectedMetric] = useState(isProduct ? PRODUCT_METRICS[0] : SERVICE_METRICS[0])
 
-  const metrics = isProduct ? PRODUCT_METRICS : SERVICE_METRICS
+  const [activePeriod, setActivePeriod] = useState('mtd')
+  const [selectedMetric, setSelectedMetric] = useState(null)
+
+  const metricGroups = isProduct ? PRODUCT_METRIC_GROUPS : SERVICE_METRIC_GROUPS
+
+  // Init selected metric to first in first group
+  useEffect(() => {
+    if (!selectedMetric) {
+      setSelectedMetric(metricGroups[0].metrics[0])
+    }
+  }, [isProduct])
 
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const [allEntries, savedConstants] = await Promise.all([
+      const [allEntries, savedConstants, costs] = await Promise.all([
         getMoneyDashboardEntries(user_id, model, 52),
         getMoneyDashboardConstants(user_id, model),
+        getBaselineFixedCosts(user_id),
       ])
       setEntries(allEntries)
       if (savedConstants) {
         setConstants({ ...(isProduct ? PRODUCT_CONSTANT_DEFAULTS : SERVICE_CONSTANT_DEFAULTS), ...savedConstants })
       }
+      setFixedCosts(costs)
       setLoading(false)
     }
     load()
   }, [user_id, model])
 
   const today = new Date()
+  const periods = useMemo(() => getPeriods(today), [])
 
-  // Period boundaries
-  const thisWeek = { start: startOfWeek(today, { weekStartsOn: 1 }), end: endOfWeek(today, { weekStartsOn: 1 }) }
-  const lastWeek = { start: startOfWeek(subWeeks(today, 1), { weekStartsOn: 1 }), end: endOfWeek(subWeeks(today, 1), { weekStartsOn: 1 }) }
-  const thisMonth = { start: startOfMonth(today), end: endOfMonth(today) }
-  const lastMonth = { start: startOfMonth(subMonths(today, 1)), end: endOfMonth(subMonths(today, 1)) }
-  const thisQ = { start: startOfQuarter(today), end: endOfQuarter(today) }
-  const lastQ = { start: startOfQuarter(subQuarters(today, 1)), end: endOfQuarter(subQuarters(today, 1)) }
-  const thisYear = { start: startOfYear(today), end: endOfYear(today) }
-  const lastYear = { start: startOfYear(subYears(today, 1)), end: endOfYear(subYears(today, 1)) }
+  const fmtC = (v) => `${currency} $${Math.round(n(v)).toLocaleString()}`
+  const fmtCShort = (v) => fmt.currencyShort(v)
 
-  const entriesIn = (range) => getEntriesInRange(entries, range.start, range.end)
+  // Period entries
+  const periodEntries = useMemo(() => {
+    const p = periods[activePeriod]
+    return getEntriesInRange(entries, p.current.start, p.current.end)
+  }, [entries, activePeriod, periods])
 
-  // Comparison data
+  const prevPeriodEntries = useMemo(() => {
+    const p = periods[activePeriod]
+    return getEntriesInRange(entries, p.previous.start, p.previous.end)
+  }, [entries, activePeriod, periods])
+
+  // Period stats
+  const periodStats = useMemo(() => {
+    const currentKey = selectedMetric?.key
+    if (!currentKey) return { total: 0, vsPercent: null, weeklyAvg: 0 }
+    const total = periodEntries.reduce((s, e) => s + getMetricValue(e, currentKey, constants, isProduct), 0)
+    const prevTotal = prevPeriodEntries.reduce((s, e) => s + getMetricValue(e, currentKey, constants, isProduct), 0)
+    const vsPercent = pctChange(total, prevTotal)
+    const weeklyAvg = periodEntries.length > 0 ? total / periodEntries.length : 0
+    return { total, vsPercent, weeklyAvg }
+  }, [periodEntries, prevPeriodEntries, selectedMetric, constants, isProduct])
+
+  // Chart data for active period
+  const chartData = useMemo(() => {
+    if (!selectedMetric) return []
+    const sorted = [...periodEntries].sort((a, b) =>
+      a.entry_week_start_date.localeCompare(b.entry_week_start_date)
+    )
+    return sorted.map(e => ({
+      label: format(parseISO(e.entry_week_start_date), activePeriod === 'ytd' || activePeriod === 'qtd' ? 'MMM' : 'd MMM'),
+      value: getMetricValue(e, selectedMetric.key, constants, isProduct),
+    }))
+  }, [periodEntries, selectedMetric, activePeriod, constants, isProduct])
+
+  // Comparison cards data (always weekly/monthly/quarterly/yearly)
   const comparisons = useMemo(() => {
-    const makeComp = (curr, prev) => {
-      const cRevenue = sumMetric(curr, 'revenue')
-      const pRevenue = sumMetric(prev, 'revenue')
-      const cMkt = sumMetric(curr, 'marketing_spend')
-      const pMkt = sumMetric(prev, 'marketing_spend')
-      const cSales = isProduct ? sumMetric(curr, 'num_orders') : sumMetric(curr, 'sales_closed')
-      const pSales = isProduct ? sumMetric(prev, 'num_orders') : sumMetric(prev, 'sales_closed')
-      const cNewCust = isProduct ? sumMetric(curr, 'new_customers') : sumMetric(curr, 'new_clients')
-      const pNewCust = isProduct ? sumMetric(prev, 'new_customers') : sumMetric(prev, 'new_clients')
-      return [
-        { label: 'Revenue', current: fmt.currencyShort(cRevenue), change: pctChange(cRevenue, pRevenue) },
-        { label: 'Ad Spend', current: fmt.currencyShort(cMkt), change: pctChange(cMkt, pMkt) },
-        { label: isProduct ? 'Orders' : 'Sales', current: String(cSales), change: pctChange(cSales, pSales) },
-        { label: isProduct ? 'New Customers' : 'New Clients', current: String(cNewCust), change: pctChange(cNewCust, pNewCust) },
-      ]
+    const makeComp = (period) => {
+      const curr = getEntriesInRange(entries, periods[period].current.start, periods[period].current.end)
+      const prev = getEntriesInRange(entries, periods[period].previous.start, periods[period].previous.end)
+      const cRev = sumMetric(curr, 'revenue')
+      const pRev = sumMetric(prev, 'revenue')
+      return {
+        current: fmtCShort(cRev),
+        change: pctChange(cRev, pRev),
+        previous: fmtCShort(pRev),
+      }
     }
     return {
-      weekly: makeComp(entriesIn(thisWeek), entriesIn(lastWeek)),
-      monthly: makeComp(entriesIn(thisMonth), entriesIn(lastMonth)),
-      quarterly: makeComp(entriesIn(thisQ), entriesIn(lastQ)),
-      yearly: makeComp(entriesIn(thisYear), entriesIn(lastYear)),
+      wtd: makeComp('wtd'),
+      mtd: makeComp('mtd'),
+      qtd: makeComp('qtd'),
+      ytd: makeComp('ytd'),
     }
-  }, [entries, isProduct])
+  }, [entries, periods])
 
-  // Chart data (last 12 entries, oldest first for chart)
-  const chartData = useMemo(() => {
-    const recent = entries.slice(0, 12).reverse()
-    return recent.map(e => ({
-      label: e.entry_week_start_date ? format(parseISO(e.entry_week_start_date), 'd MMM') : '',
-      value: Number(e.entry_json?.[selectedMetric.key] || 0),
-    }))
-  }, [entries, selectedMetric])
-
-  // Snapshot-based trend debrief
-  const snapshots = useMemo(() => {
-    return entries.map(e => {
-      const calc = isProduct ? calcProduct : calcService
-      return calc(constants, e.entry_json || {})
-    })
-  }, [entries, constants, isProduct])
-
+  // Trend debrief
   const trendDebrief = useMemo(() =>
     generateTrendDebrief(entries, constants, model),
     [entries, constants, model]
   )
 
-  const currentSnapshot = snapshots[0] || {}
+  // Current snapshot for profit levers
+  const currentSnapshot = useMemo(() => {
+    if (entries.length === 0) return {}
+    const calc = isProduct ? calcProduct : calcService
+    return calc(constants, entries[0]?.entry_json || {}, fixedCosts)
+  }, [entries, constants, fixedCosts, isProduct])
+
   const profitLevers = useMemo(() => getProfitLevers(currentSnapshot, model), [currentSnapshot, model])
   const streak = useMemo(() => computeStreak(entries), [entries])
 
-  const fmtC = (v) => `${currency} $${Number(v || 0).toLocaleString()}`
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${BRAND} transparent transparent transparent` }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+        <div style={{ width: '32px', height: '32px', border: `4px solid ${BRAND}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       </div>
     )
   }
 
   if (entries.length === 0) {
     return (
-      <div className="card-section text-center py-12">
-        <p className="text-2xl mb-3">📊</p>
-        <p className="section-title mb-1">No data yet</p>
-        <p className="text-sm text-gray-500">Save your first weekly entry on the Weekly tab to start seeing trends.</p>
+      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '40px 20px', border: '0.5px solid rgba(0,0,0,0.12)', textAlign: 'center' }}>
+        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '20px', fontWeight: 500, marginBottom: '8px' }}>No data yet</p>
+        <p style={{ fontSize: '14px', color: 'rgba(0,0,0,0.5)' }}>Save your first weekly entry on the Weekly tab to start seeing trends.</p>
       </div>
     )
   }
 
+  const isCurrencyMetric = (key) => ['revenue', 'marketing_spend', 'net_profit_calc', 'variable_expenses_total', 'delivery_costs', 'cogs'].includes(key)
+  const periodStatLabel = selectedMetric
+    ? (isCurrencyMetric(selectedMetric.key) ? fmtC(periodStats.total) : Math.round(periodStats.total).toLocaleString())
+    : '—'
+  const weeklyAvgLabel = selectedMetric
+    ? (isCurrencyMetric(selectedMetric.key) ? fmtC(periodStats.weeklyAvg) : periodStats.weeklyAvg.toFixed(1))
+    : '—'
+
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-      {/* ── Stats strip ── */}
-      <div className="card-section !p-4">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Weeks Tracked</p>
-            <p className="section-title">{entries.length}</p>
-          </div>
-          {streak > 0 && (
-            <>
-              <div className="w-px h-8 bg-gray-100" />
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Current Streak</p>
-                <p className="text-sm font-bold" style={{ color: BRAND }}>{streak} week{streak !== 1 ? 's' : ''}</p>
-              </div>
-            </>
-          )}
-          {entries[0] && (
-            <>
-              <div className="w-px h-8 bg-gray-100" />
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Latest Entry</p>
-                <p className="section-title">{format(parseISO(entries[0].entry_week_start_date), 'd MMM yyyy')}</p>
-              </div>
-            </>
-          )}
-          <div className="w-px h-8 bg-gray-100" />
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Model</p>
-            <p className="section-title">{isProduct ? 'Product-Based' : 'Service-Based'}</p>
-          </div>
+      {/* ── Momentum right now ── */}
+      <div style={{ background: BEIGE, borderRadius: '12px', padding: '20px 22px', borderTop: '0.5px solid rgba(0,0,0,0.08)', borderRight: '0.5px solid rgba(0,0,0,0.08)', borderBottom: '0.5px solid rgba(0,0,0,0.08)', borderLeft: `3px solid ${BRAND}` }}>
+        <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: BRAND, marginBottom: '8px' }}>
+          MOMENTUM RIGHT NOW
+        </p>
+        <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '28px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
+          {trendDebrief.momentumHeadline}
+        </h2>
+        <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)', marginBottom: '8px' }}>{trendDebrief.momentumSubtitle}</p>
+        {trendDebrief.momentumSentence && (
+          <p style={{ fontSize: '14px', color: 'rgba(0,0,0,0.7)', lineHeight: 1.6 }}>{trendDebrief.momentumSentence}</p>
+        )}
+      </div>
+
+      {/* ── Period comparison cards ── */}
+      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+        <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '14px' }}>Compare periods</p>
+
+        {/* Row 1: full weight */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+          <ComparisonCard title="This week" subtitle="vs last week" currentTotal={comparisons.wtd.current} change={comparisons.wtd.change} previousTotal={`from ${comparisons.wtd.previous}`} />
+          <ComparisonCard title="This month" subtitle="vs last month" currentTotal={comparisons.mtd.current} change={comparisons.mtd.change} previousTotal={`from ${comparisons.mtd.previous}`} />
+        </div>
+
+        {/* Row 2: soft/muted */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <ComparisonCard title="This quarter" subtitle="vs last quarter" currentTotal={comparisons.qtd.current} change={comparisons.qtd.change} previousTotal={`from ${comparisons.qtd.previous}`} soft />
+          <ComparisonCard title="This year" subtitle="vs last year" currentTotal={comparisons.ytd.current} change={comparisons.ytd.change} previousTotal={`from ${comparisons.ytd.previous}`} soft />
         </div>
       </div>
 
-      {/* ── Period comparisons ── */}
-      <div className="card-section">
-        <p className="section-title mb-1">Period Comparisons</p>
-        <p className="section-subtitle">Current period vs previous, based on your saved data.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <ComparisonCard title="This Week vs Last Week" metrics={comparisons.weekly} />
-          <ComparisonCard title="This Month vs Last Month" metrics={comparisons.monthly} />
-          <ComparisonCard title="This Quarter vs Last Quarter" metrics={comparisons.quarterly} />
-          <ComparisonCard title="This Year vs Last Year" metrics={comparisons.yearly} />
-        </div>
-      </div>
+      {/* ── Trend chart card ── */}
+      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
 
-      {/* ── Trend chart ── */}
-      <div className="card-section">
-        <div className="flex items-center justify-between mb-4">
+        {/* Chart header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
           <div>
-            <p className="font-black text-gray-900 text-base mb-0.5">Trend Chart</p>
-            <p className="text-sm text-gray-400">Last {Math.min(entries.length, 12)} weeks of data.</p>
+            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Trend chart</p>
+            <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)' }}>{periods[activePeriod].label}</p>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {metrics.map(m => (
+
+          {/* WTD / MTD / QTD / YTD toggle */}
+          <div style={{ display: 'flex', gap: '2px', background: '#F2F2F2', borderRadius: '10px', padding: '3px' }}>
+            {['wtd', 'mtd', 'qtd', 'ytd'].map(p => (
               <button
-                key={m.key}
-                onClick={() => setSelectedMetric(m)}
-                className="text-xs px-2.5 py-1 rounded-lg font-semibold transition-colors"
-                style={
-                  selectedMetric.key === m.key
-                    ? { backgroundColor: BRAND, color: '#fff' }
-                    : { backgroundColor: '#f3f4f6', color: '#6B7280' }
-                }
+                key={p}
+                onClick={() => setActivePeriod(p)}
+                style={{
+                  padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500,
+                  border: 'none', cursor: 'pointer', letterSpacing: '0.02em', fontFamily: 'DM Sans, sans-serif',
+                  background: activePeriod === p ? '#FFFFFF' : 'transparent',
+                  color: activePeriod === p ? '#1A1A1A' : 'rgba(0,0,0,0.45)',
+                  boxShadow: activePeriod === p ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                }}
               >
-                {m.label}
+                {p.toUpperCase()}
               </button>
             ))}
           </div>
         </div>
 
+        {/* Period stats strip */}
+        <div style={{ background: BEIGE, borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+          <div>
+            <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>Period total</p>
+            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A' }}>{periodStatLabel}</p>
+          </div>
+          <div>
+            <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>Vs previous</p>
+            <p style={{
+              fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500,
+              color: periodStats.vsPercent === null ? '#9CA3AF' : periodStats.vsPercent >= 0 ? '#27500A' : '#A32D2D',
+            }}>
+              {periodStats.vsPercent === null ? '—' : `${periodStats.vsPercent >= 0 ? '↑' : '↓'} ${Math.abs(periodStats.vsPercent * 100).toFixed(0)}%`}
+            </p>
+          </div>
+          <div>
+            <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>Weekly avg</p>
+            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A' }}>{weeklyAvgLabel}</p>
+          </div>
+        </div>
+
+        {/* Metric pills grouped */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+          {metricGroups.map(({ group, metrics }) => (
+            <div key={group} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '9px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(0,0,0,0.3)', minWidth: '52px' }}>{group}</span>
+              {metrics.map(m => (
+                <button
+                  key={m.key}
+                  onClick={() => setSelectedMetric(m)}
+                  style={{
+                    fontSize: '12px', fontWeight: 500, padding: '4px 12px', borderRadius: '14px',
+                    border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
+                    background: selectedMetric?.key === m.key ? BRAND : '#F2F2F2',
+                    color: selectedMetric?.key === m.key ? '#FFFFFF' : 'rgba(0,0,0,0.6)',
+                  }}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Chart */}
         {chartData.length === 0 ? (
-          <div className="text-center py-8 text-gray-400 text-sm">No data available for this metric.</div>
-        ) : selectedMetric.type === 'bar' ? (
-          <TrendBarChart data={chartData} />
+          <div style={{ textAlign: 'center', padding: '32px 0', color: 'rgba(0,0,0,0.3)', fontSize: '14px' }}>No data for this period.</div>
         ) : (
           <TrendLineChart data={chartData} />
         )}
       </div>
 
       {/* ── WMHQ Trend Debrief ── */}
-      <div className="card-section">
-        <p className="section-title mb-1">WMHQ Trend Debrief</p>
-        <p className="section-subtitle">A read of your recent trajectory.</p>
-        <TrendDebriefBlock {...trendDebrief} />
+      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>WMHQ trend debrief</p>
+        <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)', marginBottom: '16px' }}>A read of your recent trajectory.</p>
+        <TrendDebriefBlock watch={trendDebrief.watch} nextMove={trendDebrief.nextMove} />
       </div>
 
       {/* ── Profit Levers ── */}
-      <div className="card-section">
-        <p className="section-title mb-1">Profit Levers</p>
-        <p className="section-subtitle">The highest-leverage moves for your business model right now.</p>
-        <div className="grid grid-cols-1 gap-3 mt-3">
+      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Profit levers</p>
+        <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)', marginBottom: '16px' }}>The highest-leverage moves for your business model right now.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {profitLevers.map((lever, i) => (
             <ProfitLeverCard key={i} title={lever.title} description={lever.description} />
           ))}

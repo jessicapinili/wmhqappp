@@ -1,12 +1,15 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { format, parseISO } from 'date-fns'
 import {
   getWeekDates,
   getMoneyDashboardConstants,
-  upsertMoneyDashboardConstants,
   getMoneyDashboardEntryForWeek,
   upsertMoneyDashboardEntry,
   getMoneyDashboardEntries,
+  getBaselineFixedCosts,
+  getWeeklyVariableExpenses,
+  saveWeeklyVariableExpenses,
+  upsertMoneyDashboardSettings,
 } from '../lib/moneyDashboardService'
 import {
   PRODUCT_CONSTANT_DEFAULTS,
@@ -15,6 +18,8 @@ import {
   SERVICE_WEEKLY_DEFAULTS,
   calcProduct,
   calcService,
+  baselineWeeklyTotal,
+  toWeekly,
   healthTag,
   computeStreak,
   generateWeeklyDebrief,
@@ -22,76 +27,186 @@ import {
 } from '../lib/moneyDashboardCalc'
 import { EXPLANATIONS } from '../lib/wmhq-explanations'
 
-const BRAND = '#3d0c0c'
+const BRAND = '#6B1020'
+const BEIGE = '#FAF7F2'
 const CURRENCIES = ['AUD', 'NZD', 'USD', 'EUR', 'CAD', 'GBP', 'SGD']
 
-// ─── Shared input components ──────────────────────────────────────────────────
+const VARIABLE_CATEGORIES = [
+  'Travel',
+  'Professional development',
+  'Contractor (one-off)',
+  'Equipment',
+  'Meals + entertainment',
+  'Banking + fees',
+  'Tax / GST set-aside',
+  'Other',
+]
 
-function CurrencyInput({ label, value, onChange, helper }) {
+// ─── Shared input primitives ──────────────────────────────────────────────────
+
+const inputStyle = {
+  width: '100%', padding: '11px 14px', fontSize: '14px', background: BEIGE,
+  border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: '8px',
+  fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
+}
+
+function CurrencyInput({ label, hint, value, onChange }) {
   return (
     <div>
-      <label className="label">{label}</label>
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">$</span>
+      <label style={{ display: 'block', fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '6px' }}>
+        {label}
+      </label>
+      <div style={{ position: 'relative' }}>
+        <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: 'rgba(0,0,0,0.4)', pointerEvents: 'none' }}>$</span>
         <input
-          type="number"
-          className="input-field"
-          style={{ paddingLeft: '1.6rem' }}
+          type="number" min="0"
           value={value === '' ? '' : value}
           onChange={e => onChange(e.target.value === '' ? '' : Number(e.target.value))}
           placeholder="0"
-          min="0"
+          style={{ ...inputStyle, paddingLeft: '26px' }}
+          onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+          onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
         />
       </div>
-      {helper && <p className="text-xs text-gray-400 mt-1">{helper}</p>}
+      {hint && <p style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)', marginTop: '4px' }}>{hint}</p>}
     </div>
   )
 }
 
-function NumberInput({ label, value, onChange, helper, placeholder = '0' }) {
+function NumberInput({ label, hint, value, onChange }) {
   return (
     <div>
-      <label className="label">{label}</label>
+      <label style={{ display: 'block', fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '6px' }}>
+        {label}
+      </label>
       <input
-        type="number"
-        className="input-field"
+        type="number" min="0"
         value={value === '' ? '' : value}
         onChange={e => onChange(e.target.value === '' ? '' : Number(e.target.value))}
-        placeholder={placeholder}
-        min="0"
+        placeholder="0"
+        style={inputStyle}
+        onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+        onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
       />
-      {helper && <p className="text-xs text-gray-400 mt-1">{helper}</p>}
+      {hint && <p style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)', marginTop: '4px' }}>{hint}</p>}
     </div>
   )
 }
 
-function SectionSummaryBar({ items }) {
+// ─── Step card wrapper ────────────────────────────────────────────────────────
+
+function StepCard({ step, title, subtitle, children, extraLabel, extraChildren }) {
+  const [expanded, setExpanded] = useState(false)
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1 pt-4 mt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-      {items.map(({ label, value }) => (
-        <p key={label} className="text-xs text-gray-500">
-          <span className="font-bold tracking-wide uppercase text-[10px] text-gray-400 mr-1">{label}</span>
-          {value}
-        </p>
-      ))}
+    <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div>
+          <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
+            {step}. {title}
+          </h3>
+          <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)' }}>{subtitle}</p>
+        </div>
+        <span style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>
+          STEP {step} / 4
+        </span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>{children}</div>
+      {extraChildren && (
+        <div style={{ marginTop: '14px' }}>
+          <button
+            onClick={() => setExpanded(e => !e)}
+            style={{ fontSize: '13px', fontWeight: 500, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            {expanded ? '− Show less' : `+ ${extraLabel || 'Add more details'}`}
+          </button>
+          {expanded && (
+            <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {extraChildren}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
 
-// ─── Financial snapshot cards ─────────────────────────────────────────────────
+// ─── Live "at a glance" panel ─────────────────────────────────────────────────
+
+function AtAGlancePanel({ revenue, grossProfit, netProfit, netMargin, directCosts, operatingExpenses, totalCosts, currency }) {
+  const fmtC = (v) => {
+    const num = Number(v || 0)
+    return `${currency} $${Math.round(Math.abs(num)).toLocaleString()}`
+  }
+  const fmtPct = (v) => `${(Number(v || 0) * 100).toFixed(1)}%`
+
+  const metricStyle = (val, isNet = false) => ({
+    fontFamily: 'Cormorant Garamond, serif',
+    fontSize: '20px',
+    fontWeight: 500,
+    color: isNet ? (val >= 0 ? '#27500A' : '#A32D2D') : '#1A1A1A',
+  })
+
+  return (
+    <div style={{
+      background: BEIGE, borderRadius: '12px', padding: '18px 20px',
+      borderTop: '0.5px solid rgba(0,0,0,0.08)',
+      borderRight: '0.5px solid rgba(0,0,0,0.08)',
+      borderBottom: '0.5px solid rgba(0,0,0,0.08)',
+      borderLeft: `3px solid ${BRAND}`,
+    }}>
+      <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: BRAND, marginBottom: '14px' }}>
+        YOUR WEEK AT A GLANCE
+      </p>
+
+      {/* Top row: 4 key metrics */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '14px' }}>
+        {[
+          { label: 'Revenue', value: fmtC(revenue), raw: revenue },
+          { label: 'Gross profit', value: fmtC(grossProfit), raw: grossProfit },
+          { label: 'Net profit', value: fmtC(netProfit), raw: netProfit, isNet: true },
+          { label: 'Net margin', value: fmtPct(netMargin), raw: netProfit, isNet: true },
+        ].map(({ label, value, raw, isNet }) => (
+          <div key={label}>
+            <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>{label}</p>
+            <p style={metricStyle(raw, isNet)}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Divider */}
+      <div style={{ height: '0.5px', background: `rgba(107,16,32,0.12)`, margin: '12px 0' }} />
+
+      {/* Bottom row: 3 cost metrics */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+        {[
+          { label: 'Direct costs', value: fmtC(directCosts) },
+          { label: 'Operating expenses', value: fmtC(operatingExpenses) },
+          { label: 'Total costs', value: fmtC(totalCosts) },
+        ].map(({ label, value }) => (
+          <div key={label}>
+            <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>{label}</p>
+            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A' }}>{value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Financial snapshot card (unchanged visually) ─────────────────────────────
 
 function SnapshotCard({ label, value, metricKey, metricValue, explanation, simpleMode }) {
-  const tag = metricKey ? healthTag(metricKey, metricValue) : null
+  const htag = metricKey ? healthTag(metricKey, metricValue) : null
   const [expanded, setExpanded] = useState(false)
   const exp = explanation ? (simpleMode ? explanation.simple : explanation.expert) : null
   return (
-    <div className="rounded-xl flex flex-col overflow-hidden" style={{ backgroundColor: '#fff', border: '1px solid rgba(0,0,0,0.07)' }}>
-      <div className="p-4 flex flex-col gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-400">{label}</p>
-        <p className="stat-number">{value}</p>
-        {tag && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full w-fit" style={{ color: tag.color, backgroundColor: tag.bg }}>
-            {tag.label}
+    <div style={{ borderRadius: '12px', overflow: 'hidden', background: '#fff', border: '1px solid rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#9ca3af' }}>{label}</p>
+        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '22px', fontWeight: 500, color: '#1A1A1A' }}>{value}</p>
+        {htag && (
+          <span style={{ fontSize: '10px', fontWeight: 500, padding: '2px 8px', borderRadius: '14px', width: 'fit-content', color: htag.color, background: htag.bg }}>
+            {htag.label}
           </span>
         )}
       </div>
@@ -99,29 +214,25 @@ function SnapshotCard({ label, value, metricKey, metricValue, explanation, simpl
         <>
           <button
             onClick={() => setExpanded(e => !e)}
-            className="flex items-center justify-between px-4 py-2.5 text-left transition-colors hover:bg-gray-50"
-            style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderTop: '1px solid rgba(0,0,0,0.06)', background: 'none', border: 'none', cursor: 'pointer', width: '100%' }}
           >
-            <span className="text-[11px] font-semibold" style={{ color: BRAND }}>How is this calculated?</span>
-            <svg
-              width="12" height="12" viewBox="0 0 12 12" fill="none"
-              style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: '#9ca3af', flexShrink: 0 }}
-            >
+            <span style={{ fontSize: '11px', fontWeight: 500, color: BRAND }}>How is this calculated?</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: '#9ca3af', flexShrink: 0 }}>
               <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
           {expanded && (
-            <div className="px-4 pb-4 space-y-2">
+            <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {exp.howItWorks && (
-                <div className="rounded-lg p-3" style={{ backgroundColor: '#f9f7f5' }}>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-gray-400 mb-1.5">How it works</p>
-                  <p className="text-xs text-gray-600 leading-relaxed">{exp.howItWorks}</p>
+                <div style={{ borderRadius: '8px', padding: '12px', background: '#f9f7f5' }}>
+                  <p style={{ fontSize: '9px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9ca3af', marginBottom: '6px' }}>How it works</p>
+                  <p style={{ fontSize: '12px', color: '#4b5563', lineHeight: 1.6 }}>{exp.howItWorks}</p>
                 </div>
               )}
               {exp.whyItMatters && (
-                <div className="rounded-lg p-3" style={{ backgroundColor: '#f9f7f5' }}>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-gray-400 mb-1.5">Why it matters</p>
-                  <p className="text-xs text-gray-600 leading-relaxed">{exp.whyItMatters}</p>
+                <div style={{ borderRadius: '8px', padding: '12px', background: '#f9f7f5' }}>
+                  <p style={{ fontSize: '9px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9ca3af', marginBottom: '6px' }}>Why it matters</p>
+                  <p style={{ fontSize: '12px', color: '#4b5563', lineHeight: 1.6 }}>{exp.whyItMatters}</p>
                 </div>
               )}
             </div>
@@ -132,46 +243,31 @@ function SnapshotCard({ label, value, metricKey, metricValue, explanation, simpl
   )
 }
 
-// ─── Mini bar chart ───────────────────────────────────────────────────────────
+// ─── Mini bar chart (unchanged) ───────────────────────────────────────────────
 
 function MiniBarChart({ entries, metric = 'revenue', currency = 'AUD' }) {
   if (!entries || entries.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-20 text-gray-300 text-sm">
-        No saved weeks yet
-      </div>
-    )
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80px', color: '#d1d5db', fontSize: '14px' }}>No saved weeks yet</div>
   }
-
   const getVal = (e) => Number(e.entry_json?.[metric] || 0)
   const values = entries.map(getVal)
   const max = Math.max(...values, 1)
-  const display = [...entries].reverse() // oldest to newest
-
+  const display = [...entries].reverse()
   return (
-    <div className="flex items-end gap-1.5" style={{ height: '80px' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '80px' }}>
       {display.map((entry, i) => {
         const val = getVal(entry)
         const h = max > 0 ? (val / max) * 100 : 0
-        const label = entry.entry_week_start_date
-          ? format(parseISO(entry.entry_week_start_date), 'd MMM')
-          : ''
+        const label = entry.entry_week_start_date ? format(parseISO(entry.entry_week_start_date), 'd MMM') : ''
         return (
-          <div key={i} className="flex-1 flex flex-col items-center gap-1" style={{ minWidth: 0 }}>
-            <div className="w-full flex items-end" style={{ height: '60px' }}>
+          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', minWidth: 0 }}>
+            <div style={{ width: '100%', display: 'flex', alignItems: 'flex-end', height: '60px' }}>
               <div
                 title={`${label}: ${currency} $${val.toLocaleString()}`}
-                style={{
-                  width: '100%',
-                  height: `${Math.max(h, val > 0 ? 4 : 0)}%`,
-                  backgroundColor: BRAND,
-                  borderRadius: '3px 3px 0 0',
-                  opacity: 0.85,
-                  transition: 'height 0.3s ease',
-                }}
+                style={{ width: '100%', height: `${Math.max(h, val > 0 ? 4 : 0)}%`, background: BRAND, borderRadius: '3px 3px 0 0', opacity: 0.85, transition: 'height 0.3s ease' }}
               />
             </div>
-            <span className="text-[9px] text-gray-400 truncate w-full text-center">{label}</span>
+            <span style={{ fontSize: '9px', color: '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>{label}</span>
           </div>
         )
       })}
@@ -179,126 +275,201 @@ function MiniBarChart({ entries, metric = 'revenue', currency = 'AUD' }) {
   )
 }
 
-// ─── Health debrief ───────────────────────────────────────────────────────────
+// ─── Weekly debrief (unchanged visually) ─────────────────────────────────────
 
 function WeeklyDebrief({ points }) {
   const iconMap = { positive: '↑', warning: '↗', watch: '→', risk: '!', neutral: '·' }
-  const colorMap = {
-    positive: '#059669',
-    warning: '#D97706',
-    watch: '#6B7280',
-    risk: '#DC2626',
-    neutral: '#9CA3AF',
-  }
+  const colorMap = { positive: '#059669', warning: '#D97706', watch: '#6B7280', risk: '#DC2626', neutral: '#9CA3AF' }
   return (
-    <div className="space-y-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {points.map((p, i) => (
-        <div key={i} className="flex items-start gap-2.5">
-          <span className="text-xs font-black mt-0.5 flex-shrink-0 w-4 text-center" style={{ color: colorMap[p.type] }}>
-            {iconMap[p.type]}
-          </span>
-          <p className="text-sm text-gray-700 leading-relaxed">{p.text}</p>
+        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 900, marginTop: '2px', flexShrink: 0, width: '16px', textAlign: 'center', color: colorMap[p.type] }}>{iconMap[p.type]}</span>
+          <p style={{ fontSize: '14px', color: '#374151', lineHeight: 1.6 }}>{p.text}</p>
         </div>
       ))}
     </div>
   )
 }
 
-// ─── Constants section (product) ──────────────────────────────────────────────
+// ─── Step 4: Operating expenses ───────────────────────────────────────────────
 
-function ProductConstants({ constants, onChange }) {
+function OperatingExpensesStep({ baselineCosts, variableExpenses, onAddExpense, onUpdateExpense, onRemoveExpense, onGoToBaseline }) {
+  const weeklyTotal = useMemo(() => baselineWeeklyTotal(baselineCosts), [baselineCosts])
+  const variableTotal = useMemo(() => variableExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0), [variableExpenses])
+  const totalOpex = weeklyTotal + variableTotal
+  const amountRefs = useRef([])
+
+  const handleQuickAdd = (category) => {
+    onAddExpense(category)
+    // Focus will be handled after state update
+    setTimeout(() => {
+      const lastRef = amountRefs.current[variableExpenses.length]
+      if (lastRef) lastRef.focus()
+    }, 50)
+  }
+
   return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">Per-Order Variable Costs</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <CurrencyInput label="Packaging Cost / Unit" value={constants.packaging_cost_per_unit} onChange={v => onChange('packaging_cost_per_unit', v)} />
-          <CurrencyInput label="Fulfilment Cost / Unit" value={constants.fulfillment_cost_per_unit} onChange={v => onChange('fulfillment_cost_per_unit', v)} />
-          <NumberInput label="Transaction Fee %" value={constants.transaction_fee_pct} onChange={v => onChange('transaction_fee_pct', v)} placeholder="2" helper="e.g. 2 for 2%" />
+    <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div>
+          <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
+            4. Operating expenses
+          </h3>
+          <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)' }}>Everything else it costs to run the business.</p>
+        </div>
+        <span style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.3)', flexShrink: 0 }}>STEP 4 / 4</span>
+      </div>
+
+      {/* Block A: Baseline reminder banner */}
+      <div style={{ background: '#FAEEDA', borderRadius: '8px', padding: '10px 14px', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p style={{ fontSize: '13px', color: '#7a5c10' }}>
+          From your baseline: auto-included in your total.
+        </p>
+        <button
+          onClick={onGoToBaseline}
+          style={{ fontSize: '12px', fontWeight: 500, color: BRAND, background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap', marginLeft: '12px' }}
+        >
+          Edit baseline →
+        </button>
+      </div>
+
+      {/* Block B: Baseline cost list (read-only) */}
+      {baselineCosts.length > 0 ? (
+        <div style={{ marginBottom: '16px' }}>
+          {baselineCosts.map((c, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: i < baselineCosts.length - 1 ? '0.5px solid rgba(0,0,0,0.06)' : 'none' }}>
+              <span style={{ fontSize: '13px', color: 'rgba(0,0,0,0.6)' }}>{c.name}</span>
+              <span style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)', fontFamily: 'DM Sans, sans-serif' }}>
+                ${Math.round(toWeekly(c.amount, c.frequency)).toLocaleString()} / wk
+              </span>
+            </div>
+          ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', marginTop: '4px', borderTop: '0.5px solid rgba(0,0,0,0.12)' }}>
+            <span style={{ fontSize: '13px', fontWeight: 500, color: '#1A1A1A' }}>Baseline total / week</span>
+            <span style={{ fontSize: '13px', fontWeight: 500, color: '#1A1A1A' }}>${Math.round(weeklyTotal).toLocaleString()}</span>
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: '12px 0', marginBottom: '12px' }}>
+          <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)' }}>No baseline costs set. <button onClick={onGoToBaseline} style={{ color: BRAND, background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', padding: 0 }}>Set up baseline →</button></p>
+        </div>
+      )}
+
+      {/* Block C: Variable expenses */}
+      <div style={{ borderTop: '0.5px solid rgba(0,0,0,0.08)', paddingTop: '14px' }}>
+        <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '10px' }}>
+          Variable expenses this week
+        </p>
+
+        {variableExpenses.map((exp, i) => (
+          <div key={exp._key ?? i} style={{ display: 'grid', gridTemplateColumns: '1fr 130px 28px', gap: '8px', alignItems: 'end', marginBottom: '8px' }}>
+            <div>
+              <select
+                value={exp.category}
+                onChange={e => onUpdateExpense(i, 'category', e.target.value)}
+                style={{ ...inputStyle, cursor: 'pointer' }}
+              >
+                {VARIABLE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: 'rgba(0,0,0,0.4)', pointerEvents: 'none' }}>$</span>
+              <input
+                ref={el => amountRefs.current[i] = el}
+                type="number" min="0"
+                value={exp.amount === '' ? '' : exp.amount}
+                onChange={e => onUpdateExpense(i, 'amount', e.target.value === '' ? '' : Number(e.target.value))}
+                placeholder="0"
+                style={{ ...inputStyle, paddingLeft: '26px' }}
+                onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+                onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
+              />
+            </div>
+            <button
+              onClick={() => onRemoveExpense(i)}
+              style={{ width: '28px', height: '28px', borderRadius: '6px', border: '0.5px solid rgba(0,0,0,0.12)', background: BEIGE, color: 'rgba(0,0,0,0.4)', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1px' }}
+            >×</button>
+          </div>
+        ))}
+
+        {/* Quick-add tags */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+          {['Travel', 'Dev', 'Contractor', 'Equipment', 'Other'].map(tag => (
+            <button
+              key={tag}
+              onClick={() => handleQuickAdd(tag === 'Dev' ? 'Professional development' : tag === 'Contractor' ? 'Contractor (one-off)' : tag)}
+              style={{ fontSize: '12px', fontWeight: 500, color: BRAND, background: '#fdf5f5', border: '0.5px solid rgba(107,16,32,0.15)', borderRadius: '14px', padding: '4px 10px', cursor: 'pointer' }}
+            >
+              + {tag}
+            </button>
+          ))}
         </div>
       </div>
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">Weekly Fixed Costs</p>
-        <div className="grid grid-cols-2 gap-3">
-          <CurrencyInput label="Team / Contractors" value={constants.opex_team} onChange={v => onChange('opex_team', v)} />
-          <CurrencyInput label="Software / Subscriptions" value={constants.opex_software} onChange={v => onChange('opex_software', v)} />
-          <CurrencyInput label="Rent / Overheads" value={constants.opex_rent} onChange={v => onChange('opex_rent', v)} />
-          <CurrencyInput label="Other Fixed Costs" value={constants.opex_other} onChange={v => onChange('opex_other', v)} />
+
+      {/* Block D: Section totals */}
+      <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+          <span style={{ fontSize: '13px', color: 'rgba(0,0,0,0.6)' }}>Variable subtotal</span>
+          <span style={{ fontSize: '13px', color: 'rgba(0,0,0,0.6)' }}>${Math.round(variableTotal).toLocaleString()}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', marginTop: '4px', borderTop: '0.5px solid rgba(0,0,0,0.12)' }}>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#1A1A1A' }}>Total operating expenses</span>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: '#1A1A1A' }}>${Math.round(totalOpex).toLocaleString()}</span>
         </div>
       </div>
     </div>
   )
 }
 
-// ─── Constants section (service) ─────────────────────────────────────────────
+// ─── Main weekly component ────────────────────────────────────────────────────
 
-function ServiceConstants({ constants, onChange }) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">Capacity Baseline</p>
-        <div className="grid grid-cols-2 gap-3">
-          <NumberInput label="Max Client Capacity" value={constants.max_client_capacity} onChange={v => onChange('max_client_capacity', v)} helper="Max clients at one time" />
-          <NumberInput label="Available Hours / Week" value={constants.available_hours_per_week} onChange={v => onChange('available_hours_per_week', v)} helper="Your total working hours" />
-        </div>
-      </div>
-      <div>
-        <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-3">Weekly Fixed Costs</p>
-        <div className="grid grid-cols-2 gap-3">
-          <CurrencyInput label="Team / Contractors" value={constants.opex_team} onChange={v => onChange('opex_team', v)} />
-          <CurrencyInput label="Software / Subscriptions" value={constants.opex_software} onChange={v => onChange('opex_software', v)} />
-          <CurrencyInput label="Rent / Overheads" value={constants.opex_rent} onChange={v => onChange('opex_rent', v)} />
-          <CurrencyInput label="Other Fixed Costs" value={constants.opex_other} onChange={v => onChange('opex_other', v)} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Main Weekly page ─────────────────────────────────────────────────────────
-
-export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMode = false, onToggleSimpleMode }) {
+export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBaseline, simpleMode = false, onToggleSimpleMode }) {
   const { user_id, business_model: model, preferred_currency } = settings
   const isProduct = model === 'product'
 
   const week = useMemo(() => getWeekDates(), [])
-  const currency = preferred_currency || 'AUD'
+  const [currency, setCurrency] = useState(preferred_currency || 'AUD')
 
   const [constants, setConstants] = useState(isProduct ? PRODUCT_CONSTANT_DEFAULTS : SERVICE_CONSTANT_DEFAULTS)
-  const [constSaved, setConstSaved] = useState(false)
-  const [showConstants, setShowConstants] = useState(false)
-  const [savingConst, setSavingConst] = useState(false)
-
+  const [baselineCosts, setBaselineCosts] = useState([])
   const [form, setForm] = useState(isProduct ? PRODUCT_WEEKLY_DEFAULTS : SERVICE_WEEKLY_DEFAULTS)
   const [notes, setNotes] = useState('')
-  const [savingEntry, setSavingEntry] = useState(false)
-  const [lastSaved, setLastSaved] = useState(null)
+  const [variableExpenses, setVariableExpenses] = useState([])
+  const [entryId, setEntryId] = useState(null)
 
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
+  const [saveConfirmed, setSaveConfirmed] = useState(false)
   const [recentEntries, setRecentEntries] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // ── Review flow state ──
-  const [reviewInProgress, setReviewInProgress] = useState(false)
+  const [reviewStarted, setReviewStarted] = useState(false)
   const [editMode, setEditMode] = useState(false)
-  const [weekDetailsExpanded, setWeekDetailsExpanded] = useState(false)
 
-  // Load constants + current week entry + recent entries
+  // Load all data on mount
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const [savedConstants, weekEntry, recent] = await Promise.all([
+      const [savedConstants, existingCosts, weekEntry, recent] = await Promise.all([
         getMoneyDashboardConstants(user_id, model),
+        getBaselineFixedCosts(user_id),
         getMoneyDashboardEntryForWeek(user_id, model, week.start),
         getMoneyDashboardEntries(user_id, model, 4),
       ])
+
       if (savedConstants) {
         setConstants({ ...(isProduct ? PRODUCT_CONSTANT_DEFAULTS : SERVICE_CONSTANT_DEFAULTS), ...savedConstants })
-        setConstSaved(true)
       }
+      setBaselineCosts(existingCosts)
+
       if (weekEntry) {
         setForm({ ...(isProduct ? PRODUCT_WEEKLY_DEFAULTS : SERVICE_WEEKLY_DEFAULTS), ...(weekEntry.entry_json || {}) })
         setNotes(weekEntry.notes || '')
         setLastSaved(weekEntry.updated_at)
+        setEntryId(weekEntry.id)
+        const varExp = await getWeeklyVariableExpenses(weekEntry.id)
+        setVariableExpenses(varExp.map((e, i) => ({ ...e, _key: e.id || i })))
       }
       setRecentEntries(recent)
       setLoading(false)
@@ -306,598 +477,466 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, simpleMod
     load()
   }, [user_id, model, week.start])
 
-  const streak = useMemo(() => computeStreak(recentEntries), [recentEntries])
-
   const setField = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
-  const setConst = (key, val) => setConstants(prev => ({ ...prev, [key]: val }))
 
+  // Live snapshot using live baseline costs
   const snapshot = useMemo(() => {
-    return isProduct ? calcProduct(constants, form) : calcService(constants, form)
-  }, [constants, form, isProduct])
+    const varTotal = variableExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0)
+    const enriched = { ...form, variable_expenses_total: varTotal }
+    return isProduct
+      ? calcProduct(constants, enriched, baselineCosts)
+      : calcService(constants, enriched, baselineCosts)
+  }, [constants, form, variableExpenses, baselineCosts, isProduct])
 
   const debrief = useMemo(() => generateWeeklyDebrief(snapshot, model), [snapshot, model])
+  const streak = useMemo(() => computeStreak(recentEntries), [recentEntries])
 
-  // ── View state derivations ──
-  const isIdle = !lastSaved && !reviewInProgress
-  const isEditing = (!lastSaved && reviewInProgress) || editMode
-  const isSubmitted = !!lastSaved && !editMode
+  // At-a-glance values (derived from snapshot)
+  const atAGlance = useMemo(() => {
+    const revenue = snapshot.grossRevenue - (Number(form.refunds_value) || 0)
+    const directCosts = snapshot.directCosts
+    const operatingExpenses = snapshot.fixedOpex + snapshot.variableOpex
+    const grossProfit = snapshot.grossProfit
+    const netProfit = snapshot.netProfit
+    const netMargin = snapshot.netMargin
+    const totalCosts = directCosts + operatingExpenses
+    return { revenue, grossProfit, netProfit, netMargin, directCosts, operatingExpenses, totalCosts }
+  }, [snapshot, form.refunds_value])
 
-  const handleSaveConstants = async () => {
-    setSavingConst(true)
+  const fmtC = (v) => v !== null && v !== undefined && v !== ''
+    ? `${currency} $${Math.round(Number(v || 0)).toLocaleString()}` : '—'
+
+  const handleCurrencyChange = async (newCurrency) => {
+    setCurrency(newCurrency)
     try {
-      await upsertMoneyDashboardConstants(user_id, model, constants)
-      setConstSaved(true)
-      setShowConstants(false)
-    } catch (err) {
-      alert('Failed to save baseline settings.')
-    } finally {
-      setSavingConst(false)
-    }
+      await upsertMoneyDashboardSettings(user_id, {
+        business_model: model,
+        preferred_currency: newCurrency,
+      })
+    } catch {}
+  }
+
+  const handleAddExpense = (category = VARIABLE_CATEGORIES[0]) => {
+    setVariableExpenses(prev => [...prev, { category, amount: '', _key: Date.now() }])
+  }
+
+  const handleUpdateExpense = (index, field, value) => {
+    setVariableExpenses(prev => prev.map((e, i) => i === index ? { ...e, [field]: value } : e))
+  }
+
+  const handleRemoveExpense = (index) => {
+    setVariableExpenses(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleSaveEntry = async () => {
-    setSavingEntry(true)
+    setSaving(true)
     try {
-      const saved = await upsertMoneyDashboardEntry(user_id, model, week.start, week.end, form, notes)
+      const varTotal = variableExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0)
+      const bwTotal = baselineWeeklyTotal(baselineCosts)
+      const enrichedForm = {
+        ...form,
+        variable_expenses_total: varTotal,
+        baseline_weekly_total: bwTotal,
+      }
+
+      const saved = await upsertMoneyDashboardEntry(user_id, model, week.start, week.end, enrichedForm, notes)
+      setEntryId(saved.id)
       setLastSaved(saved.updated_at)
+
+      await saveWeeklyVariableExpenses(saved.id, user_id, variableExpenses)
+
       const recent = await getMoneyDashboardEntries(user_id, model, 4)
       setRecentEntries(recent)
       setEditMode(false)
-      setReviewInProgress(false)
+      setReviewStarted(false)
+      setSaveConfirmed(true)
+      setTimeout(() => setSaveConfirmed(false), 1500)
     } catch (err) {
       alert('Failed to save week. Please try again.')
     } finally {
-      setSavingEntry(false)
+      setSaving(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${BRAND} transparent transparent transparent` }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+        <div style={{ width: '32px', height: '32px', border: `4px solid ${BRAND}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       </div>
     )
   }
 
-  const fmtC = (v) => v !== null && v !== undefined && v !== '' ? `${currency} $${Number(v || 0).toLocaleString()}` : '—'
+  const isSubmitted = !!lastSaved && !editMode
+  const isEditing = (!lastSaved && reviewStarted) || editMode
 
-  // ── Reusable: baseline constants block ──
-  const baselineBlock = (
-    <div className="card-section">
-      <div className="flex items-center justify-between mb-1">
-        <div>
-          <p className="section-title">Your Baseline Numbers</p>
-          <p className="text-sm text-gray-400">Semi-fixed costs and capacity settings. Only update when they change.</p>
-        </div>
-        <button
-          onClick={() => setShowConstants(!showConstants)}
-          className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-          style={{ color: BRAND, backgroundColor: '#fdf5f5' }}
-        >
-          {showConstants ? 'Collapse' : constSaved ? 'Edit Baseline' : 'Set Up Baseline'}
-        </button>
-      </div>
+  // ── Submitted state ──────────────────────────────────────────────────────────
+  if (isSubmitted) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-      {!constSaved && !showConstants && (
-        <div className="mt-3 rounded-xl p-3 text-sm" style={{ backgroundColor: '#fef9ee', border: '1px solid #f0dfa0', color: '#7a5c10' }}>
-          Set your baseline numbers once — packaging costs, fixed overheads, and capacity limits won't need re-entering each week.
-        </div>
-      )}
+        {/* Context strip */}
+        <ContextStrip week={week} model={model} currency={currency} onCurrencyChange={handleCurrencyChange} streak={streak} lastSaved={lastSaved} />
 
-      {showConstants && (
-        <div className="mt-4 space-y-4">
-          {isProduct
-            ? <ProductConstants constants={constants} onChange={setConst} />
-            : <ServiceConstants constants={constants} onChange={setConst} />
-          }
-          <div className="flex gap-3 pt-2">
-            <button onClick={() => setShowConstants(false)} className="text-sm px-4 py-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">
-              Cancel
+        {/* Debrief hero */}
+        <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)', borderTop: `3px solid ${BRAND}` }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '20px' }}>
+            <div>
+              <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.16em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>{week.label}</p>
+              <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '2px' }}>This week's read</p>
+              <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)' }}>Your numbers, interpreted.</p>
+            </div>
+            <button
+              onClick={() => { setEditMode(true) }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, padding: '6px 12px', borderRadius: '8px', color: BRAND, background: '#fdf5f5', border: '0.5px solid rgba(107,16,32,0.12)', cursor: 'pointer', flexShrink: 0 }}
+            >
+              <svg width="11" height="11" viewBox="0 0 13 13" fill="none">
+                <path d="M9 1.5L11.5 4L4 11.5H1.5V9L9 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+              </svg>
+              Edit this week
             </button>
-            <button onClick={handleSaveConstants} disabled={savingConst} className="btn-brand">
-              {savingConst ? 'Saving…' : 'Save Baseline'}
+          </div>
+          <WeeklyDebrief points={debrief} />
+        </div>
+
+        {/* Financial Snapshot */}
+        <FinancialSnapshot snapshot={snapshot} isProduct={isProduct} currency={currency} fmtC={fmtC} simpleMode={simpleMode} onToggleSimpleMode={onToggleSimpleMode} />
+
+        {/* Revenue trend */}
+        <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div>
+              <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500, marginBottom: '2px' }}>Revenue trend</p>
+              <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)' }}>
+                {recentEntries.length > 0 ? `Your last ${recentEntries.length} saved week${recentEntries.length !== 1 ? 's' : ''}.` : 'Appears here once you save your first week.'}
+              </p>
+            </div>
+            {recentEntries.length > 0 && (
+              <button onClick={onViewTrends} style={{ fontSize: '12px', fontWeight: 500, padding: '6px 12px', borderRadius: '8px', color: BRAND, background: '#fdf5f5', border: 'none', cursor: 'pointer' }}>
+                View full trends →
+              </button>
+            )}
+          </div>
+          <MiniBarChart entries={recentEntries} metric="revenue" currency={currency} />
+        </div>
+      </div>
+    )
+  }
+
+  // ── Idle state ───────────────────────────────────────────────────────────────
+  if (!isEditing) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <ContextStrip week={week} model={model} currency={currency} onCurrencyChange={handleCurrencyChange} streak={streak} lastSaved={null} />
+        <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+            <div>
+              <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Ready when you are</p>
+              <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)' }}>Enter your numbers for {week.label}.</p>
+            </div>
+            <button onClick={() => setReviewStarted(true)} style={{ background: BRAND, color: 'white', border: 'none', fontSize: '13px', fontWeight: 500, padding: '10px 24px', borderRadius: '8px', letterSpacing: '0.04em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0, fontFamily: 'DM Sans, sans-serif' }}>
+              Begin weekly review
             </button>
           </div>
         </div>
+
+        {recentEntries.length > 0 && (
+          <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500 }}>Revenue trend</p>
+              <button onClick={onViewTrends} style={{ fontSize: '12px', fontWeight: 500, padding: '6px 12px', borderRadius: '8px', color: BRAND, background: '#fdf5f5', border: 'none', cursor: 'pointer' }}>
+                View full trends →
+              </button>
+            </div>
+            <MiniBarChart entries={recentEntries} metric="revenue" currency={currency} />
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ── Editing state: 4-step form ────────────────────────────────────────────────
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+      {/* Context strip */}
+      <ContextStrip week={week} model={model} currency={currency} onCurrencyChange={handleCurrencyChange} streak={streak} lastSaved={lastSaved} />
+
+      {/* Edit mode banner */}
+      {editMode && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderRadius: '10px', background: '#f0f4ff', border: '1px solid #c7d2fe' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4F46E5', flexShrink: 0 }} />
+          <p style={{ fontSize: '12px', fontWeight: 500, color: '#3730a3' }}>Editing {week.label}</p>
+        </div>
       )}
 
-      {constSaved && !showConstants && (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
+      {/* ── Step 1: Money in ── */}
+      <StepCard
+        step={1}
+        title="Money in"
+        subtitle="What you actually received this week."
+        extraLabel="Add more details"
+        extraChildren={isProduct ? (
+          <>
+            <NumberInput
+              label="Number of orders"
+              hint={form.revenue && form.num_orders ? `AOV: $${Math.round(Number(form.revenue) / Number(form.num_orders)).toLocaleString()}` : undefined}
+              value={form.num_orders}
+              onChange={v => setField('num_orders', v)}
+            />
+            <CurrencyInput label="Refunds / returns" value={form.refunds_value} onChange={v => setField('refunds_value', v)} />
+          </>
+        ) : (
+          <>
+            <NumberInput
+              label="Number of invoices"
+              hint={form.revenue && form.num_invoices ? `AOV: $${Math.round(Number(form.revenue) / Number(form.num_invoices)).toLocaleString()}` : undefined}
+              value={form.num_invoices}
+              onChange={v => setField('num_invoices', v)}
+            />
+            <CurrencyInput label="Refunds / churn" value={form.refunds_value} onChange={v => setField('refunds_value', v)} />
+          </>
+        )}
+      >
+        <CurrencyInput label="Revenue this week" value={form.revenue} onChange={v => setField('revenue', v)} />
+      </StepCard>
+
+      {/* ── Step 2: Sales activity ── */}
+      <StepCard
+        step={2}
+        title="Sales activity"
+        subtitle="Did the pipeline actually move this week?"
+        extraLabel="Add more details"
+        extraChildren={isProduct ? (
+          <>
+            <NumberInput label="Repeat customers" value={form.repeat_customers} onChange={v => setField('repeat_customers', v)} />
+            <NumberInput label="Stock sold (units)" value={form.stock_sold_units} onChange={v => setField('stock_sold_units', v)} />
+            <NumberInput label="Total active customers" value={form.active_customers} onChange={v => setField('active_customers', v)} />
+          </>
+        ) : (
+          <>
+            <NumberInput label="Sales calls booked" value={form.sales_calls_booked} onChange={v => setField('sales_calls_booked', v)} />
+            <NumberInput label="Renewals / extensions" value={form.renewals} onChange={v => setField('renewals', v)} />
+            <NumberInput label="Total active clients" value={form.active_clients} onChange={v => setField('active_clients', v)} />
+          </>
+        )}
+      >
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {isProduct ? (
             <>
-              <p className="text-xs text-gray-500"><span className="text-gray-400 uppercase text-[10px] font-bold mr-1">Packaging</span>${Number(constants.packaging_cost_per_unit || 0).toLocaleString()}/unit</p>
-              <p className="text-xs text-gray-500"><span className="text-gray-400 uppercase text-[10px] font-bold mr-1">Fulfilment</span>${Number(constants.fulfillment_cost_per_unit || 0).toLocaleString()}/unit</p>
-              <p className="text-xs text-gray-500"><span className="text-gray-400 uppercase text-[10px] font-bold mr-1">Tx Fee</span>{constants.transaction_fee_pct || 2}%</p>
-              <p className="text-xs text-gray-500"><span className="text-gray-400 uppercase text-[10px] font-bold mr-1">Fixed OPEX</span>{currency} ${(Number(constants.opex_team || 0) + Number(constants.opex_software || 0) + Number(constants.opex_rent || 0) + Number(constants.opex_other || 0)).toLocaleString()}/wk</p>
+              <NumberInput label="Orders placed" value={form.num_orders} onChange={v => setField('num_orders', v)} />
+              <NumberInput label="New customers" value={form.new_customers} onChange={v => setField('new_customers', v)} />
             </>
           ) : (
             <>
-              <p className="text-xs text-gray-500"><span className="text-gray-400 uppercase text-[10px] font-bold mr-1">Max Clients</span>{constants.max_client_capacity}</p>
-              <p className="text-xs text-gray-500"><span className="text-gray-400 uppercase text-[10px] font-bold mr-1">Hours/Wk</span>{constants.available_hours_per_week}</p>
-              <p className="text-xs text-gray-500"><span className="text-gray-400 uppercase text-[10px] font-bold mr-1">Fixed OPEX</span>{currency} ${(Number(constants.opex_team || 0) + Number(constants.opex_software || 0) + Number(constants.opex_rent || 0) + Number(constants.opex_other || 0)).toLocaleString()}/wk</p>
+              <NumberInput label="Sales closed" value={form.sales_closed} onChange={v => setField('sales_closed', v)} />
+              <NumberInput label="New clients" value={form.new_clients} onChange={v => setField('new_clients', v)} />
             </>
           )}
         </div>
-      )}
-    </div>
-  )
+      </StepCard>
 
-  // ── Reusable: product form sections ──
-  const productFormSections = (
-    <>
-      {/* Revenue */}
-      <div className="card-section">
-        <p className="section-title mb-0.5">Revenue</p>
-        <p className="section-subtitle">Total income generated this week.</p>
-        <div className="grid grid-cols-2 gap-4">
-          <CurrencyInput label="Revenue" value={form.revenue} onChange={v => setField('revenue', v)} />
-          <NumberInput label="Number of Orders" value={form.num_orders} onChange={v => setField('num_orders', v)} />
+      {/* ── Step 3: Direct costs ── */}
+      <StepCard
+        step={3}
+        title="Direct costs"
+        subtitle={isProduct ? 'COGS + marketing for what sold.' : 'What it costs you to deliver and market this week.'}
+        extraLabel="Add more details"
+        extraChildren={isProduct ? (
+          <>
+            <CurrencyInput label="Opening inventory ($)" value={form.opening_inventory_value} onChange={v => setField('opening_inventory_value', v)} />
+            <CurrencyInput label="Closing inventory ($)" value={form.closing_inventory_value} onChange={v => setField('closing_inventory_value', v)} />
+            <CurrencyInput label="Inventory purchased this week" value={form.inventory_purchased} onChange={v => setField('inventory_purchased', v)} />
+          </>
+        ) : (
+          <>
+            <NumberInput label="Billable / client hours" value={form.billable_hours} onChange={v => setField('billable_hours', v)} />
+            <NumberInput label="Admin / non-billable hours" value={form.admin_hours} onChange={v => setField('admin_hours', v)} />
+          </>
+        )}
+      >
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <CurrencyInput
+            label={isProduct ? 'Cost of goods (COGS)' : 'Delivery costs'}
+            hint={isProduct ? 'Direct cost of products sold' : 'Contractor, platform, tools'}
+            value={isProduct ? form.cogs : form.delivery_costs}
+            onChange={v => setField(isProduct ? 'cogs' : 'delivery_costs', v)}
+          />
+          <CurrencyInput
+            label="Marketing spend"
+            hint="Ads, sponsorships, paid posts"
+            value={form.marketing_spend}
+            onChange={v => setField('marketing_spend', v)}
+          />
         </div>
-        <SectionSummaryBar items={[
-          { label: 'Revenue', value: fmtC(form.revenue) },
-          { label: 'AOV', value: form.revenue && form.num_orders ? fmtC(Math.round(Number(form.revenue) / Number(form.num_orders))) : '—' },
-        ]} />
-      </div>
+      </StepCard>
 
-      {/* COGS */}
-      <div className="card-section">
-        <p className="section-title mb-0.5">Cost of Goods</p>
-        <p className="section-subtitle">Direct product costs this week. Per-unit packaging and fulfilment come from your baseline.</p>
-        <div className="grid grid-cols-1 gap-4">
-          <CurrencyInput label="Total COGS (Cost of Goods Sold)" value={form.cogs} onChange={v => setField('cogs', v)} helper="Cost of the goods sold this week" />
-        </div>
-        <SectionSummaryBar items={[
-          { label: 'COGS', value: fmtC(form.cogs) },
-          { label: 'Gross Profit', value: fmtC(Math.round(snapshot.grossProfit)) },
-          { label: 'Gross Margin', value: fmt.pct(snapshot.grossMargin) },
-        ]} />
-      </div>
-
-      {/* Operating Expenses */}
-      <div className="card-section">
-        <p className="section-title mb-0.5">Operating Expenses</p>
-        <p className="section-subtitle">Variable spend this week. Fixed costs from your baseline are included automatically.</p>
-        <div className="grid grid-cols-1 gap-4">
-          <CurrencyInput label="Marketing / Ad Spend" value={form.marketing_spend} onChange={v => setField('marketing_spend', v)} helper="Ads, sponsored posts, and paid marketing this week" />
-        </div>
-        <SectionSummaryBar items={[
-          { label: 'Marketing', value: fmtC(form.marketing_spend) },
-          { label: 'Total OPEX', value: fmtC(Math.round(snapshot.totalOpex)) },
-          { label: 'Net Profit', value: fmtC(Math.round(snapshot.netProfit)) },
-          { label: 'Net Margin', value: fmt.pct(snapshot.netMargin) },
-        ]} />
-      </div>
-
-      {/* Customer Economics */}
-      <div className="card-section">
-        <p className="section-title mb-0.5">Customer Economics</p>
-        <p className="section-subtitle">Who bought and what came back.</p>
-        <div className="grid grid-cols-2 gap-4">
-          <NumberInput label="New Customers Acquired" value={form.new_customers} onChange={v => setField('new_customers', v)} />
-          <NumberInput label="Repeat Customers" value={form.repeat_customers} onChange={v => setField('repeat_customers', v)} />
-          <CurrencyInput label="Refunds / Returns Value" value={form.refunds_value} onChange={v => setField('refunds_value', v)} />
-        </div>
-        <SectionSummaryBar items={[
-          { label: 'CAC', value: snapshot.cac !== null ? fmtC(Math.round(snapshot.cac)) : '—' },
-          { label: 'Repeat Rate', value: snapshot.repeatRate !== null ? fmt.pct(snapshot.repeatRate) : '—' },
-          { label: 'Refund Rate', value: snapshot.refundRate !== null ? fmt.pct(snapshot.refundRate) : '—' },
-        ]} />
-      </div>
-
-      {/* Inventory */}
-      <div className="card-section">
-        <p className="section-title mb-0.5">Inventory & Cash Flow</p>
-        <p className="section-subtitle">How your stock moves and where cash sits.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <CurrencyInput label="Opening Inventory Value" value={form.opening_inventory_value} onChange={v => setField('opening_inventory_value', v)} />
-          <CurrencyInput label="Closing Inventory Value" value={form.closing_inventory_value} onChange={v => setField('closing_inventory_value', v)} />
-          <CurrencyInput label="Inventory Purchased" value={form.inventory_purchased} onChange={v => setField('inventory_purchased', v)} />
-          <NumberInput label="Stock Sold (Units)" value={form.stock_sold_units} onChange={v => setField('stock_sold_units', v)} />
-          <NumberInput label="Stock On Hand (Units)" value={form.stock_on_hand_units} onChange={v => setField('stock_on_hand_units', v)} />
-        </div>
-        <SectionSummaryBar items={[
-          { label: 'Avg Inventory', value: snapshot.avgInventory > 0 ? fmtC(Math.round(snapshot.avgInventory)) : '—' },
-          { label: 'Turnover', value: snapshot.inventoryTurnover !== null ? fmt.x(snapshot.inventoryTurnover) : '—' },
-          { label: 'Sell-Through', value: snapshot.sellThrough !== null ? fmt.pct(snapshot.sellThrough) : '—' },
-        ]} />
-      </div>
-    </>
-  )
-
-  // ── Reusable: service form sections ──
-  const serviceFormSections = (
-    <>
-      {/* Revenue */}
-      <div className="card-section">
-        <p className="section-title mb-0.5">Revenue</p>
-        <p className="section-subtitle">Total income received this week.</p>
-        <div className="grid grid-cols-1 gap-4">
-          <CurrencyInput label="Revenue" value={form.revenue} onChange={v => setField('revenue', v)} />
-        </div>
-        <SectionSummaryBar items={[
-          { label: 'Revenue', value: fmtC(form.revenue) },
-        ]} />
-      </div>
-
-      {/* Sales Activity */}
-      <div className="card-section">
-        <p className="section-title mb-0.5">Sales Activity</p>
-        <p className="section-subtitle">Calls, closes, and client movements this week.</p>
-        <div className="grid grid-cols-2 gap-4">
-          <NumberInput label="Sales Calls Booked" value={form.sales_calls_booked} onChange={v => setField('sales_calls_booked', v)} />
-          <NumberInput label="Sales Closed" value={form.sales_closed} onChange={v => setField('sales_closed', v)} />
-          <NumberInput label="New Clients Onboarded" value={form.new_clients} onChange={v => setField('new_clients', v)} />
-          <NumberInput label="Total Active Clients" value={form.active_clients} onChange={v => setField('active_clients', v)} helper="All current active clients this week" />
-          <NumberInput label="Renewals / Extensions" value={form.renewals} onChange={v => setField('renewals', v)} />
-        </div>
-        <SectionSummaryBar items={[
-          { label: 'Conversion', value: snapshot.conversionRate !== null ? fmt.pct(snapshot.conversionRate) : '—' },
-          { label: 'Capacity', value: snapshot.capacityPressure !== null ? fmt.pct(snapshot.capacityPressure) : '—' },
-        ]} />
-      </div>
-
-      {/* Delivery Costs */}
-      <div className="card-section">
-        <p className="section-title mb-0.5">Delivery Costs</p>
-        <p className="section-subtitle">Direct cost to deliver your service this week.</p>
-        <div className="grid grid-cols-2 gap-4">
-          <CurrencyInput label="Delivery Costs" value={form.delivery_costs} onChange={v => setField('delivery_costs', v)} helper="Contractor, platform, or direct delivery costs" />
-          <CurrencyInput label="Refunds / Churn Value" value={form.refunds_value} onChange={v => setField('refunds_value', v)} />
-        </div>
-        <SectionSummaryBar items={[
-          { label: 'Variable Costs', value: fmtC(Math.round(snapshot.variableCosts)) },
-          { label: 'Gross Profit', value: fmtC(Math.round(snapshot.grossProfit)) },
-          { label: 'Gross Margin', value: fmt.pct(snapshot.grossMargin) },
-        ]} />
-      </div>
-
-      {/* Operating Expenses */}
-      <div className="card-section">
-        <p className="section-title mb-0.5">Operating Expenses</p>
-        <p className="section-subtitle">Variable spend this week. Fixed costs from your baseline are included automatically.</p>
-        <div className="grid grid-cols-1 gap-4">
-          <CurrencyInput label="Marketing / Ad Spend" value={form.marketing_spend} onChange={v => setField('marketing_spend', v)} helper="Ads, paid placements, and outbound marketing" />
-        </div>
-        <SectionSummaryBar items={[
-          { label: 'Total OPEX', value: fmtC(Math.round(snapshot.totalOpex)) },
-          { label: 'Net Profit', value: fmtC(Math.round(snapshot.netProfit)) },
-          { label: 'Net Margin', value: fmt.pct(snapshot.netMargin) },
-        ]} />
-      </div>
-
-      {/* Capacity & Hours */}
-      <div className="card-section">
-        <p className="section-title mb-0.5">Capacity & Delivery Hours</p>
-        <p className="section-subtitle">How your time was spent this week.</p>
-        <div className="grid grid-cols-2 gap-4">
-          <NumberInput label="Billable / Client Hours" value={form.billable_hours} onChange={v => setField('billable_hours', v)} />
-          <NumberInput label="Admin / Non-Billable Hours" value={form.admin_hours} onChange={v => setField('admin_hours', v)} />
-        </div>
-        <SectionSummaryBar items={[
-          { label: 'Utilisation', value: snapshot.utilisation !== null ? fmt.pct(snapshot.utilisation) : '—' },
-          { label: 'Total Hours', value: snapshot.totalHours > 0 ? `${snapshot.totalHours}h` : '—' },
-        ]} />
-      </div>
-    </>
-  )
-
-  // ── Reusable: notes block ──
-  const notesBlock = (
-    <div className="card-section">
-      <p className="section-title mb-1">Week Notes</p>
-      <p className="section-subtitle">Optional context for this week.</p>
-      <textarea
-        className="textarea-field"
-        rows={2}
-        placeholder="Anything worth noting about this week…"
-        value={notes}
-        onChange={e => setNotes(e.target.value)}
+      {/* ── Step 4: Operating expenses ── */}
+      <OperatingExpensesStep
+        baselineCosts={baselineCosts}
+        variableExpenses={variableExpenses}
+        onAddExpense={handleAddExpense}
+        onUpdateExpense={handleUpdateExpense}
+        onRemoveExpense={handleRemoveExpense}
+        onGoToBaseline={onGoToBaseline}
       />
+
+      {/* ── At a glance panel ── */}
+      <AtAGlancePanel
+        revenue={atAGlance.revenue}
+        grossProfit={atAGlance.grossProfit}
+        netProfit={atAGlance.netProfit}
+        netMargin={atAGlance.netMargin}
+        directCosts={atAGlance.directCosts}
+        operatingExpenses={atAGlance.operatingExpenses}
+        totalCosts={atAGlance.totalCosts}
+        currency={currency}
+      />
+
+      {/* ── Week notes ── */}
+      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500, marginBottom: '4px' }}>Week notes</p>
+        <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)', marginBottom: '12px' }}>Optional context for this week.</p>
+        <textarea
+          rows={2}
+          placeholder="Anything worth noting about this week…"
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }}
+          onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+          onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
+        />
+      </div>
+
+      {/* ── Status strip + Save ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)' }}>
+          {lastSaved ? `Saved ${format(new Date(lastSaved), 'd MMM, h:mm a')}` : 'Not yet saved'}
+        </p>
+        <button
+          onClick={handleSaveEntry}
+          disabled={saving}
+          style={{
+            background: saving ? '#9B7E85' : BRAND, color: 'white', border: 'none',
+            fontSize: '13px', fontWeight: 500, padding: '10px 24px', borderRadius: '8px',
+            letterSpacing: '0.04em', textTransform: 'uppercase', cursor: saving ? 'not-allowed' : 'pointer',
+            fontFamily: 'DM Sans, sans-serif', display: 'flex', alignItems: 'center', gap: '6px',
+          }}
+        >
+          {saveConfirmed ? (
+            <>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <path d="M2 7l3.5 3.5L11 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Saved
+            </>
+          ) : saving ? 'Saving…' : editMode ? 'Save changes' : 'Save week'}
+        </button>
+      </div>
+
+      {/* ── Financial Snapshot (unchanged) ── */}
+      <FinancialSnapshot snapshot={snapshot} isProduct={isProduct} currency={currency} fmtC={fmtC} simpleMode={simpleMode} onToggleSimpleMode={onToggleSimpleMode} />
+
     </div>
   )
+}
 
-  // ── Reusable: snapshot section ──
-  const snapshotSection = (
-    <div className="card-section">
-      <div className="flex items-start justify-between gap-4 mb-1">
+// ─── Context strip ────────────────────────────────────────────────────────────
+
+function ContextStrip({ week, model, currency, onCurrencyChange, streak, lastSaved }) {
+  return (
+    <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '16px 20px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px' }}>
+          <div>
+            <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '2px' }}>Current week</p>
+            <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1A1A' }}>{week.label}</p>
+          </div>
+          <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.08)' }} />
+          <div>
+            <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '2px' }}>Model</p>
+            <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1A1A' }}>{model === 'product' ? 'Product-based' : 'Service-based'}</p>
+          </div>
+          {streak > 0 && (
+            <>
+              <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.08)' }} />
+              <div>
+                <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '2px' }}>Streak</p>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: '#6B1020' }}>{streak} {streak === 1 ? 'week' : 'week streak'}</p>
+              </div>
+            </>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {lastSaved && (
+            <p style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)' }}>
+              Saved {format(new Date(lastSaved), 'd MMM, h:mm a')}
+            </p>
+          )}
+          <select
+            value={currency}
+            onChange={e => onCurrencyChange(e.target.value)}
+            style={{ padding: '8px 12px', fontSize: '13px', background: '#FAF7F2', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: '8px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
+          >
+            {CURRENCIES.map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Financial Snapshot (unchanged visually) ──────────────────────────────────
+
+function FinancialSnapshot({ snapshot, isProduct, currency, fmtC, simpleMode, onToggleSimpleMode }) {
+  const BRAND = '#6B1020'
+  return (
+    <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '4px' }}>
         <div>
-          <p className="section-title">
-            {isSubmitted ? 'This Week\'s Snapshot' : 'Financial Snapshot'}
-          </p>
-          <p className="section-subtitle">
-            {isSubmitted ? 'Saved metrics for this week.' : 'Updates as you enter.'}
-          </p>
+          <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '2px' }}>Financial snapshot</p>
+          <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)' }}>Updates as you enter.</p>
         </div>
         {onToggleSimpleMode && (
           <button
             onClick={onToggleSimpleMode}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors flex-shrink-0"
             style={{
-              backgroundColor: simpleMode ? '#fdf5f5' : '#f3f4f6',
+              display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '14px',
+              fontSize: '11px', fontWeight: 500, cursor: 'pointer', flexShrink: 0,
+              background: simpleMode ? '#fdf5f5' : '#f3f4f6',
               color: simpleMode ? BRAND : '#6b7280',
               border: `1px solid ${simpleMode ? '#f0d0d0' : '#e5e7eb'}`,
             }}
           >
             Explain like I'm new
-            <span
-              className="w-7 h-4 rounded-full relative flex-shrink-0"
-              style={{ backgroundColor: simpleMode ? BRAND : '#d1d5db', display: 'inline-block' }}
-            >
-              <span
-                className="absolute top-0.5 w-3 h-3 rounded-full bg-white"
-                style={{ left: simpleMode ? '14px' : '2px', transition: 'left 0.15s' }}
-              />
+            <span style={{ width: '28px', height: '16px', borderRadius: '8px', background: simpleMode ? BRAND : '#d1d5db', position: 'relative', display: 'inline-block' }}>
+              <span style={{ position: 'absolute', top: '2px', width: '12px', height: '12px', borderRadius: '50%', background: 'white', left: simpleMode ? '14px' : '2px', transition: 'left 0.15s' }} />
             </span>
           </button>
         )}
       </div>
 
-      {isProduct ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
-          <SnapshotCard label="Revenue" value={fmtC(Math.round(snapshot.revenue))} metricKey="revenue" metricValue={snapshot.revenue} explanation={EXPLANATIONS.revenue} simpleMode={simpleMode} />
-          <SnapshotCard label="Gross Profit" value={fmtC(Math.round(snapshot.grossProfit))} explanation={EXPLANATIONS.grossProfit} simpleMode={simpleMode} />
-          <SnapshotCard label="Gross Margin" value={fmt.pct(snapshot.grossMargin)} metricKey="grossMargin" metricValue={snapshot.grossMargin} explanation={EXPLANATIONS.grossMargin} simpleMode={simpleMode} />
-          <SnapshotCard label="Net Profit" value={fmtC(Math.round(snapshot.netProfit))} explanation={EXPLANATIONS.netProfit} simpleMode={simpleMode} />
-          <SnapshotCard label="Net Margin" value={fmt.pct(snapshot.netMargin)} metricKey="netMargin" metricValue={snapshot.netMargin} explanation={EXPLANATIONS.netMargin} simpleMode={simpleMode} />
-          <SnapshotCard label="Inventory Pressure" value={snapshot.inventoryTurnover !== null ? fmt.x(snapshot.inventoryTurnover) : '—'} metricKey="inventoryTurnover" metricValue={snapshot.inventoryTurnover} explanation={EXPLANATIONS.inventoryTurnover} simpleMode={simpleMode} />
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
-          <SnapshotCard label="Revenue" value={fmtC(Math.round(snapshot.revenue))} metricKey="revenue" metricValue={snapshot.revenue} explanation={EXPLANATIONS.revenue} simpleMode={simpleMode} />
-          <SnapshotCard label="Gross Profit" value={fmtC(Math.round(snapshot.grossProfit))} explanation={EXPLANATIONS.grossProfit} simpleMode={simpleMode} />
-          <SnapshotCard label="Gross Margin" value={fmt.pct(snapshot.grossMargin)} metricKey="grossMargin" metricValue={snapshot.grossMargin} explanation={EXPLANATIONS.grossMargin} simpleMode={simpleMode} />
-          <SnapshotCard label="Net Profit" value={fmtC(Math.round(snapshot.netProfit))} explanation={EXPLANATIONS.netProfit} simpleMode={simpleMode} />
-          <SnapshotCard label="Net Margin" value={fmt.pct(snapshot.netMargin)} metricKey="netMargin" metricValue={snapshot.netMargin} explanation={EXPLANATIONS.netMargin} simpleMode={simpleMode} />
-          <SnapshotCard label="Capacity Pressure" value={snapshot.capacityPressure !== null ? fmt.pct(snapshot.capacityPressure) : '—'} metricKey="capacityPressure" metricValue={snapshot.capacityPressure} explanation={EXPLANATIONS.capacityPressure} simpleMode={simpleMode} />
-        </div>
-      )}
-    </div>
-  )
-
-  return (
-    <div className="space-y-5">
-
-      {/* ── Top strip ── */}
-      <div className="card-section !p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-4">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Current Week</p>
-              <p className="text-sm font-bold text-gray-900">{week.label}</p>
-            </div>
-            <div className="w-px h-8 bg-gray-100" />
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Model</p>
-              <p className="text-sm font-bold text-gray-900">{isProduct ? 'Product-Based' : 'Service-Based'}</p>
-            </div>
-            {streak > 0 && (
-              <>
-                <div className="w-px h-8 bg-gray-100" />
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Streak</p>
-                  <p className="text-sm font-bold" style={{ color: BRAND }}>{streak} {streak === 1 ? 'week' : 'week streak'}</p>
-                </div>
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            {lastSaved && (
-              <p className="text-xs text-gray-400">
-                Saved {format(new Date(lastSaved), 'd MMM, h:mm a')}
-              </p>
-            )}
-            <select
-              className="input-field !w-auto text-xs"
-              value={currency}
-              readOnly
-            >
-              {CURRENCIES.map(c => <option key={c}>{c}</option>)}
-            </select>
-          </div>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginTop: '16px' }}
+        className="sm:grid-cols-3">
+        {isProduct ? (
+          <>
+            <SnapshotCard label="Revenue" value={fmtC(Math.round(snapshot.revenue))} metricKey="revenue" metricValue={snapshot.revenue} explanation={EXPLANATIONS.revenue} simpleMode={simpleMode} />
+            <SnapshotCard label="Gross profit" value={fmtC(Math.round(snapshot.grossProfit))} explanation={EXPLANATIONS.grossProfit} simpleMode={simpleMode} />
+            <SnapshotCard label="Gross margin" value={fmt.pct(snapshot.grossMargin)} metricKey="grossMargin" metricValue={snapshot.grossMargin} explanation={EXPLANATIONS.grossMargin} simpleMode={simpleMode} />
+            <SnapshotCard label="Net profit" value={fmtC(Math.round(snapshot.netProfit))} explanation={EXPLANATIONS.netProfit} simpleMode={simpleMode} />
+            <SnapshotCard label="Net margin" value={fmt.pct(snapshot.netMargin)} metricKey="netMargin" metricValue={snapshot.netMargin} explanation={EXPLANATIONS.netMargin} simpleMode={simpleMode} />
+            <SnapshotCard label="Inventory pressure" value={snapshot.inventoryTurnover !== null ? fmt.x(snapshot.inventoryTurnover) : '—'} metricKey="inventoryTurnover" metricValue={snapshot.inventoryTurnover} explanation={EXPLANATIONS.inventoryTurnover} simpleMode={simpleMode} />
+          </>
+        ) : (
+          <>
+            <SnapshotCard label="Revenue" value={fmtC(Math.round(snapshot.revenue))} metricKey="revenue" metricValue={snapshot.revenue} explanation={EXPLANATIONS.revenue} simpleMode={simpleMode} />
+            <SnapshotCard label="Gross profit" value={fmtC(Math.round(snapshot.grossProfit))} explanation={EXPLANATIONS.grossProfit} simpleMode={simpleMode} />
+            <SnapshotCard label="Gross margin" value={fmt.pct(snapshot.grossMargin)} metricKey="grossMargin" metricValue={snapshot.grossMargin} explanation={EXPLANATIONS.grossMargin} simpleMode={simpleMode} />
+            <SnapshotCard label="Net profit" value={fmtC(Math.round(snapshot.netProfit))} explanation={EXPLANATIONS.netProfit} simpleMode={simpleMode} />
+            <SnapshotCard label="Net margin" value={fmt.pct(snapshot.netMargin)} metricKey="netMargin" metricValue={snapshot.netMargin} explanation={EXPLANATIONS.netMargin} simpleMode={simpleMode} />
+            <SnapshotCard label="Capacity pressure" value={snapshot.capacityPressure !== null ? fmt.pct(snapshot.capacityPressure) : '—'} metricKey="capacityPressure" metricValue={snapshot.capacityPressure} explanation={EXPLANATIONS.capacityPressure} simpleMode={simpleMode} />
+          </>
+        )}
       </div>
-
-      {/* ════════════════════════════════════════════════════════════════════════
-          SUBMITTED STATE: Debrief hero → Snapshot → Week details → Trend
-          ════════════════════════════════════════════════════════════════════════ */}
-      {isSubmitted && (
-        <>
-          {/* ── Debrief Hero ── */}
-          <div
-            className="card-section"
-            style={{
-              background: 'linear-gradient(160deg, #fdf9f8 0%, #fff 60%)',
-              borderTop: `3px solid ${BRAND}`,
-            }}
-          >
-            <div className="flex items-start justify-between gap-4 mb-5">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-400 mb-1">{week.label}</p>
-                <p className="section-title">This Week's Read</p>
-                <p className="text-sm text-gray-400 mt-0.5">Your numbers, interpreted.</p>
-              </div>
-              <button
-                onClick={() => { setEditMode(true); setWeekDetailsExpanded(true) }}
-                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex-shrink-0"
-                style={{ color: BRAND, backgroundColor: '#fdf5f5', border: '1px solid rgba(107,16,16,0.12)' }}
-              >
-                <svg width="11" height="11" viewBox="0 0 13 13" fill="none">
-                  <path d="M9 1.5L11.5 4L4 11.5H1.5V9L9 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-                </svg>
-                Edit this week
-              </button>
-            </div>
-            <WeeklyDebrief points={debrief} />
-          </div>
-
-          {/* ── Snapshot (second position in submitted view) ── */}
-          {snapshotSection}
-
-          {/* ── Week Details accordion ── */}
-          <div className="card-section">
-            <button
-              onClick={() => setWeekDetailsExpanded(e => !e)}
-              className="flex items-center justify-between w-full"
-            >
-              <div className="text-left">
-                <p className="section-title">Week Details</p>
-                <p className="text-sm text-gray-400">Your entries for {week.label}.</p>
-              </div>
-              <svg
-                width="16" height="16" viewBox="0 0 12 12" fill="none"
-                style={{ transform: weekDetailsExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: '#9ca3af', flexShrink: 0 }}
-              >
-                <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-
-            {weekDetailsExpanded && (
-              <div className="mt-5 space-y-5">
-                {baselineBlock}
-                {isProduct ? productFormSections : serviceFormSections}
-                {notesBlock}
-              </div>
-            )}
-          </div>
-
-          {/* ── Revenue trend (full width in submitted view) ── */}
-          <div className="card-section">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="section-title mb-0.5">Revenue Trend</p>
-                <p className="text-sm text-gray-400">
-                  {recentEntries.length > 0
-                    ? `Your last ${recentEntries.length} saved week${recentEntries.length !== 1 ? 's' : ''}.`
-                    : 'Appears here once you save your first week.'}
-                </p>
-              </div>
-              {recentEntries.length > 0 && (
-                <button
-                  onClick={onViewTrends}
-                  className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex-shrink-0"
-                  style={{ color: BRAND, backgroundColor: '#fdf5f5' }}
-                >
-                  View full trends →
-                </button>
-              )}
-            </div>
-            <MiniBarChart entries={recentEntries} metric="revenue" currency={currency} />
-          </div>
-        </>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════════════
-          IN PROGRESS / IDLE STATE: Status treatment → Form → Snapshot → Trend
-          ════════════════════════════════════════════════════════════════════════ */}
-      {!isSubmitted && (
-        <>
-          {/* ── Idle: begin review prompt ── */}
-          {isIdle && (
-            <div className="card-section !p-5">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="section-title">Ready when you are</p>
-                  <p className="text-sm text-gray-400 mt-0.5">Enter your numbers for {week.label}.</p>
-                </div>
-                <button
-                  onClick={() => setReviewInProgress(true)}
-                  className="btn-brand flex-shrink-0"
-                >
-                  Begin Weekly Review
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ── In progress: review state banner ── */}
-          {isEditing && !editMode && (
-            <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl" style={{ backgroundColor: '#fef9ee', border: '1px solid #f0dfa0' }}>
-              <span className="w-2 h-2 rounded-full flex-shrink-0 animate-pulse" style={{ backgroundColor: '#D97706' }} />
-              <p className="text-xs font-semibold" style={{ color: '#7a5c10' }}>
-                Weekly Review in Progress · {week.label}
-              </p>
-            </div>
-          )}
-
-          {/* ── Editing: edit mode banner ── */}
-          {editMode && (
-            <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl" style={{ backgroundColor: '#f0f4ff', border: '1px solid #c7d2fe' }}>
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: '#4F46E5' }} />
-              <p className="text-xs font-semibold" style={{ color: '#3730a3' }}>
-                Editing {week.label}
-              </p>
-            </div>
-          )}
-
-          {/* ── Baseline ── */}
-          {baselineBlock}
-
-          {/* ── Form sections ── */}
-          {isProduct ? productFormSections : serviceFormSections}
-
-          {/* ── Notes ── */}
-          {notesBlock}
-
-          {/* ── Save / submit button ── */}
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-400">
-              {lastSaved ? `Saved ${format(new Date(lastSaved), 'd MMM, h:mm a')}` : 'Not yet saved'}
-            </p>
-            <button onClick={handleSaveEntry} disabled={savingEntry} className="btn-brand flex items-center gap-2">
-              {savingEntry ? 'Saving…' : editMode ? (
-                <>
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                    <path d="M2 7l3.5 3.5L11 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  Save changes
-                </>
-              ) : 'Save Week'}
-            </button>
-          </div>
-
-          {/* ── Financial Snapshot (live preview) ── */}
-          {snapshotSection}
-
-          {/* ── Recent trend + debrief (side by side) ── */}
-          <div className="grid grid-cols-1 gap-5" style={{ gridTemplateColumns: recentEntries.length > 0 ? '1fr 1fr' : '1fr' }}>
-
-            {/* Trend chart */}
-            <div className="card-section">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="section-title mb-0.5">Revenue Trend</p>
-                  <p className="text-sm text-gray-400">
-                    {recentEntries.length > 0
-                      ? `Your last ${recentEntries.length} saved week${recentEntries.length !== 1 ? 's' : ''}.`
-                      : 'Appears here once you save your first week.'}
-                  </p>
-                </div>
-                {recentEntries.length > 0 && (
-                  <button
-                    onClick={onViewTrends}
-                    className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex-shrink-0"
-                    style={{ color: BRAND, backgroundColor: '#fdf5f5' }}
-                  >
-                    View full trends →
-                  </button>
-                )}
-              </div>
-              <MiniBarChart entries={recentEntries} metric="revenue" currency={currency} />
-            </div>
-
-            {/* Weekly debrief */}
-            <div className="card-section">
-              <p className="section-title mb-1">This Week's Debrief</p>
-              <p className="section-subtitle">Your numbers as you've entered them.</p>
-              <div className="mt-2">
-                <WeeklyDebrief points={debrief} />
-              </div>
-            </div>
-
-          </div>
-        </>
-      )}
-
     </div>
   )
 }

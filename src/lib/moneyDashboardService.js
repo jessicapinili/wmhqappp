@@ -39,12 +39,11 @@ export const upsertMoneyDashboardSettings = async (userId, payload) => {
     .select()
     .maybeSingle()
   if (error) throw error
-  // upsert succeeded but returned no row (can happen with some RLS configs) — fetch directly
   if (!data) return getMoneyDashboardSettings(userId)
   return data
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Constants (capacity fields — opex fields are now in baseline_fixed_costs) ─
 
 export const getMoneyDashboardConstants = async (userId, businessModel) => {
   const { data, error } = await supabase
@@ -82,6 +81,45 @@ export const deleteMoneyDashboardConstants = async (userId, businessModel) => {
     .eq('user_id', userId)
     .eq('business_model', businessModel)
   if (error) throw error
+}
+
+// ─── Baseline fixed costs ─────────────────────────────────────────────────────
+
+export const getBaselineFixedCosts = async (userId) => {
+  const { data, error } = await supabase
+    .from('baseline_fixed_costs')
+    .select('*')
+    .eq('user_id', userId)
+    .order('sort_order', { ascending: true })
+  if (error) console.error('baseline_fixed_costs load:', error)
+  return data || []
+}
+
+// Full replace: delete all existing rows for user, then insert the new set.
+// Returns the freshly inserted rows.
+export const saveBaselineFixedCosts = async (userId, costs) => {
+  const { error: delErr } = await supabase
+    .from('baseline_fixed_costs')
+    .delete()
+    .eq('user_id', userId)
+  if (delErr) throw delErr
+
+  if (!costs || costs.length === 0) return []
+
+  const rows = costs.map((c, i) => ({
+    user_id: userId,
+    name: c.name,
+    amount: Number(c.amount) || 0,
+    frequency: c.frequency || 'monthly',
+    sort_order: i,
+  }))
+
+  const { data, error } = await supabase
+    .from('baseline_fixed_costs')
+    .insert(rows)
+    .select()
+  if (error) throw error
+  return data || []
 }
 
 // ─── Weekly entries ───────────────────────────────────────────────────────────
@@ -140,7 +178,49 @@ export const deleteMoneyDashboardEntriesForModel = async (userId, businessModel)
   if (error) throw error
 }
 
-// ─── Full model reset ─────────────────────────────────────────────────────────
+// ─── Weekly variable expenses ──────────────────────────────────────────────────
+
+export const getWeeklyVariableExpenses = async (entryId) => {
+  if (!entryId) return []
+  const { data, error } = await supabase
+    .from('weekly_variable_expenses')
+    .select('*')
+    .eq('entry_id', entryId)
+    .order('created_at', { ascending: true })
+  if (error) console.error('variable_expenses load:', error)
+  return data || []
+}
+
+// Full replace for the week: delete all rows for this entry, insert new set.
+export const saveWeeklyVariableExpenses = async (entryId, userId, expenses) => {
+  const { error: delErr } = await supabase
+    .from('weekly_variable_expenses')
+    .delete()
+    .eq('entry_id', entryId)
+  if (delErr) throw delErr
+
+  if (!expenses || expenses.length === 0) return []
+
+  const rows = expenses
+    .filter(e => Number(e.amount) > 0)
+    .map(e => ({
+      entry_id: entryId,
+      user_id: userId,
+      category: e.category,
+      amount: Number(e.amount) || 0,
+    }))
+
+  if (rows.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('weekly_variable_expenses')
+    .insert(rows)
+    .select()
+  if (error) throw error
+  return data || []
+}
+
+// ─── Full model reset (used only when user explicitly resets) ─────────────────
 
 export const resetDashboardForModelChange = async (userId, oldModel) => {
   await deleteMoneyDashboardEntriesForModel(userId, oldModel)
