@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { format, parseISO } from 'date-fns'
 import {
   getWeekDates,
+  getPreviousWeekDates,
   getMoneyDashboardConstants,
   getMoneyDashboardEntryForWeek,
   upsertMoneyDashboardEntry,
@@ -428,7 +429,9 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
   const { user_id, business_model: model, preferred_currency } = settings
   const isProduct = model === 'product'
 
-  const week = useMemo(() => getWeekDates(), [])
+  const currentWeek = useMemo(() => getWeekDates(), [])
+  const [activeWeek, setActiveWeek] = useState(currentWeek)
+  const [showBackfillModal, setShowBackfillModal] = useState(false)
   const [currency, setCurrency] = useState(preferred_currency || 'AUD')
 
   const [constants, setConstants] = useState(isProduct ? PRODUCT_CONSTANT_DEFAULTS : SERVICE_CONSTANT_DEFAULTS)
@@ -447,15 +450,21 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
   const [reviewStarted, setReviewStarted] = useState(false)
   const [editMode, setEditMode] = useState(false)
 
-  // Load all data on mount
+  // Load all data on mount or when active week changes
   useEffect(() => {
+    setForm(isProduct ? PRODUCT_WEEKLY_DEFAULTS : SERVICE_WEEKLY_DEFAULTS)
+    setNotes('')
+    setVariableExpenses([])
+    setEntryId(null)
+    setLastSaved(null)
+
     const load = async () => {
       setLoading(true)
       const [savedConstants, existingCosts, weekEntry, recent] = await Promise.all([
         getMoneyDashboardConstants(user_id, model),
         getBaselineFixedCosts(user_id),
-        getMoneyDashboardEntryForWeek(user_id, model, week.start),
-        getMoneyDashboardEntries(user_id, model, 4),
+        getMoneyDashboardEntryForWeek(user_id, model, activeWeek.start),
+        getMoneyDashboardEntries(user_id, model, 8),
       ])
 
       if (savedConstants) {
@@ -475,7 +484,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
       setLoading(false)
     }
     load()
-  }, [user_id, model, week.start])
+  }, [user_id, model, activeWeek.start])
 
   const setField = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
 
@@ -491,6 +500,19 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
   const debrief = useMemo(() => generateWeeklyDebrief(snapshot, model), [snapshot, model])
   const streak = useMemo(() => computeStreak(recentEntries), [recentEntries])
 
+  const missedWeeks = useMemo(() => {
+    const result = []
+    for (let i = 1; i <= 4; i++) {
+      const w = getPreviousWeekDates(i)
+      if (!recentEntries.some(e => e.entry_week_start_date === w.start)) {
+        result.push({ ...w, weeksAgo: i })
+      }
+    }
+    return result
+  }, [recentEntries])
+
+  const isPastWeek = activeWeek.start !== currentWeek.start
+
   // At-a-glance values (derived from snapshot)
   const atAGlance = useMemo(() => {
     const revenue = snapshot.grossRevenue - (Number(form.refunds_value) || 0)
@@ -505,6 +527,19 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
 
   const fmtC = (v) => v !== null && v !== undefined && v !== ''
     ? `${currency} $${Math.round(Number(v || 0)).toLocaleString()}` : '—'
+
+  const handlePickMissedWeek = (week) => {
+    setActiveWeek(week)
+    setShowBackfillModal(false)
+    setReviewStarted(true)
+    setEditMode(false)
+  }
+
+  const handleBackToCurrentWeek = () => {
+    setActiveWeek(currentWeek)
+    setReviewStarted(false)
+    setEditMode(false)
+  }
 
   const handleCurrencyChange = async (newCurrency) => {
     setCurrency(newCurrency)
@@ -539,7 +574,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
         baseline_weekly_total: bwTotal,
       }
 
-      const saved = await upsertMoneyDashboardEntry(user_id, model, week.start, week.end, enrichedForm, notes)
+      const saved = await upsertMoneyDashboardEntry(user_id, model, activeWeek.start, activeWeek.end, enrichedForm, notes)
       setEntryId(saved.id)
       setLastSaved(saved.updated_at)
 
@@ -574,14 +609,20 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
+        {showBackfillModal && <BackfillModal missedWeeks={missedWeeks} onConfirm={handlePickMissedWeek} onCancel={() => setShowBackfillModal(false)} />}
+
         {/* Context strip */}
-        <ContextStrip week={week} model={model} currency={currency} onCurrencyChange={handleCurrencyChange} streak={streak} lastSaved={lastSaved} />
+        <ContextStrip week={activeWeek} model={model} currency={currency} onCurrencyChange={handleCurrencyChange} streak={streak} lastSaved={lastSaved} isPast={isPastWeek} onBackToCurrent={handleBackToCurrentWeek} />
+
+        {!isPastWeek && missedWeeks.length > 0 && (
+          <MissedWeeksBanner missedWeeks={missedWeeks} onChoose={() => setShowBackfillModal(true)} />
+        )}
 
         {/* Debrief hero */}
         <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)', borderTop: `3px solid ${BRAND}` }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '20px' }}>
             <div>
-              <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.16em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>{week.label}</p>
+              <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.16em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>{activeWeek.label}</p>
               <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '2px' }}>This week's read</p>
               <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)' }}>Your numbers, interpreted.</p>
             </div>
@@ -616,7 +657,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
               </button>
             )}
           </div>
-          <MiniBarChart entries={recentEntries} metric="revenue" currency={currency} />
+          <MiniBarChart entries={recentEntries.slice(0, 4)} metric="revenue" currency={currency} />
         </div>
       </div>
     )
@@ -626,12 +667,16 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
   if (!isEditing) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <ContextStrip week={week} model={model} currency={currency} onCurrencyChange={handleCurrencyChange} streak={streak} lastSaved={null} />
+        {showBackfillModal && <BackfillModal missedWeeks={missedWeeks} onConfirm={handlePickMissedWeek} onCancel={() => setShowBackfillModal(false)} />}
+        <ContextStrip week={activeWeek} model={model} currency={currency} onCurrencyChange={handleCurrencyChange} streak={streak} lastSaved={null} isPast={isPastWeek} onBackToCurrent={handleBackToCurrentWeek} />
+        {!isPastWeek && missedWeeks.length > 0 && (
+          <MissedWeeksBanner missedWeeks={missedWeeks} onChoose={() => setShowBackfillModal(true)} />
+        )}
         <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
             <div>
               <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Ready when you are</p>
-              <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)' }}>Enter your numbers for {week.label}.</p>
+              <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)' }}>Enter your numbers for {activeWeek.label}.</p>
             </div>
             <button onClick={() => setReviewStarted(true)} style={{ background: BRAND, color: 'white', border: 'none', fontSize: '13px', fontWeight: 500, padding: '10px 24px', borderRadius: '8px', letterSpacing: '0.04em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0, fontFamily: 'DM Sans, sans-serif' }}>
               Begin weekly review
@@ -647,7 +692,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
                 View full trends →
               </button>
             </div>
-            <MiniBarChart entries={recentEntries} metric="revenue" currency={currency} />
+            <MiniBarChart entries={recentEntries.slice(0, 4)} metric="revenue" currency={currency} />
           </div>
         )}
       </div>
@@ -658,14 +703,20 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
+      {showBackfillModal && <BackfillModal missedWeeks={missedWeeks} onConfirm={handlePickMissedWeek} onCancel={() => setShowBackfillModal(false)} />}
+
       {/* Context strip */}
-      <ContextStrip week={week} model={model} currency={currency} onCurrencyChange={handleCurrencyChange} streak={streak} lastSaved={lastSaved} />
+      <ContextStrip week={activeWeek} model={model} currency={currency} onCurrencyChange={handleCurrencyChange} streak={streak} lastSaved={lastSaved} isPast={isPastWeek} onBackToCurrent={handleBackToCurrentWeek} />
+
+      {!isPastWeek && missedWeeks.length > 0 && (
+        <MissedWeeksBanner missedWeeks={missedWeeks} onChoose={() => setShowBackfillModal(true)} />
+      )}
 
       {/* Edit mode banner */}
-      {editMode && (
+      {editMode && !isPastWeek && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderRadius: '10px', background: '#f0f4ff', border: '1px solid #c7d2fe' }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4F46E5', flexShrink: 0 }} />
-          <p style={{ fontSize: '12px', fontWeight: 500, color: '#3730a3' }}>Editing {week.label}</p>
+          <p style={{ fontSize: '12px', fontWeight: 500, color: '#3730a3' }}>Editing {activeWeek.label}</p>
         </div>
       )}
 
@@ -840,34 +891,140 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
   )
 }
 
+// ─── Missed weeks banner ──────────────────────────────────────────────────────
+
+function MissedWeeksBanner({ missedWeeks, onChoose }) {
+  const weekList = missedWeeks.map(w => w.label).join(', ')
+  return (
+    <div style={{
+      background: '#FAEEDA', borderRadius: '10px', padding: '14px 18px',
+      display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px',
+      border: '0.5px solid rgba(122,92,16,0.2)',
+    }}>
+      <div>
+        <p style={{ fontSize: '14px', fontWeight: 500, color: '#7a5c10', marginBottom: '4px' }}>
+          You've got missed weeks.
+        </p>
+        <p style={{ fontSize: '13px', color: '#7a5c10', lineHeight: 1.5 }}>
+          You haven't logged: {weekList}. Catch up so your trends stay accurate.
+        </p>
+      </div>
+      <button
+        onClick={onChoose}
+        style={{
+          fontSize: '12px', fontWeight: 500, color: BRAND,
+          background: 'white', border: '0.5px solid rgba(107,16,32,0.15)',
+          borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', whiteSpace: 'nowrap',
+          fontFamily: 'DM Sans, sans-serif', flexShrink: 0,
+        }}
+      >
+        Choose a week to log →
+      </button>
+    </div>
+  )
+}
+
+// ─── Backfill modal ───────────────────────────────────────────────────────────
+
+function BackfillModal({ missedWeeks, onConfirm, onCancel }) {
+  const [selected, setSelected] = useState(missedWeeks[0] || null)
+  const agoLabel = (n) => n === 1 ? 'last week' : `${n} weeks ago`
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', padding: '24px' }}>
+      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', maxWidth: '440px', width: '100%' }}>
+        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '20px', fontWeight: 500, marginBottom: '6px' }}>Log a missed week</p>
+        <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)', marginBottom: '20px' }}>Pick which one you want to add.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+          {missedWeeks.map((w) => (
+            <label
+              key={w.start}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px',
+                borderRadius: '8px', cursor: 'pointer',
+                border: `1px solid ${selected?.start === w.start ? BRAND : 'rgba(0,0,0,0.1)'}`,
+                background: selected?.start === w.start ? '#fdf5f5' : 'white',
+              }}
+            >
+              <input
+                type="radio"
+                name="missed-week"
+                checked={selected?.start === w.start}
+                onChange={() => setSelected(w)}
+                style={{ accentColor: BRAND }}
+              />
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1A1A' }}>Week of {w.label}</p>
+                <p style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)' }}>{agoLabel(w.weeksAgo)}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={onCancel}
+            style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '0.5px solid rgba(0,0,0,0.12)', fontSize: '13px', fontWeight: 500, color: 'rgba(0,0,0,0.6)', background: 'white', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => selected && onConfirm(selected)}
+            disabled={!selected}
+            style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 500, color: 'white', background: selected ? BRAND : '#9B7E85', cursor: selected ? 'pointer' : 'not-allowed', fontFamily: 'DM Sans, sans-serif' }}
+          >
+            Open this week →
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Context strip ────────────────────────────────────────────────────────────
 
-function ContextStrip({ week, model, currency, onCurrencyChange, streak, lastSaved }) {
+function ContextStrip({ week, model, currency, onCurrencyChange, streak, lastSaved, isPast, onBackToCurrent }) {
   return (
     <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '16px 20px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px' }}>
           <div>
-            <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '2px' }}>Current week</p>
+            <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: isPast ? '#D97706' : 'rgba(0,0,0,0.4)', marginBottom: '2px' }}>
+              {isPast ? 'Logging' : 'Current week'}
+            </p>
             <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1A1A' }}>{week.label}</p>
           </div>
-          <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.08)' }} />
-          <div>
-            <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '2px' }}>Model</p>
-            <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1A1A' }}>{model === 'product' ? 'Product-based' : 'Service-based'}</p>
-          </div>
-          {streak > 0 && (
+          {isPast ? (
+            <span style={{ fontSize: '11px', fontWeight: 500, padding: '3px 10px', borderRadius: '14px', background: '#FAEEDA', color: '#7a5c10', border: '0.5px solid rgba(122,92,16,0.2)' }}>
+              Catching up — this is a past week
+            </span>
+          ) : (
             <>
               <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.08)' }} />
               <div>
-                <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '2px' }}>Streak</p>
-                <p style={{ fontSize: '14px', fontWeight: 500, color: '#6B1020' }}>{streak} {streak === 1 ? 'week' : 'week streak'}</p>
+                <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '2px' }}>Model</p>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1A1A' }}>{model === 'product' ? 'Product-based' : 'Service-based'}</p>
               </div>
+              {streak > 0 && (
+                <>
+                  <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.08)' }} />
+                  <div>
+                    <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '2px' }}>Streak</p>
+                    <p style={{ fontSize: '14px', fontWeight: 500, color: '#6B1020' }}>{streak} {streak === 1 ? 'week' : 'week streak'}</p>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {lastSaved && (
+          {isPast && onBackToCurrent && (
+            <button
+              onClick={onBackToCurrent}
+              style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(0,0,0,0.5)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline', textUnderlineOffset: '2px', fontFamily: 'DM Sans, sans-serif' }}
+            >
+              ← Back to current week
+            </button>
+          )}
+          {lastSaved && !isPast && (
             <p style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)' }}>
               Saved {format(new Date(lastSaved), 'd MMM, h:mm a')}
             </p>

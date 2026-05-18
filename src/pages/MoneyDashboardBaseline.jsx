@@ -170,8 +170,9 @@ function WeeklyBaselineBanner({ costs, currency }) {
   return (
     <div style={{
       background: '#FAF7F2', borderRadius: '12px', padding: '18px 20px',
-      borderLeft: `3px solid ${BRAND}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      border: '0.5px solid rgba(0,0,0,0.08)', borderLeft: `3px solid ${BRAND}`,
+      borderTop: '0.5px solid rgba(0,0,0,0.08)', borderRight: '0.5px solid rgba(0,0,0,0.08)',
+      borderBottom: '0.5px solid rgba(0,0,0,0.08)', borderLeft: `3px solid ${BRAND}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     }}>
       <div>
         <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '2px' }}>
