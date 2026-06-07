@@ -70,11 +70,27 @@ CREATE TABLE IF NOT EXISTS life_focus (
   quarter TEXT,
   areas TEXT[],
   notes TEXT,
+  done BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 ALTER TABLE life_focus ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage own life focus" ON life_focus FOR ALL USING (auth.uid() = user_id);
+
+
+-- ── BUSINESS FOCUS NOTES ─────────────────────────
+-- Per-focus notes thread. Plain text, max 150 chars. Cascades with focus and user.
+CREATE TABLE IF NOT EXISTS business_focus_notes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  focus_id UUID REFERENCES business_focus(id) ON DELETE CASCADE NOT NULL,
+  body VARCHAR(150) NOT NULL CHECK (char_length(body) <= 150),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE business_focus_notes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage own business focus notes" ON business_focus_notes FOR ALL USING (auth.uid() = user_id);
+CREATE INDEX IF NOT EXISTS business_focus_notes_focus_id_idx ON business_focus_notes(focus_id);
 
 
 -- ── DAILY CHECKLIST ──────────────────────────────
