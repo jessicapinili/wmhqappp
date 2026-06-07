@@ -61,6 +61,15 @@ function getQuarter(dateStr) {
   return 'Q4'
 }
 
+// Whole days from today to the given date (negative if past).
+function daysUntil(dateStr) {
+  if (!dateStr) return null
+  const target = new Date(dateStr + 'T00:00:00')
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.ceil((target - today) / 86400000)
+}
+
 // ─── Status Pill ───────────────────────────────────────────────────────────────
 
 function StatusPill({ status }) {
@@ -526,7 +535,7 @@ export default function Launches() {
 
       {/* Snapshot card */}
       <div className="p-5 text-white" style={{ borderRadius: '5px', backgroundColor: BRAND }}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 gap-4">
 
           {/* Total launches */}
           <div className="text-center">
@@ -555,25 +564,6 @@ export default function Launches() {
               <>
                 <p className="text-2xl font-black">—</p>
                 <p className="text-xs text-white/60 mt-1">Best Performing · no data yet</p>
-              </>
-            )}
-          </div>
-
-          {/* Next launch */}
-          <div className="text-center">
-            {snapshot.nextLaunch ? (
-              <>
-                <p className="text-base font-black leading-snug truncate px-1">
-                  {snapshot.nextLaunch.offer_name}
-                </p>
-                <p className="text-xs text-white/60 mt-1">
-                  Next Launch · {fmtAUD(snapshot.nextLaunch.revenue_goal)} target
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="text-2xl font-black">—</p>
-                <p className="text-xs text-white/60 mt-1">Next Launch · none planned</p>
               </>
             )}
           </div>
@@ -614,13 +604,13 @@ export default function Launches() {
           </div>
           <button
             onClick={() => setShowForm(p => !p)}
-            className="btn-brand text-sm"
+            className="btn-brand"
           >
             + Add Launch
           </button>
         </div>
 
-        {/* Inline form — above table */}
+        {/* Inline form — above list */}
         {showForm && (
           <LaunchForm
             onSave={handleAddLaunch}
@@ -628,238 +618,165 @@ export default function Launches() {
           />
         )}
 
-        {/* Table */}
+        {/* Launch cards */}
         {loading ? (
           <p className="text-sm text-gray-400 py-10 text-center">Loading launches…</p>
+        ) : filteredLaunches.length === 0 ? (
+          <p className="py-10 text-center text-sm text-gray-400 italic">
+            No launches recorded for this year. Add your first launch above.
+          </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="text-left py-2 pr-4 pb-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Offer
-                  </th>
-                  <th className="text-left py-2 pr-4 pb-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Dates
-                  </th>
-                  <th className="text-left py-2 pr-4 pb-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Status
-                  </th>
-                  <th className="text-right py-2 pr-4 pb-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Revenue
-                  </th>
-                  <th className="text-right py-2 pr-4 pb-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Enrolled
-                  </th>
-                  <th className="text-right py-2 pr-4 pb-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Goal %
-                  </th>
-                  <th className="text-right py-2 pr-4 pb-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Avg/Client
-                  </th>
-                  <th className="py-2 pb-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLaunches.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-10 text-center text-sm text-gray-400 italic">
-                      No launches recorded for this year. Add your first launch above.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredLaunches.map(launch => {
-                    const revSecured = launch.revenue_achieved || 0
-                    const enrolled   = launch.enrolled_count || 0
-                    const capacity   = launch.capacity || null
-                    const revGoal    = launch.revenue_goal || 0
+          <div className="space-y-3">
+            {filteredLaunches.map(launch => {
+              const revSecured = launch.revenue_achieved || 0
+              const enrolled   = launch.enrolled_count || 0
+              const capacity   = launch.capacity || null
+              const revGoal    = launch.revenue_goal || 0
 
-                    const goalPct = revGoal > 0 && revSecured > 0
-                      ? Math.min(Math.round((revSecured / revGoal) * 100), 100)
-                      : null
+              const goalPct = revGoal > 0
+                ? (revSecured > 0 ? Math.min(Math.round((revSecured / revGoal) * 100), 100) : 0)
+                : null
+              const avgPerClient = revSecured > 0 && enrolled > 0
+                ? Math.round(revSecured / enrolled)
+                : null
 
-                    const avgPerClient = revSecured > 0 && enrolled > 0
-                      ? Math.round(revSecured / enrolled)
-                      : null
+              const isOpen = openDetailId === launch.id
+              const started = ['Live', 'Closed', 'Evergreen'].includes(launch.status)
+              const notStarted = ['Planning', 'Warming'].includes(launch.status)
+              const endDays = daysUntil(launch.end_date)
+              const startDays = daysUntil(launch.start_date)
+              const meta = [launch.offer_type, fmtDateRange(launch.start_date, launch.end_date)].filter(Boolean).join(' · ')
 
-                    // Show "— / —" if enrolled=0, no capacity, and status=Upcoming
-                    const showDash = enrolled === 0 && !capacity && launch.status === 'Upcoming'
+              return (
+                <div key={launch.id} className="rounded-xl px-4 py-3.5" style={{ backgroundColor: '#faf7f5', border: '0.5px solid #e8e0d8' }}>
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <p className="font-bold text-gray-900 leading-snug">{launch.offer_name}</p>
+                        <StatusPill status={launch.status} />
+                      </div>
+                      {meta && <p className="text-xs text-gray-400">{meta}</p>}
+                    </div>
+                    <button
+                      onClick={() => handleToggleDetail(launch)}
+                      className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0"
+                      style={isOpen
+                        ? { backgroundColor: BRAND, color: '#fff' }
+                        : { backgroundColor: '#f7f7f7', color: '#6B7280' }
+                      }
+                    >
+                      {isOpen ? 'Close ▴' : 'Detail ▾'}
+                    </button>
+                  </div>
 
-                    const isOpen = openDetailId === launch.id
-
-                    return (
-                      <React.Fragment key={launch.id}>
-                        {/* Main row */}
-                        <tr className={`border-b border-gray-50 transition-colors ${
-                          isOpen ? 'bg-[#f7f7f7]' : 'hover:bg-gray-50/50'
-                        }`}>
-
-                          {/* Offer name + type */}
-                          <td className="py-3.5 pr-4">
-                            <p className="font-bold text-gray-900 leading-snug tracking-tight">{launch.offer_name}</p>
-                            {launch.offer_type && (
-                              <span className="inline-block text-[11px] font-medium text-gray-400 bg-[#f7f7f7] rounded-md px-1.5 py-0.5 mt-1">
-                                {launch.offer_type}
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Date range */}
-                          <td className="py-3.5 pr-4 text-xs text-gray-500 whitespace-nowrap">
-                            {fmtDateRange(launch.start_date, launch.end_date)}
-                          </td>
-
-                          {/* Status */}
-                          <td className="py-3.5 pr-4">
-                            <StatusPill status={launch.status} />
-                          </td>
-
-                          {/* Revenue */}
-                          <td className="py-3.5 pr-4 text-right">
-                            <p className="font-bold text-gray-900">{fmtAUD(revSecured)}</p>
-                            {revGoal > 0 && (
-                              <p className="text-[11px] text-gray-400 mt-0.5">goal {fmtAUD(revGoal)}</p>
-                            )}
-                          </td>
-
-                          {/* Enrolled */}
-                          <td className="py-3.5 pr-4 text-right">
-                            {showDash ? (
-                              <span className="text-gray-300 font-medium">— / —</span>
-                            ) : (
-                              <p className="font-semibold text-gray-900">
-                                {enrolled}
-                                {capacity
-                                  ? <span className="text-gray-400 font-normal"> / {capacity}</span>
-                                  : null
-                                }
-                              </p>
-                            )}
-                          </td>
-
-                          {/* Goal % */}
-                          <td className="py-3.5 pr-4 text-right">
-                            {goalPct !== null ? (
-                              <span className={`font-semibold ${goalPct >= 100 ? 'text-emerald-600' : 'text-gray-900'}`}>
-                                {goalPct}%
-                              </span>
-                            ) : (
-                              <span className="text-gray-300">—</span>
-                            )}
-                          </td>
-
-                          {/* Avg per client */}
-                          <td className="py-3.5 pr-4 text-right">
-                            {avgPerClient !== null ? (
-                              <span className="font-semibold text-gray-900">{fmtAUD(avgPerClient)}</span>
-                            ) : (
-                              <span className="text-gray-300">—</span>
-                            )}
-                          </td>
-
-                          {/* Detail toggle */}
-                          <td className="py-3.5 text-right">
-                            <button
-                              onClick={() => handleToggleDetail(launch)}
-                              className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap"
-                              style={isOpen
-                                ? { backgroundColor: BRAND, color: '#fff' }
-                                : { backgroundColor: '#f7f7f7', color: '#6B7280' }
-                              }
-                            >
-                              {isOpen ? 'Close ▴' : 'Detail ▾'}
-                            </button>
-                          </td>
-                        </tr>
-
-                        {/* Detail panel */}
-                        {isOpen && (
-                          <tr>
-                            <td colSpan={8} className="pb-4 pt-0 px-0">
-                              <div className="mx-0 bg-[#f7f7f7] border-x border-b border-[#ede6e1] rounded-b-xl px-5 py-5 space-y-4">
-
-                                {/* Read-only metric tiles */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                  {[
-                                    ['Revenue Secured', fmtAUD(revSecured)],
-                                    ['Revenue Goal',    fmtAUD(revGoal)],
-                                    ['Enrolled',        enrolled],
-                                    ['Avg per Client',  avgPerClient !== null ? fmtAUD(avgPerClient) : '—'],
-                                  ].map(([label, val]) => (
-                                    <div
-                                      key={label}
-                                      className="bg-white rounded-xl p-3 border border-gray-100 text-center"
-                                    >
-                                      <p className="stat-number">{val}</p>
-                                      <p className="text-xs text-gray-400 mt-0.5">{label}</p>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                {/* Editable fields */}
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="label">Update Revenue (AUD)</label>
-                                    <input
-                                      className="input-field"
-                                      type="number"
-                                      min="0"
-                                      value={detailEdit.revenueSecured}
-                                      onChange={e => setDetailEdit(p => ({ ...p, revenueSecured: e.target.value }))}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="label">Update Enrolments</label>
-                                    <input
-                                      className="input-field"
-                                      type="number"
-                                      min="0"
-                                      value={detailEdit.enrolled}
-                                      onChange={e => setDetailEdit(p => ({ ...p, enrolled: e.target.value }))}
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* Notes */}
-                                <div>
-                                  <label className="label">Notes &amp; Reflections</label>
-                                  <textarea
-                                    className="textarea-field"
-                                    rows={3}
-                                    value={detailEdit.notes}
-                                    onChange={e => setDetailEdit(p => ({ ...p, notes: e.target.value }))}
-                                    placeholder="What worked? What would you do differently? What will you carry forward?"
-                                  />
-                                </div>
-
-                                {/* Actions */}
-                                <div className="flex items-center justify-between pt-1">
-                                  <button
-                                    onClick={() => handleDelete(launch.id)}
-                                    className="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors"
-                                  >
-                                    Delete launch
-                                  </button>
-                                  <button
-                                    onClick={() => handleDetailSave(launch.id)}
-                                    className="btn-brand"
-                                  >
-                                    Save Changes
-                                  </button>
-                                </div>
-
-                              </div>
-                            </td>
-                          </tr>
+                  {/* Started launches: goal, bar, performance stats */}
+                  {started && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-semibold text-gray-700">
+                          {revGoal > 0 ? `${fmtAUD(revSecured)} of ${fmtAUD(revGoal)} goal` : `${fmtAUD(revSecured)} secured`}
+                        </span>
+                        {goalPct !== null && (
+                          <span className="text-xs font-bold" style={{ color: goalPct >= 100 ? '#059669' : BRAND }}>{goalPct}%</span>
                         )}
-                      </React.Fragment>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
+                      </div>
+                      {revGoal > 0 && (
+                        <div className="rounded-full overflow-hidden w-full" style={{ height: 6, backgroundColor: '#f0e0e0' }}>
+                          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${goalPct || 0}%`, backgroundColor: BRAND }} />
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-x-5 gap-y-1 mt-2.5 text-xs text-gray-500">
+                        <span>Enrolled {enrolled}{capacity ? ` of ${capacity}` : ''}</span>
+                        {avgPerClient !== null && <span>Avg per client {fmtAUD(avgPerClient)}</span>}
+                        {launch.status === 'Live' && endDays != null && endDays >= 0 && (
+                          <span>{endDays} days remaining</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Not started launches: single muted line */}
+                  {notStarted && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      {[
+                        `Goal ${fmtAUD(revGoal)}`,
+                        capacity ? `${capacity} seats` : null,
+                        startDays != null ? `starts in ${Math.max(0, startDays)} days` : null,
+                      ].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
+
+                  {/* Detail panel (content unchanged) */}
+                  {isOpen && (
+                    <div className="mt-3 pt-4 space-y-4" style={{ borderTop: '1px solid #ede6e1' }}>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {[
+                          ['Revenue Secured', fmtAUD(revSecured)],
+                          ['Revenue Goal',    fmtAUD(revGoal)],
+                          ['Enrolled',        enrolled],
+                          ['Avg per Client',  avgPerClient !== null ? fmtAUD(avgPerClient) : '—'],
+                        ].map(([label, val]) => (
+                          <div key={label} className="bg-white rounded-xl p-3 border border-gray-100 text-center">
+                            <p className="stat-number">{val}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="label">Update Revenue (AUD)</label>
+                          <input
+                            className="input-field"
+                            type="number"
+                            min="0"
+                            value={detailEdit.revenueSecured}
+                            onChange={e => setDetailEdit(p => ({ ...p, revenueSecured: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <label className="label">Update Enrolments</label>
+                          <input
+                            className="input-field"
+                            type="number"
+                            min="0"
+                            value={detailEdit.enrolled}
+                            onChange={e => setDetailEdit(p => ({ ...p, enrolled: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="label">Notes &amp; Reflections</label>
+                        <textarea
+                          className="textarea-field"
+                          rows={3}
+                          value={detailEdit.notes}
+                          onChange={e => setDetailEdit(p => ({ ...p, notes: e.target.value }))}
+                          placeholder="What worked? What would you do differently? What will you carry forward?"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <button
+                          onClick={() => handleDelete(launch.id)}
+                          className="text-sm font-semibold text-red-500 hover:text-red-700 transition-colors"
+                        >
+                          Delete launch
+                        </button>
+                        <button onClick={() => handleDetailSave(launch.id)} className="btn-brand">
+                          Save Changes
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
+
       </div>
 
       {/* Insight strip */}
