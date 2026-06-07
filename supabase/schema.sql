@@ -348,6 +348,23 @@ CREATE POLICY "Users can manage own brain dump" ON brain_dump_entries FOR ALL US
 CREATE INDEX IF NOT EXISTS brain_dump_entries_user_date_idx ON brain_dump_entries(user_id, local_date);
 
 
+-- ── QUICK LINKS ──────────────────────────────────
+-- Private per-member click-through links, split into business / personal.
+CREATE TABLE IF NOT EXISTS quick_links (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
+  name VARCHAR(40) NOT NULL,
+  url TEXT NOT NULL,
+  side TEXT NOT NULL CHECK (side IN ('business', 'personal')),
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE quick_links ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage own quick links" ON quick_links FOR ALL USING (auth.uid() = user_id);
+CREATE INDEX IF NOT EXISTS quick_links_user_idx ON quick_links(user_id, side, sort_order);
+
+
 -- =====================================================
 -- DONE! All tables created with Row Level Security.
 -- Each member can only access their own data.

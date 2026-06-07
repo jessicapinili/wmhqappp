@@ -114,6 +114,7 @@ export default function Sidebar({ onClose }) {
       {/* Nav */}
       <nav className="flex-1 py-3 space-y-0.5">
         <NavItem to="/dashboard" icon="⊞" label="Dashboard" onClose={onClose} />
+        <NavItem to="/quick-links" icon="🔗" label="Quick Links" onClose={onClose} />
 
         {/* Phases section label */}
         <div className="px-5 pt-5 pb-1.5">
