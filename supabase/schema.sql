@@ -49,6 +49,10 @@ CREATE POLICY "Users can manage own seasons" ON season_selection FOR ALL USING (
 
 
 -- ── BUSINESS FOCUS ───────────────────────────────
+-- All focus content lives in the data JSONB, including (additively):
+-- title, current, target, begin_date, completion_date, lever, priority,
+-- trafficNeeded, customers_current, customers_target, manual_status, finished_year.
+-- The yearly reset of finished focuses is scheduled in migration 010.
 CREATE TABLE IF NOT EXISTS business_focus (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,

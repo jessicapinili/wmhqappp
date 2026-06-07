@@ -33,6 +33,11 @@ const STATUS_CHIP = {
   in_progress:   { label: 'In progress',   cls: 'bg-amber-50 text-amber-700 border-amber-100' },
   not_completed: { label: 'Not completed', cls: 'bg-rose-50 text-rose-700 border-rose-100' },
 }
+const STATUS_OPTIONS = [
+  { key: 'in_progress', label: 'In progress' },
+  { key: 'completed', label: 'Completed' },
+  { key: 'not_completed', label: 'Not completed' },
+]
 
 /* ── Helpers ── */
 // Parse the first number out of values like "$630 ($9x70)", "$10,000", "175000".
@@ -60,6 +65,15 @@ function statusOf(f) {
     if (!isNaN(due.getTime()) && due < new Date() && c < t) return 'not_completed'
   }
   return 'in_progress'
+}
+
+// A manual status, once set, overrides the derived status.
+function effStatus(f) {
+  return f.manual_status || statusOf(f)
+}
+function isFinished(f) {
+  const s = effStatus(f)
+  return s === 'completed' || s === 'not_completed'
 }
 
 function pctOf(f) {
@@ -103,6 +117,10 @@ function normalizeBiz(row) {
     lever: d.lever ?? d.primaryLever ?? '',
     priority: d.priority == null ? null : Number(d.priority),
     legacyCompleted: d.status === 'Completed',
+    manual_status: d.manual_status || null,
+    finished_year: d.finished_year == null ? null : Number(d.finished_year),
+    customers_current: d.customers_current == null ? null : num(d.customers_current),
+    customers_target: d.customers_target == null ? null : num(d.customers_target),
     created_at: row.created_at,
     raw: d,
   }
@@ -156,11 +174,53 @@ function TypeTag({ type }) {
   )
 }
 
-function StatusChip({ f }) {
-  const s = STATUS_CHIP[statusOf(f)]
+function StatusChip({ f, onSet }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    if (!open) return
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [open])
+
+  const cur = effStatus(f)
+  const s = STATUS_CHIP[cur]
+
+  if (!onSet) {
+    return (
+      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span>
+    )
+  }
+
   return (
-    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}>
-      {s.label}
+    <span ref={ref} className="relative inline-block">
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
+        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}
+        title="Change status"
+      >
+        {s.label}
+      </button>
+      {open && (
+        <div className="absolute z-20 left-0 mt-1"
+          style={{ backgroundColor: '#fff', border: '0.5px solid #e8e0d8', borderRadius: 5, padding: 4, minWidth: 132 }}>
+          {STATUS_OPTIONS.map(opt => (
+            <button
+              key={opt.key}
+              onClick={(e) => { e.stopPropagation(); setOpen(false); onSet(opt.key) }}
+              className="block w-full text-left text-xs px-2 py-1.5 rounded transition-colors"
+              style={{
+                color: opt.key === cur ? BRAND : '#6b6b6b',
+                fontWeight: opt.key === cur ? 600 : 400,
+                backgroundColor: opt.key === cur ? '#faf7f3' : 'transparent',
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
     </span>
   )
 }
@@ -296,6 +356,8 @@ function BizForm({ initial, onSave, onCancel, onDelete }) {
   // Offer
   const [offerTitle, setOfferTitle] = useState(initial?.type === 'offer' ? (initial.title || '') : '')
   const [traffic, setTraffic] = useState(initial?.raw?.trafficNeeded || '')
+  const [custCurrent, setCustCurrent] = useState(initial?.customers_current != null ? String(initial.customers_current) : '')
+  const [custTarget, setCustTarget] = useState(initial?.customers_target != null ? String(initial.customers_target) : '')
 
   // Visibility
   const visInit = initDropdown(initial?.type === 'visibility' ? initial.title : '', VISIBILITY_OPTIONS)
@@ -334,7 +396,11 @@ function BizForm({ initial, onSave, onCancel, onDelete }) {
       completion_date: complete,
       lever: type === 'revenue' ? computeLever().slice(0, LEVER_MAX) : '',
     }
-    if (type === 'offer') vals.trafficNeeded = traffic.trim()
+    if (type === 'offer') {
+      vals.trafficNeeded = traffic.trim()
+      vals.customers_current = custCurrent === '' ? null : num(custCurrent)
+      vals.customers_target = custTarget === '' ? null : num(custTarget)
+    }
     onSave(vals)
   }
 
@@ -383,6 +449,16 @@ function BizForm({ initial, onSave, onCancel, onDelete }) {
             <div>
               <label className="label">Revenue goal ($)</label>
               <input className="input-field" type="number" value={target} onChange={e => setTarget(e.target.value)} placeholder="0" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Current customers</label>
+              <input className="input-field" type="number" value={custCurrent} onChange={e => setCustCurrent(e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <label className="label">Customer goal</label>
+              <input className="input-field" type="number" value={custTarget} onChange={e => setCustTarget(e.target.value)} placeholder="0" />
             </div>
           </div>
           <div>
@@ -484,7 +560,7 @@ function BizForm({ initial, onSave, onCancel, onDelete }) {
 }
 
 /* ── Hero card (priority 1) ── */
-function HeroCard({ f, notes, open, onToggle, onGrip, onEdit, onProgress, onAddNote, onDeleteNote }) {
+function HeroCard({ f, notes, open, onToggle, onGrip, onEdit, onSetStatus, onProgress, onAddNote, onDeleteNote }) {
   return (
     <div className="rounded-xl p-5" style={{ backgroundColor: '#faf7f5', border: '1px solid rgba(0,0,0,0.06)' }}>
       <div className="flex items-start gap-3">
@@ -506,7 +582,7 @@ function HeroCard({ f, notes, open, onToggle, onGrip, onEdit, onProgress, onAddN
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <TypeTag type={f.type} />
             <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#b8a898' }}>Main focus</span>
-            <StatusChip f={f} />
+            <StatusChip f={f} onSet={onSetStatus} />
           </div>
           <p className="text-base font-semibold" style={{ color: '#1a0606' }}>{f.title || 'Untitled focus'}</p>
           {fmtRange(f.begin_date, f.completion_date) && (
@@ -528,6 +604,11 @@ function HeroCard({ f, notes, open, onToggle, onGrip, onEdit, onProgress, onAddN
           </span>
           <span className="text-xs font-bold" style={{ color: BRAND }}>{pctOf(f)}%</span>
         </div>
+        {f.type === 'offer' && f.customers_target != null && (
+          <p className="text-[11px] mb-1.5" style={{ color: '#b8a898' }}>
+            {num(f.customers_current).toLocaleString('en-AU')} of {num(f.customers_target).toLocaleString('en-AU')} customers
+          </p>
+        )}
         <ProgressBar f={f} height={8} />
       </div>
 
@@ -548,7 +629,7 @@ function HeroCard({ f, notes, open, onToggle, onGrip, onEdit, onProgress, onAddN
 }
 
 /* ── Compact row (priority 2+) ── */
-function RowCard({ f, n, notes, expanded, dragging, onGrip, onToggle, onEdit, onProgress, onAddNote, onDeleteNote }) {
+function RowCard({ f, n, notes, expanded, dragging, onGrip, onToggle, onEdit, onSetStatus, onProgress, onAddNote, onDeleteNote }) {
   return (
     <div className="rounded-xl" style={{ backgroundColor: dragging ? '#f3ece6' : '#faf7f5', border: '1px solid rgba(0,0,0,0.06)' }}>
       <div className="flex items-center gap-2.5 px-3 py-3">
@@ -586,12 +667,17 @@ function RowCard({ f, n, notes, expanded, dragging, onGrip, onToggle, onEdit, on
       {expanded && (
         <div className="px-3 pb-3 space-y-4" style={{ borderTop: '1px solid #ede6e1', paddingTop: 14 }}>
           <div className="flex items-center gap-2 flex-wrap">
-            <StatusChip f={f} />
+            <StatusChip f={f} onSet={onSetStatus} />
             {fmtRange(f.begin_date, f.completion_date) && (
               <span className="text-xs" style={{ color: '#b8a898' }}>{fmtRange(f.begin_date, f.completion_date)}</span>
             )}
             {f.lever && <span className="text-xs" style={{ color: '#8a8a8a' }}>Lever: {f.lever}</span>}
           </div>
+          {f.type === 'offer' && f.customers_target != null && (
+            <p className="text-[11px]" style={{ color: '#b8a898' }}>
+              {num(f.customers_current).toLocaleString('en-AU')} of {num(f.customers_target).toLocaleString('en-AU')} customers
+            </p>
+          )}
           <ProgressUpdate f={f} onSave={onProgress} />
           <NotesThread notes={notes} onAdd={onAddNote} onDelete={onDeleteNote} />
         </div>
@@ -675,6 +761,30 @@ function LifeForm({ initial, onSave, onCancel, onDelete }) {
   )
 }
 
+/* ── Finished focus card (Completed / Not completed tabs) ── */
+function FinishedCard({ f, onSetStatus, onReopen }) {
+  return (
+    <div className="rounded-xl px-4 py-3" style={{ backgroundColor: '#faf7f5', border: '1px solid rgba(0,0,0,0.06)' }}>
+      <div className="flex items-start gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <TypeTag type={f.type} />
+            <StatusChip f={f} onSet={onSetStatus} />
+          </div>
+          <p className="text-sm font-semibold" style={{ color: '#1a0606' }}>{f.title || 'Untitled focus'}</p>
+          {fmtRange(f.begin_date, f.completion_date) && (
+            <p className="text-xs mt-0.5" style={{ color: '#b8a898' }}>{fmtRange(f.begin_date, f.completion_date)}</p>
+          )}
+          <p className="text-xs mt-1" style={{ color: '#8a8a8a' }}>
+            Reached {formatVal(f.type, f.current)} of {formatVal(f.type, f.target)}
+          </p>
+        </div>
+        <button onClick={onReopen} className="btn-brand-outline flex-shrink-0">Reopen</button>
+      </div>
+    </div>
+  )
+}
+
 /* ── Main section ── */
 export default function YourFocus({ userId }) {
   const [biz, setBiz] = useState([])
@@ -690,14 +800,22 @@ export default function YourFocus({ userId }) {
   const [editingLifeId, setEditingLifeId] = useState(null)
   const [addingLife, setAddingLife] = useState(false)
 
+  const [tab, setTab] = useState('active')
+
   const [dragId, setDragId] = useState(null)
   const dragIdRef = useRef(null)
   const rowRefs = useRef({})
   const bizRef = useRef([])
   bizRef.current = biz
+  const activeRef = useRef([])
 
   const now = new Date()
+  const currentYear = now.getFullYear()
   const headerLabel = `${format(now, 'MMMM yyyy')} · ${getCurrentQuarter()}`
+
+  // Hide finished focuses from a prior calendar year (load-time guard for the
+  // yearly reset, in case the scheduled job has not run yet).
+  const yearHidden = (f) => f.finished_year != null && f.finished_year < currentYear
 
   /* ── Load ── */
   useEffect(() => {
@@ -709,7 +827,29 @@ export default function YourFocus({ userId }) {
         supabase.from('life_focus').select('*').eq('user_id', userId).order('created_at'),
       ])
       if (!active) return
-      setBiz(sortBiz((bizRows || []).map(normalizeBiz)))
+      // Reconcile finished_year: stamp finished focuses missing it, clear it from
+      // any focus that is no longer finished. Keeps the yearly reset accurate.
+      const normalized = (bizRows || []).map(normalizeBiz)
+      const pending = []
+      const reconciled = normalized.map(f => {
+        const fin = isFinished(f)
+        if (fin && f.finished_year == null) {
+          const raw = { ...f.raw, finished_year: currentYear }
+          pending.push({ id: f.id, raw })
+          return normalizeBiz({ id: f.id, focus_type: f.type, data: raw, created_at: f.created_at })
+        }
+        if (!fin && f.finished_year != null) {
+          const raw = { ...f.raw }; delete raw.finished_year
+          pending.push({ id: f.id, raw })
+          return normalizeBiz({ id: f.id, focus_type: f.type, data: raw, created_at: f.created_at })
+        }
+        return f
+      })
+      if (pending.length) {
+        Promise.all(pending.map(u => supabase.from('business_focus').update({ data: u.raw }).eq('id', u.id)))
+          .catch(e => console.error('Failed to reconcile finished_year:', e))
+      }
+      setBiz(sortBiz(reconciled))
       setLife(lifeRows || [])
 
       // Notes table may not exist yet; fail soft.
@@ -733,9 +873,16 @@ export default function YourFocus({ userId }) {
   const writeBizData = async (id, patch) => {
     const item = bizRef.current.find(b => b.id === id)
     if (!item) return
-    const nextRaw = { ...item.raw, ...patch }
-    setBiz(prev => prev.map(b => b.id === id ? normalizeBiz({ id, focus_type: patch.type || item.type, data: nextRaw, created_at: item.created_at }) : b))
-    await supabase.from('business_focus').update({ focus_type: patch.type || item.type, data: nextRaw }).eq('id', id)
+    const type = patch.type || item.type
+    let nextRaw = { ...item.raw, ...patch }
+    // Keep finished_year aligned with the effective status after the change.
+    const probe = normalizeBiz({ id, focus_type: type, data: nextRaw, created_at: item.created_at })
+    const fin = isFinished(probe)
+    if (fin && nextRaw.finished_year == null) nextRaw = { ...nextRaw, finished_year: currentYear }
+    if (!fin && nextRaw.finished_year != null) { nextRaw = { ...nextRaw }; delete nextRaw.finished_year }
+    const norm = normalizeBiz({ id, focus_type: type, data: nextRaw, created_at: item.created_at })
+    setBiz(prev => prev.map(b => b.id === id ? norm : b))
+    await supabase.from('business_focus').update({ focus_type: type, data: nextRaw }).eq('id', id)
   }
 
   const saveBizForm = async (vals) => {
@@ -744,13 +891,38 @@ export default function YourFocus({ userId }) {
       setEditingBizId(null)
     } else {
       const priority = biz.length
-      const data = { ...vals, priority }
+      let data = { ...vals, priority }
+      const probe = normalizeBiz({ id: 'tmp', focus_type: vals.type, data, created_at: new Date().toISOString() })
+      if (isFinished(probe)) data = { ...data, finished_year: currentYear }
       const { data: row } = await supabase.from('business_focus')
         .insert({ user_id: userId, focus_type: vals.type, data }).select().single()
       if (row) setBiz(prev => sortBiz([...prev, normalizeBiz(row)]))
       setAddingBiz(false)
     }
   }
+
+  // Manually set status via the chip. Marking finished stamps the year; choosing
+  // In progress on a finished focus reopens it to the bottom of the Active list.
+  const setManualStatus = async (id, key) => {
+    const item = bizRef.current.find(b => b.id === id)
+    if (!item) return
+    const wasFinished = isFinished(item)
+    let nextRaw = { ...item.raw, manual_status: key }
+    if (key === 'in_progress') {
+      delete nextRaw.finished_year
+      if (wasFinished) {
+        const maxP = Math.max(-1, ...bizRef.current.map(b => (b.priority == null ? -1 : b.priority)))
+        nextRaw.priority = maxP + 1
+        setTab('active')
+      }
+    } else {
+      nextRaw.finished_year = item.finished_year ?? currentYear
+    }
+    const norm = normalizeBiz({ id, focus_type: item.type, data: nextRaw, created_at: item.created_at })
+    setBiz(prev => prev.map(b => b.id === id ? norm : b))
+    await supabase.from('business_focus').update({ data: nextRaw }).eq('id', id)
+  }
+  const reopen = (id) => setManualStatus(id, 'in_progress')
 
   const deleteBiz = async (id) => {
     if (!window.confirm('Delete this focus? This cannot be undone.')) return
@@ -778,7 +950,7 @@ export default function YourFocus({ userId }) {
   const onGripMove = useCallback((e) => {
     if (dragIdRef.current == null) return
     e.preventDefault()
-    const order = bizRef.current
+    const order = activeRef.current
     const y = e.clientY
     let target = order.length - 1
     for (let i = 0; i < order.length; i++) {
@@ -792,19 +964,22 @@ export default function YourFocus({ userId }) {
     const next = [...order]
     const [moved] = next.splice(from, 1)
     next.splice(target, 0, moved)
-    setBiz(next)
+    const pri = {}
+    next.forEach((f, i) => { pri[f.id] = i })
+    setBiz(prev => prev.map(b => pri[b.id] != null
+      ? { ...b, priority: pri[b.id], raw: { ...b.raw, priority: pri[b.id] } }
+      : b))
   }, [])
 
   const onGripUp = useCallback(() => {
     if (dragIdRef.current == null) return
     window.removeEventListener('pointermove', onGripMove)
     window.removeEventListener('pointerup', onGripUp)
-    const ordered = bizRef.current.map((f, i) => ({ ...f, priority: i, raw: { ...f.raw, priority: i } }))
+    const ordered = activeRef.current
     dragIdRef.current = null
     setDragId(null)
-    setBiz(ordered)
-    Promise.all(ordered.map(f =>
-      supabase.from('business_focus').update({ data: f.raw }).eq('id', f.id)
+    Promise.all(ordered.map((f, i) =>
+      supabase.from('business_focus').update({ data: { ...f.raw, priority: i } }).eq('id', f.id)
     )).catch(err => console.error('Failed to persist order:', err))
   }, [onGripMove])
 
@@ -862,87 +1037,137 @@ export default function YourFocus({ userId }) {
 
   const dragging = dragId != null
 
+  // Categorise by effective status; finished focuses from a prior year are hidden.
+  const activeList = sortBiz(biz.filter(b => effStatus(b) === 'in_progress'))
+  const completedList = sortBiz(biz.filter(b => effStatus(b) === 'completed' && !yearHidden(b)))
+  const notCompletedList = sortBiz(biz.filter(b => effStatus(b) === 'not_completed' && !yearHidden(b)))
+  activeRef.current = activeList
+  const finishedList = tab === 'completed' ? completedList : notCompletedList
+
   return (
     <div className="card-section">
       {/* Section header */}
-      <div className="flex items-start justify-between mb-5">
+      <div className="flex items-start justify-between mb-4">
         <div>
           <h2 className="section-title">Your Focus</h2>
           <p className="section-subtitle" style={{ marginBottom: 0 }}>{headerLabel}</p>
         </div>
       </div>
 
-      {/* Business focuses */}
-      <div className="space-y-2.5">
-        {biz.map((f, idx) => {
-          const setRef = (el) => { if (el) rowRefs.current[f.id] = el; else delete rowRefs.current[f.id] }
-          if (editingBizId === f.id) {
-            return (
-              <div key={f.id} ref={setRef}>
-                <BizForm
-                  initial={f}
-                  onSave={saveBizForm}
-                  onCancel={() => setEditingBizId(null)}
-                  onDelete={() => deleteBiz(f.id)}
-                />
-              </div>
-            )
-          }
-          const notes = notesByFocus[f.id] || []
-          const isHero = idx === 0 && !dragging
-          return (
-            <div key={f.id} ref={setRef}>
-              {isHero ? (
-                <HeroCard
-                  f={f}
-                  notes={notes}
-                  open={heroOpen}
-                  onToggle={() => setHeroOpen(o => !o)}
-                  onGrip={(e) => onGrip(e, f.id)}
-                  onEdit={() => { setEditingBizId(f.id); setAddingBiz(false) }}
-                  onProgress={(n) => writeBizData(f.id, { current: n })}
-                  onAddNote={(b) => addNote(f.id, b)}
-                  onDeleteNote={(nid) => deleteNote(f.id, nid)}
-                />
-              ) : (
-                <RowCard
-                  f={f}
-                  n={idx + 1}
-                  notes={notes}
-                  expanded={expandedId === f.id && !dragging}
-                  dragging={dragId === f.id}
-                  onGrip={(e) => onGrip(e, f.id)}
-                  onToggle={() => setExpandedId(expandedId === f.id ? null : f.id)}
-                  onEdit={() => { setEditingBizId(f.id); setAddingBiz(false) }}
-                  onProgress={(n) => writeBizData(f.id, { current: n })}
-                  onAddNote={(b) => addNote(f.id, b)}
-                  onDeleteNote={(nid) => deleteNote(f.id, nid)}
-                />
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Add business focus */}
-      <div className="mt-3">
-        {addingBiz ? (
-          <BizForm onSave={saveBizForm} onCancel={() => setAddingBiz(false)} />
-        ) : (
+      {/* Status tabs */}
+      <div className="flex gap-1 mb-4">
+        {[
+          ['active', 'Active', activeList.length],
+          ['completed', 'Completed', completedList.length],
+          ['not_completed', 'Not completed', notCompletedList.length],
+        ].map(([key, label, count]) => (
           <button
-            onClick={() => { setAddingBiz(true); setEditingBizId(null) }}
-            className="w-full text-xs font-semibold flex items-center justify-center gap-1 py-2.5 rounded-lg transition-colors"
-            style={{ color: BRAND, border: '1px dashed #e8e0d8' }}
+            key={key}
+            onClick={() => setTab(key)}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            style={tab === key
+              ? { backgroundColor: BRAND, color: '#fff' }
+              : { color: '#9ca3af', backgroundColor: 'transparent' }}
           >
-            + Add business focus
+            {label} ({count})
           </button>
-        )}
-        {biz.length === 0 && !addingBiz && (
-          <p className="text-sm italic mt-3" style={{ color: '#b8a898' }}>No business focuses yet.</p>
-        )}
+        ))}
       </div>
 
-      {/* Life focuses */}
+      {tab === 'active' ? (
+        <>
+          {/* Business focuses */}
+          <div className="space-y-2.5">
+            {activeList.map((f, idx) => {
+              const setRef = (el) => { if (el) rowRefs.current[f.id] = el; else delete rowRefs.current[f.id] }
+              if (editingBizId === f.id) {
+                return (
+                  <div key={f.id} ref={setRef}>
+                    <BizForm
+                      initial={f}
+                      onSave={saveBizForm}
+                      onCancel={() => setEditingBizId(null)}
+                      onDelete={() => deleteBiz(f.id)}
+                    />
+                  </div>
+                )
+              }
+              const notes = notesByFocus[f.id] || []
+              const isHero = idx === 0 && !dragging
+              return (
+                <div key={f.id} ref={setRef}>
+                  {isHero ? (
+                    <HeroCard
+                      f={f}
+                      notes={notes}
+                      open={heroOpen}
+                      onToggle={() => setHeroOpen(o => !o)}
+                      onGrip={(e) => onGrip(e, f.id)}
+                      onEdit={() => { setEditingBizId(f.id); setAddingBiz(false) }}
+                      onSetStatus={(key) => setManualStatus(f.id, key)}
+                      onProgress={(n) => writeBizData(f.id, { current: n })}
+                      onAddNote={(b) => addNote(f.id, b)}
+                      onDeleteNote={(nid) => deleteNote(f.id, nid)}
+                    />
+                  ) : (
+                    <RowCard
+                      f={f}
+                      n={idx + 1}
+                      notes={notes}
+                      expanded={expandedId === f.id && !dragging}
+                      dragging={dragId === f.id}
+                      onGrip={(e) => onGrip(e, f.id)}
+                      onToggle={() => setExpandedId(expandedId === f.id ? null : f.id)}
+                      onEdit={() => { setEditingBizId(f.id); setAddingBiz(false) }}
+                      onSetStatus={(key) => setManualStatus(f.id, key)}
+                      onProgress={(n) => writeBizData(f.id, { current: n })}
+                      onAddNote={(b) => addNote(f.id, b)}
+                      onDeleteNote={(nid) => deleteNote(f.id, nid)}
+                    />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Add business focus */}
+          <div className="mt-3">
+            {addingBiz ? (
+              <BizForm onSave={saveBizForm} onCancel={() => setAddingBiz(false)} />
+            ) : (
+              <button
+                onClick={() => { setAddingBiz(true); setEditingBizId(null) }}
+                className="w-full text-xs font-semibold flex items-center justify-center gap-1 py-2.5 rounded-lg transition-colors"
+                style={{ color: BRAND, border: '1px dashed #e8e0d8' }}
+              >
+                + Add business focus
+              </button>
+            )}
+            {activeList.length === 0 && !addingBiz && (
+              <p className="text-sm italic mt-3" style={{ color: '#b8a898' }}>No active business focuses.</p>
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="space-y-2.5">
+          {finishedList.map(f => (
+            <FinishedCard
+              key={f.id}
+              f={f}
+              onSetStatus={(key) => setManualStatus(f.id, key)}
+              onReopen={() => reopen(f.id)}
+            />
+          ))}
+          {finishedList.length === 0 && (
+            <p className="text-sm italic" style={{ color: '#b8a898' }}>
+              {tab === 'completed' ? 'No completed focuses.' : 'No not completed focuses.'}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Life focuses (Active tab only) */}
+      {tab === 'active' && (
       <div className="mt-6 pt-5" style={{ borderTop: '1px solid #ede6e1' }}>
         <h3 className="section-title" style={{ fontSize: 15 }}>Life Focus</h3>
         <p className="section-subtitle">Current personal priorities and areas of attention.</p>
@@ -986,6 +1211,12 @@ export default function YourFocus({ userId }) {
           )}
         </div>
       </div>
+      )}
+
+      {/* Yearly reset note */}
+      <p className="text-[11px] mt-5" style={{ color: '#b8a898' }}>
+        Completed and not completed clear every calendar year on 1 Jan
+      </p>
     </div>
   )
 }
