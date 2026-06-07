@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getQuarterFromMonth } from '../lib/utils'
@@ -188,11 +188,18 @@ function StatusBadge({ status }) {
 
 // ─── EVENT CARD ────────────────────────────────────────────────────────────────
 
-function EventCard({ event, onEdit, onDelete, onToggleClose }) {
+function EventCard({ event, onEdit, onDelete, onToggleClose, onLogRevenue }) {
+  const [logVal, setLogVal] = useState('')
   const fmt = (d) => {
     if (!d) return '—'
     const [y, m, day] = d.split('-')
     return `${day}/${m}/${y}`
+  }
+
+  const doLog = () => {
+    if (logVal === '') return
+    onLogRevenue(Number(logVal))
+    setLogVal('')
   }
 
   const isClosed = event.status === 'Closed' || event.is_closed
@@ -206,7 +213,7 @@ function EventCard({ event, onEdit, onDelete, onToggleClose }) {
   const metaParts = [event.event_type, dateRange, event.primary_focus].filter(Boolean)
 
   return (
-    <div className={`card group ${isClosed ? 'opacity-90' : ''}`}>
+    <div className={`card group ${isClosed ? 'opacity-90' : ''}`} style={{ backgroundColor: '#faf7f5' }}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           {/* Title row */}
@@ -240,7 +247,21 @@ function EventCard({ event, onEdit, onDelete, onToggleClose }) {
           {event.notes && <p className="text-xs text-gray-400 italic mt-1.5">{event.notes}</p>}
 
           {isClosed && !event.revenue_achieved && (
-            <p className="text-xs text-amber-600 mt-1.5">Don't forget to log your final revenue.</p>
+            <div className="mt-1.5">
+              <p className="text-xs text-amber-600 mb-1.5">Don't forget to log your final revenue.</p>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="number"
+                  className="input-field"
+                  style={{ maxWidth: 160 }}
+                  value={logVal}
+                  onChange={e => setLogVal(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') doLog() }}
+                  placeholder={`${event.currency || 'AUD'} 0`}
+                />
+                <button onClick={doLog} className="btn-brand" disabled={logVal === ''}>Log it</button>
+              </div>
+            </div>
           )}
         </div>
 
@@ -280,6 +301,14 @@ export default function RevenueEvents() {
   const [editEvent, setEditEvent] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
+  const addFormRef = useRef(null)
+
+  // Scroll the add form into view when it opens at the top.
+  useEffect(() => {
+    if (showForm && !editEvent && addFormRef.current) {
+      addFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [showForm, editEvent])
 
   // ── Load all events for this user (client-side year/quarter filtering) ────────
   const loadEvents = async () => {
@@ -416,6 +445,24 @@ export default function RevenueEvents() {
     setEvents(prev => prev.map(x => x.id === event.id ? data : x))
   }
 
+  // Inline log of final revenue on a closed event (writes the existing field).
+  const handleLogRevenue = async (event, value) => {
+    if (value == null || isNaN(value)) return
+    const { data, error } = await supabase
+      .from('revenue_events')
+      .update({ revenue_achieved: value })
+      .eq('id', event.id)
+      .eq('user_id', user.id)
+      .select()
+      .single()
+    if (error || !data) {
+      console.error('revenue_events log revenue failed:', error)
+      alert('Failed to log revenue. Please try again.')
+      return
+    }
+    setEvents(prev => prev.map(x => x.id === event.id ? data : x))
+  }
+
   // ── Derived / memoized values ─────────────────────────────────────────────────
 
   const yearEvents = useMemo(
@@ -442,6 +489,10 @@ export default function RevenueEvents() {
       .reduce((s, e) => s + (Number(e.revenue_achieved) || 0), 0),
     [visibleEvents]
   )
+
+  // Progress: revenue secured against goal (respects the Year/Quarter view)
+  const securedPct = totalGoal > 0 ? Math.min(100, Math.round((totalAchieved / totalGoal) * 100)) : 0
+  const remaining = Math.max(0, totalGoal - totalAchieved)
 
   // Active = Planning | Warming | Live | Evergreen (not closed)
   const activeCount = useMemo(
@@ -560,6 +611,19 @@ export default function RevenueEvents() {
             </div>
           ))}
         </div>
+
+        {/* Progress bar */}
+        {totalGoal > 0 && (
+          <div className="mt-5">
+            <div className="rounded-full overflow-hidden" style={{ height: 6, backgroundColor: 'rgba(255,255,255,0.15)' }}>
+              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${securedPct}%`, backgroundColor: '#cdd5ae' }} />
+            </div>
+            <div className="flex justify-between mt-1.5">
+              <span className="text-xs text-white/60">{securedPct}% secured</span>
+              <span className="text-xs text-white/60">{fmtNum(remaining)} to go</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Muted explanatory strip ── */}
@@ -570,6 +634,18 @@ export default function RevenueEvents() {
         }
       </p>
 
+      {/* ── Add form (opens at top, below the snapshot) ── */}
+      {showForm && !editEvent && (
+        <div ref={addFormRef}>
+          <EventForm
+            initial={null}
+            onSave={handleSave}
+            onCancel={() => { setShowForm(false); setEditEvent(null) }}
+            selectedYear={selectedYear}
+          />
+        </div>
+      )}
+
       {/* ── Main list card ── */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
@@ -579,9 +655,11 @@ export default function RevenueEvents() {
               : `${quarterEvents.length} revenue event${quarterEvents.length !== 1 ? 's' : ''} in ${selectedQuarter}.`
             }
           </p>
-          <button onClick={openAdd} className="btn-brand text-sm">
-            + Add Revenue Event
-          </button>
+          {!showForm && (
+            <button onClick={openAdd} className="btn-brand">
+              + Add Revenue Event
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -614,6 +692,7 @@ export default function RevenueEvents() {
                           onEdit={() => openEdit(event)}
                           onDelete={() => handleDelete(event.id)}
                           onToggleClose={() => handleToggleClose(event)}
+                          onLogRevenue={(val) => handleLogRevenue(event, val)}
                         />
                       ))}
                     </div>
@@ -640,6 +719,7 @@ export default function RevenueEvents() {
                   onEdit={() => openEdit(event)}
                   onDelete={() => handleDelete(event.id)}
                   onToggleClose={() => handleToggleClose(event)}
+                  onLogRevenue={(val) => handleLogRevenue(event, val)}
                 />
               ))}
             </div>
@@ -647,8 +727,8 @@ export default function RevenueEvents() {
         )}
       </div>
 
-      {/* ── Event form (inline below list) ── */}
-      {showForm && (
+      {/* ── Edit form (inline below list, where it currently opens) ── */}
+      {showForm && editEvent && (
         <EventForm
           initial={editEvent}
           onSave={handleSave}
