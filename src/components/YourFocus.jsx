@@ -798,7 +798,7 @@ export default function YourFocus({ userId }) {
   const [loaded, setLoaded] = useState(false)
 
   const [expandedId, setExpandedId] = useState(null)
-  const [heroOpen, setHeroOpen] = useState(true)
+  const [heroOpen, setHeroOpen] = useState(false)
   const [editingBizId, setEditingBizId] = useState(null)
   const [addingBiz, setAddingBiz] = useState(false)
 
