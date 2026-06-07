@@ -584,7 +584,7 @@ function HeroCard({ f, notes, open, onToggle, onGrip, onEdit, onSetStatus, onPro
             <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#b8a898' }}>Main focus</span>
             <StatusChip f={f} onSet={onSetStatus} />
           </div>
-          <p className="text-base font-semibold" style={{ color: '#1a0606' }}>{f.title || 'Untitled focus'}</p>
+          <p className="text-base font-semibold whitespace-nowrap overflow-hidden text-ellipsis sm:whitespace-normal sm:overflow-visible" style={{ color: '#1a0606' }}>{f.title || 'Untitled focus'}</p>
           {fmtRange(f.begin_date, f.completion_date) && (
             <p className="text-xs mt-0.5" style={{ color: '#b8a898' }}>{fmtRange(f.begin_date, f.completion_date)}</p>
           )}
@@ -632,7 +632,7 @@ function HeroCard({ f, notes, open, onToggle, onGrip, onEdit, onSetStatus, onPro
 function RowCard({ f, n, notes, expanded, dragging, onGrip, onToggle, onEdit, onSetStatus, onProgress, onAddNote, onDeleteNote }) {
   return (
     <div className="rounded-xl" style={{ backgroundColor: dragging ? '#f3ece6' : '#faf7f5', border: '1px solid rgba(0,0,0,0.06)' }}>
-      <div className="flex items-center gap-2.5 px-3 py-3">
+      <div className="flex items-center gap-2.5 px-3 py-3 flex-wrap sm:flex-nowrap">
         <button
           onPointerDown={onGrip}
           className="flex-shrink-0 cursor-grab"
@@ -648,20 +648,24 @@ function RowCard({ f, n, notes, expanded, dragging, onGrip, onToggle, onEdit, on
           {n}
         </div>
         <TypeTag type={f.type} />
-        <div className="flex-1 min-w-0">
+        {/* Title + numbers: full-width stacked on mobile, inline on desktop */}
+        <div className="order-last w-full mt-1 min-w-0 sm:order-none sm:w-auto sm:flex-1 sm:mt-0">
           <p className="text-sm font-semibold truncate" style={{ color: '#1a0606' }}>{f.title || 'Untitled focus'}</p>
           <p className="text-[11px] truncate" style={{ color: '#b8a898' }}>
             {formatVal(f.type, f.current)} of {formatVal(f.type, f.target)}
           </p>
         </div>
-        <div className="hidden sm:block flex-shrink-0" style={{ width: 64 }}>
-          <ProgressBar f={f} height={5} />
+        {/* Controls: stay on the first line, right-aligned on mobile */}
+        <div className="flex items-center gap-2.5 ml-auto flex-shrink-0 sm:ml-0">
+          <div className="hidden sm:block flex-shrink-0" style={{ width: 64 }}>
+            <ProgressBar f={f} height={5} />
+          </div>
+          <span className="text-xs font-bold flex-shrink-0" style={{ color: BRAND, minWidth: 34, textAlign: 'right' }}>{pctOf(f)}%</span>
+          <button onClick={onEdit} className="edit-btn flex-shrink-0"><EditIcon /></button>
+          <button onClick={onToggle} className="edit-btn flex-shrink-0" title={expanded ? 'Collapse' : 'Expand'}>
+            <ChevronIcon open={expanded} />
+          </button>
         </div>
-        <span className="text-xs font-bold flex-shrink-0" style={{ color: BRAND, minWidth: 34, textAlign: 'right' }}>{pctOf(f)}%</span>
-        <button onClick={onEdit} className="edit-btn flex-shrink-0"><EditIcon /></button>
-        <button onClick={onToggle} className="edit-btn flex-shrink-0" title={expanded ? 'Collapse' : 'Expand'}>
-          <ChevronIcon open={expanded} />
-        </button>
       </div>
 
       {expanded && (
