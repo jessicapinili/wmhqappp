@@ -247,28 +247,109 @@ function NotesThread({ notes, onAdd, onDelete }) {
   )
 }
 
+/* ── Business focus field options ── */
+const VISIBILITY_OPTIONS = [
+  'Instagram followers',
+  'TikTok followers',
+  'YouTube subscribers',
+  'Email list size',
+  'Podcast downloads',
+  'Website visits',
+  'Other',
+]
+const REVENUE_TYPE_OPTIONS = [
+  'Recurring revenue',
+  'Total monthly revenue',
+  'Launch revenue',
+  'Cash collected',
+  'Profit',
+  'Other',
+]
+const LEVER_OPTIONS = [
+  'New offer launch',
+  'Renewals and extensions',
+  'Content and organic',
+  'Paid ads',
+  'Email list',
+  'Referrals',
+  'Other',
+]
+
+// Resolve a stored value against a dropdown set: an exact match selects that
+// option; anything else (legacy or custom) falls under "Other" with the value kept.
+function initDropdown(value, options) {
+  if (value && options.includes(value)) return { select: value, other: '' }
+  if (value) return { select: 'Other', other: value }
+  return { select: '', other: '' }
+}
+
 /* ── Business focus form (add + edit, in place) ── */
 function BizForm({ initial, onSave, onCancel, onDelete }) {
   const [type, setType] = useState(initial?.type || 'offer')
-  const [title, setTitle] = useState(initial?.title || '')
+
+  // Shared fields: preserved when switching type pills.
   const [current, setCurrent] = useState(initial != null ? String(initial.current ?? '') : '')
   const [target, setTarget] = useState(initial != null ? String(initial.target ?? '') : '')
   const [begin, setBegin] = useState(initial?.begin_date || '')
   const [complete, setComplete] = useState(initial?.completion_date || '')
-  const [lever, setLever] = useState(initial?.lever || '')
+
+  // Offer
+  const [offerTitle, setOfferTitle] = useState(initial?.type === 'offer' ? (initial.title || '') : '')
+  const [traffic, setTraffic] = useState(initial?.raw?.trafficNeeded || '')
+
+  // Visibility
+  const visInit = initDropdown(initial?.type === 'visibility' ? initial.title : '', VISIBILITY_OPTIONS)
+  const [visSelect, setVisSelect] = useState(visInit.select)
+  const [visOther, setVisOther] = useState(visInit.other)
+
+  // Revenue
+  const revInit = initDropdown(initial?.type === 'revenue' ? initial.title : '', REVENUE_TYPE_OPTIONS)
+  const [revSelect, setRevSelect] = useState(revInit.select)
+  const [revOther, setRevOther] = useState(revInit.other)
+  const leverInit = initDropdown(initial?.type === 'revenue' ? initial.lever : '', LEVER_OPTIONS)
+  const [leverSelect, setLeverSelect] = useState(leverInit.select)
+  const [leverOther, setLeverOther] = useState(leverInit.other)
+
+  const computeTitle = () => {
+    if (type === 'offer') return offerTitle.trim()
+    if (type === 'visibility') return visSelect === 'Other' ? visOther.trim() : visSelect
+    return revSelect === 'Other' ? revOther.trim() : revSelect
+  }
+  const computeLever = () => {
+    if (leverSelect === '') return ''
+    return leverSelect === 'Other' ? leverOther.trim() : leverSelect
+  }
+
+  const title = computeTitle()
+  const canSave = !!title
 
   const save = () => {
-    if (!title.trim()) return
-    onSave({
+    if (!canSave) return
+    const vals = {
       type,
-      title: title.trim().slice(0, TITLE_MAX),
+      title: title.slice(0, TITLE_MAX),
       current: num(current),
       target: num(target),
       begin_date: begin,
       completion_date: complete,
-      lever: lever.trim().slice(0, LEVER_MAX),
-    })
+      lever: type === 'revenue' ? computeLever().slice(0, LEVER_MAX) : '',
+    }
+    if (type === 'offer') vals.trafficNeeded = traffic.trim()
+    onSave(vals)
   }
+
+  const dates = (
+    <div className="grid grid-cols-2 gap-3">
+      <div>
+        <label className="label">Begin date</label>
+        <input className="input-field" type="date" value={begin} onChange={e => setBegin(e.target.value)} />
+      </div>
+      <div>
+        <label className="label">Complete by</label>
+        <input className="input-field" type="date" value={complete} onChange={e => setComplete(e.target.value)} />
+      </div>
+    </div>
+  )
 
   return (
     <div className="form-card space-y-4">
@@ -287,39 +368,104 @@ function BizForm({ initial, onSave, onCancel, onDelete }) {
         })}
       </div>
 
-      <div>
-        <label className="label">What are you focusing on?</label>
-        <input className="input-field" value={title} maxLength={TITLE_MAX}
-          onChange={e => setTitle(e.target.value)} placeholder="e.g. Recurring Revenue" autoFocus />
-      </div>
+      {type === 'offer' && (
+        <>
+          <div>
+            <label className="label">Offer in focus</label>
+            <input className="input-field" value={offerTitle} maxLength={TITLE_MAX}
+              onChange={e => setOfferTitle(e.target.value)} placeholder="e.g. Spring workshop series" autoFocus />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Current revenue ($)</label>
+              <input className="input-field" type="number" value={current} onChange={e => setCurrent(e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <label className="label">Revenue goal ($)</label>
+              <input className="input-field" type="number" value={target} onChange={e => setTarget(e.target.value)} placeholder="0" />
+            </div>
+          </div>
+          <div>
+            <label className="label">Traffic needed (optional)</label>
+            <input className="input-field" value={traffic}
+              onChange={e => setTraffic(e.target.value)} placeholder="e.g. 500 website visits" />
+          </div>
+        </>
+      )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Current</label>
-          <input className="input-field" type="number" value={current} onChange={e => setCurrent(e.target.value)} placeholder="0" />
-        </div>
-        <div>
-          <label className="label">Target</label>
-          <input className="input-field" type="number" value={target} onChange={e => setTarget(e.target.value)} placeholder="0" />
-        </div>
-      </div>
+      {type === 'visibility' && (
+        <>
+          <div>
+            <label className="label">Visibility focus</label>
+            <select className="input-field" value={visSelect} onChange={e => setVisSelect(e.target.value)}>
+              <option value="">Select...</option>
+              {VISIBILITY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          {visSelect === 'Other' && (
+            <div>
+              <label className="label">Name it</label>
+              <input className="input-field" value={visOther} maxLength={TITLE_MAX}
+                onChange={e => setVisOther(e.target.value)} placeholder="Name your visibility focus" autoFocus />
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Current number</label>
+              <input className="input-field" type="number" value={current} onChange={e => setCurrent(e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <label className="label">Target number</label>
+              <input className="input-field" type="number" value={target} onChange={e => setTarget(e.target.value)} placeholder="0" />
+            </div>
+          </div>
+        </>
+      )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Begin date</label>
-          <input className="input-field" type="date" value={begin} onChange={e => setBegin(e.target.value)} />
-        </div>
-        <div>
-          <label className="label">Complete by</label>
-          <input className="input-field" type="date" value={complete} onChange={e => setComplete(e.target.value)} />
-        </div>
-      </div>
+      {type === 'revenue' && (
+        <>
+          <div>
+            <label className="label">Revenue focus type</label>
+            <select className="input-field" value={revSelect} onChange={e => setRevSelect(e.target.value)}>
+              <option value="">Select...</option>
+              {REVENUE_TYPE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          {revSelect === 'Other' && (
+            <div>
+              <label className="label">Name it</label>
+              <input className="input-field" value={revOther} maxLength={TITLE_MAX}
+                onChange={e => setRevOther(e.target.value)} placeholder="Name your revenue focus" autoFocus />
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Current revenue ($)</label>
+              <input className="input-field" type="number" value={current} onChange={e => setCurrent(e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <label className="label">Target revenue ($)</label>
+              <input className="input-field" type="number" value={target} onChange={e => setTarget(e.target.value)} placeholder="0" />
+            </div>
+          </div>
+          <div>
+            <label className="label">Primary lever (optional)</label>
+            <select className="input-field" value={leverSelect} onChange={e => setLeverSelect(e.target.value)}>
+              <option value="">Select...</option>
+              {LEVER_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          {leverSelect === 'Other' && (
+            <div>
+              <label className="label">Name it</label>
+              <input className="input-field" value={leverOther} maxLength={LEVER_MAX}
+                onChange={e => setLeverOther(e.target.value)} placeholder="Name the lever" />
+            </div>
+          )}
+        </>
+      )}
 
-      <div>
-        <label className="label">Primary lever (optional)</label>
-        <input className="input-field" value={lever} maxLength={LEVER_MAX}
-          onChange={e => setLever(e.target.value)} placeholder="e.g. New offer launch" />
-      </div>
+      {dates}
 
       <div className="flex items-center justify-between pt-1">
         {onDelete ? (
@@ -330,7 +476,7 @@ function BizForm({ initial, onSave, onCancel, onDelete }) {
         ) : <span />}
         <div className="flex gap-2">
           <button onClick={onCancel} className="btn-brand-outline">Cancel</button>
-          <button onClick={save} className="btn-brand" disabled={!title.trim()}>Save focus</button>
+          <button onClick={save} className="btn-brand" disabled={!canSave}>Save focus</button>
         </div>
       </div>
     </div>
