@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getWeekKey } from '../lib/utils'
 import { format, startOfWeek, endOfWeek } from 'date-fns'
-import { EditIcon, DeleteIcon } from '../lib/icons'
+import { EditIcon, DeleteIcon, HeartIcon } from '../lib/icons'
 
 const BRAND = '#3d0c0c'
 
@@ -109,7 +109,7 @@ function ContentSystem({ userId }) {
         </button>
       </div>
       <div className="rounded-lg px-3 py-2.5 mb-4 text-sm font-medium" style={{ backgroundColor: '#FFF8F8', border: '1px solid rgba(61,12,12,0.18)', color: '#3d0c0c' }}>
-        ✦ Watch: CEO Visibility Training → Creating Content Pillars
+        <HeartIcon /> Watch: CEO Visibility Training → Creating Content Pillars
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {columns.map((col, idx) => {
@@ -381,7 +381,7 @@ function FunnelView({ userId }) {
       </div>
 
       <div className="insight-box mb-6">
-        <p className="font-bold text-xs mb-1">Pattern Insight ✦</p>
+        <p className="font-bold text-xs mb-1">Pattern Insight <HeartIcon /></p>
         <p>{getInsight()}</p>
       </div>
 

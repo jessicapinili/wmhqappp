@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { EditIcon } from '../lib/icons'
+import { EditIcon, HeartIcon } from '../lib/icons'
 
 const BRAND = '#3d0c0c'
 const NAME_MAX = 40
@@ -378,7 +378,7 @@ export default function QuickLinks() {
 
       {/* Pin announcement */}
       <div style={{ backgroundColor: '#fdf8f5', border: '0.5px solid rgba(240,208,208,0.5)', borderLeft: '2px solid rgba(240,208,208,0.7)', borderRadius: '4px', padding: '13px 16px', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '11px', fontWeight: 300, color: '#3d0c0c' }}>
-        ✦ You can pin up to {MAX_PINNED} links to your Dashboard for one-tap access. Tap the pin on any link.
+        <HeartIcon /> You can pin up to {MAX_PINNED} links to your Dashboard for one-tap access. Tap the pin on any link.
       </div>
 
       {/* Add link */}

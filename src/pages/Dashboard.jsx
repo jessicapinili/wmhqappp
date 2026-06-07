@@ -6,6 +6,7 @@ import { getTodaysInsight } from '../lib/insights'
 import YourFocus from '../components/YourFocus'
 import BrainDump from '../components/BrainDump'
 import PinnedLinks from '../components/PinnedLinks'
+import { HeartIcon } from '../lib/icons'
 
 const BRAND = '#3d0c0c'
 
@@ -499,7 +500,7 @@ export default function Dashboard() {
       {/* Welcome + Date + Login button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="page-title">Welcome back, {firstName} <span style={{ fontFamily: 'inherit', fontSize: '0.85em', opacity: 0.6 }}>✦</span></h1>
+          <h1 className="page-title">Welcome back, {firstName} <span style={{ fontFamily: 'inherit', fontSize: '0.85em', opacity: 0.6 }}><HeartIcon /></span></h1>
           <p className="text-sm text-gray-400 mt-0.5">{today}</p>
         </div>
         <a
@@ -518,7 +519,7 @@ export default function Dashboard() {
 
       {/* Portal video notice */}
       <div style={{ backgroundColor: '#fdf8f5', border: '0.5px solid rgba(240,208,208,0.5)', borderLeft: '2px solid rgba(240,208,208,0.7)', borderRadius: '4px', padding: '13px 16px', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '11px', fontWeight: 300, color: '#3d0c0c' }}>
-        ✦ Please watch the WMHQ Personal Portal Video inside the WMHQ Vault
+        <HeartIcon /> Please watch the WMHQ Personal Portal Video inside the WMHQ Vault
       </div>
 
       {/* Insight of the Day */}

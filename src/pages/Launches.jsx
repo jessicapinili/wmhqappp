@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { HeartIcon } from '../lib/icons'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -641,7 +642,7 @@ export default function Launches() {
 
       {/* CEO training box */}
       <div style={{ backgroundColor: '#fdf8f5', border: '0.5px solid rgba(240,208,208,0.5)', borderLeft: '2px solid rgba(240,208,208,0.7)', borderRadius: '4px', padding: '13px 16px', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '11px', fontWeight: 300, color: '#3d0c0c' }}>
-        ✦ Use: CEO Cash Dashboard → <a href="https://tools.womanmasteryhqportal.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#3d0c0c', textDecoration: 'underline', textUnderlineOffset: '3px' }}>Launch Campaign</a>
+        <HeartIcon /> Use: CEO Cash Dashboard → <a href="https://tools.womanmasteryhqportal.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#3d0c0c', textDecoration: 'underline', textUnderlineOffset: '3px' }}>Launch Campaign</a>
       </div>
 
       {/* Main content card */}
