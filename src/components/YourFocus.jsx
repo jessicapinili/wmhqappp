@@ -176,12 +176,12 @@ function ProgressBar({ f, height = 6 }) {
 
 /* ── Progress update field ── */
 function ProgressUpdate({ f, onSave }) {
-  const [val, setVal] = useState('')
+  const [val, setVal] = useState(String(num(f.current)))
+  // Keep the field in sync with the saved value (e.g. after an update).
+  useEffect(() => { setVal(String(num(f.current))) }, [f.current])
   const submit = () => {
     if (val === '') return
-    const n = num(val)
-    onSave(n)
-    setVal('')
+    onSave(num(val))
   }
   return (
     <div>
@@ -194,7 +194,6 @@ function ProgressUpdate({ f, onSave }) {
           value={val}
           onChange={e => setVal(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') submit() }}
-          placeholder={String(num(f.current))}
         />
         <button onClick={submit} className="btn-brand" disabled={val === ''}>Update</button>
       </div>
@@ -339,7 +338,7 @@ function BizForm({ initial, onSave, onCancel, onDelete }) {
 }
 
 /* ── Hero card (priority 1) ── */
-function HeroCard({ f, notes, onGrip, onEdit, onProgress, onAddNote, onDeleteNote }) {
+function HeroCard({ f, notes, open, onToggle, onGrip, onEdit, onProgress, onAddNote, onDeleteNote }) {
   return (
     <div className="rounded-xl p-5" style={{ backgroundColor: '#faf7f5', border: '1px solid rgba(0,0,0,0.06)' }}>
       <div className="flex items-start gap-3">
@@ -370,6 +369,9 @@ function HeroCard({ f, notes, onGrip, onEdit, onProgress, onAddNote, onDeleteNot
           {f.lever && <p className="text-xs mt-1" style={{ color: '#8a8a8a' }}>Lever: {f.lever}</p>}
         </div>
         <button onClick={onEdit} className="edit-btn flex-shrink-0"><EditIcon /></button>
+        <button onClick={onToggle} className="edit-btn flex-shrink-0" title={open ? 'Collapse' : 'Expand'}>
+          <ChevronIcon open={open} />
+        </button>
       </div>
 
       {/* Progress */}
@@ -383,14 +385,18 @@ function HeroCard({ f, notes, onGrip, onEdit, onProgress, onAddNote, onDeleteNot
         <ProgressBar f={f} height={8} />
       </div>
 
-      <div className="mt-4">
-        <ProgressUpdate f={f} onSave={onProgress} />
-      </div>
+      {open && (
+        <>
+          <div className="mt-4">
+            <ProgressUpdate f={f} onSave={onProgress} />
+          </div>
 
-      {/* Notes */}
-      <div className="mt-4 pt-4" style={{ borderTop: '1px solid #ede6e1' }}>
-        <NotesThread notes={notes} onAdd={onAddNote} onDelete={onDeleteNote} />
-      </div>
+          {/* Notes */}
+          <div className="mt-4 pt-4" style={{ borderTop: '1px solid #ede6e1' }}>
+            <NotesThread notes={notes} onAdd={onAddNote} onDelete={onDeleteNote} />
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -531,6 +537,7 @@ export default function YourFocus({ userId }) {
   const [loaded, setLoaded] = useState(false)
 
   const [expandedId, setExpandedId] = useState(null)
+  const [heroOpen, setHeroOpen] = useState(true)
   const [editingBizId, setEditingBizId] = useState(null)
   const [addingBiz, setAddingBiz] = useState(false)
 
@@ -743,6 +750,8 @@ export default function YourFocus({ userId }) {
                 <HeroCard
                   f={f}
                   notes={notes}
+                  open={heroOpen}
+                  onToggle={() => setHeroOpen(o => !o)}
                   onGrip={(e) => onGrip(e, f.id)}
                   onEdit={() => { setEditingBizId(f.id); setAddingBiz(false) }}
                   onProgress={(n) => writeBizData(f.id, { current: n })}
