@@ -145,9 +145,9 @@ function GripIcon() {
     </svg>
   )
 }
-function ChevronIcon({ open }) {
+function ChevronIcon({ open, size = 12 }) {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
       style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
       <path d="M6 9l6 6 6-6" />
@@ -197,10 +197,11 @@ function StatusChip({ f, onSet }) {
     <span ref={ref} className="relative inline-block">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
-        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${s.cls}`}
+        className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-0.5 rounded-full border ${s.cls}`}
         title="Change status"
       >
         {s.label}
+        <ChevronIcon open={open} size={10} />
       </button>
       {open && (
         <div className="absolute z-20 left-0 mt-1"

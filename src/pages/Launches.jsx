@@ -99,11 +99,16 @@ function StatusPill({ status, onSet }) {
     <span ref={ref} className="relative inline-block">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
-        className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
+        className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
         style={{ color: cfg.color, backgroundColor: cfg.bg }}
         title="Change status"
       >
         {status}
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+          <path d="M6 9l6 6 6-6" />
+        </svg>
       </button>
       {open && (
         <div className="absolute z-20 left-0 mt-1"
