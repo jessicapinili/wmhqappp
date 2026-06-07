@@ -5,13 +5,46 @@ import { EditIcon, DeleteIcon } from '../lib/icons'
 
 const BRAND = '#3d0c0c'
 
+/* ─── Copy button (matches the Quick Links copy pattern) ─── */
+function CopyIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  )
+}
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false)
+  const doCopy = () => {
+    try { navigator.clipboard?.writeText(text || '') } catch { /* ignore */ }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1200)
+  }
+  return (
+    <button onClick={doCopy} className="edit-btn" title="Copy">
+      {copied ? <CheckIcon /> : <CopyIcon />}
+    </button>
+  )
+}
+
 /* ─── Generic single-item save/display card ─── */
-function SingleCard({ value, onEdit, onDelete, renderContent }) {
+function SingleCard({ value, onEdit, onDelete, renderContent, copyText }) {
   return (
     <div className="card group">
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">{renderContent(value)}</div>
         <div className="flex gap-1 ml-3 transition-opacity">
+          {copyText != null && <CopyButton text={copyText} />}
           <button onClick={onEdit} className="edit-btn" title="Edit"><EditIcon /></button>
           <button onClick={onDelete} className="delete-btn" title="Delete"><DeleteIcon /></button>
         </div>
@@ -57,6 +90,7 @@ function CoreOneLiner({ userId }) {
       {saved && !editing ? (
         <SingleCard
           value={saved}
+          copyText={saved}
           onEdit={() => { setValue(saved); setEditing(true) }}
           onDelete={handleDelete}
           renderContent={v => <p className="text-gray-800 font-medium leading-relaxed">"{v}"</p>}
@@ -165,6 +199,7 @@ function ProductOneLiners({ userId }) {
                       <p className="text-gray-600 text-sm mt-1 italic">"{item.offer_one_liner}"</p>
                     </div>
                     <div className="flex gap-1 ml-3 transition-opacity">
+                      <CopyButton text={item.offer_one_liner} />
                       <button onClick={() => handleEdit(item)} className="edit-btn"><EditIcon /></button>
                       <button onClick={() => handleDelete(item.id)} className="delete-btn"><DeleteIcon /></button>
                     </div>
@@ -284,11 +319,18 @@ function ObjectionBank({ userId }) {
               {items.map(item => (
                 <div key={item.id} className="card group">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900">{item.objection}</p>
-                      <p className="text-sm text-gray-500 mt-1 italic">{item.reframe}</p>
+                    <div className="flex-1 min-w-0 space-y-3">
+                      <div>
+                        <p className="label" style={{ marginBottom: 4 }}>Objection</p>
+                        <p className="text-sm font-semibold text-gray-900">{item.objection}</p>
+                      </div>
+                      <div>
+                        <p className="label" style={{ marginBottom: 4 }}>Reframe</p>
+                        <p className="text-sm text-gray-600">{item.reframe}</p>
+                      </div>
                     </div>
                     <div className="flex gap-1 ml-3 transition-opacity">
+                      <CopyButton text={item.reframe} />
                       <button onClick={() => handleEdit(item)} className="edit-btn"><EditIcon /></button>
                       <button onClick={() => handleDelete(item.id)} className="delete-btn"><DeleteIcon /></button>
                     </div>
@@ -373,29 +415,17 @@ function BuyerAvatar({ userId }) {
           value={saved}
           onEdit={() => { setForm({ name: saved.name||'', age_range: saved.age_range||'', description: saved.description||'' }); setEditing(true) }}
           onDelete={handleDelete}
-          renderContent={v => (
-            <div className="space-y-3">
-              {(v.name || v.age_range) && (
-                <div className={`grid gap-3 ${v.name && v.age_range ? 'grid-cols-2' : 'grid-cols-1 max-w-xs'}`}>
-                  {v.name && (
-                    <div className="rounded-lg p-3 border" style={{ background: '#fff', borderColor: '#ede6e1' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#b0a49e' }}>Name</p>
-                      <p className="text-sm font-semibold text-gray-900">{v.name}</p>
-                    </div>
-                  )}
-                  {v.age_range && (
-                    <div className="rounded-lg p-3 border" style={{ background: '#fff', borderColor: '#ede6e1' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#b0a49e' }}>Age Range</p>
-                      <p className="text-sm font-semibold text-gray-900">{v.age_range}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-              {v.description && (
-                <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{v.description}</p>
-              )}
-            </div>
-          )}
+          renderContent={v => {
+            const title = v.name && v.age_range ? `${v.name} · ${v.age_range}` : (v.name || v.age_range || '')
+            return (
+              <div className="space-y-1.5">
+                {title && <p className="text-sm font-semibold text-gray-900">{title}</p>}
+                {v.description && (
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{v.description}</p>
+                )}
+              </div>
+            )
+          }}
         />
       ) : (
         <div className="space-y-3">
@@ -465,12 +495,18 @@ function BuyerPsychology({ userId }) {
           renderContent={v => (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <p className="text-xs font-black uppercase tracking-wider text-red-600 mb-2">Buyer Pains</p>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{v.pains}</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="label" style={{ marginBottom: 0 }}>Buyer pains</p>
+                  {v.pains && <CopyButton text={v.pains} />}
+                </div>
+                <p className="text-sm text-gray-600 whitespace-pre-wrap">{v.pains}</p>
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-wider text-emerald-600 mb-2">Buyer Desires</p>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{v.desires}</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="label" style={{ marginBottom: 0 }}>Buyer desires</p>
+                  {v.desires && <CopyButton text={v.desires} />}
+                </div>
+                <p className="text-sm text-gray-600 whitespace-pre-wrap">{v.desires}</p>
               </div>
             </div>
           )}
