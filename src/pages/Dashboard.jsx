@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { getMonthKey, todayFormatted } from '../lib/utils'
 import { getTodaysInsight } from '../lib/insights'
 import YourFocus from '../components/YourFocus'
+import BrainDump from '../components/BrainDump'
 
 const BRAND = '#3d0c0c'
 
@@ -525,6 +526,9 @@ export default function Dashboard() {
           "{insight}"
         </p>
       </div>
+
+      {/* Brain dump */}
+      <BrainDump userId={user.id} />
 
       {/* Your Season This Month */}
       <div className="card-section">
