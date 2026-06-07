@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 
@@ -72,14 +72,58 @@ function daysUntil(dateStr) {
 
 // ─── Status Pill ───────────────────────────────────────────────────────────────
 
-function StatusPill({ status }) {
+function StatusPill({ status, onSet }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    if (!open) return
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [open])
+
   const cfg = STATUS_CONFIG[status] || { color: '#6B7280', bg: '#F3F4F6' }
+
+  if (!onSet) {
+    return (
+      <span
+        className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
+        style={{ color: cfg.color, backgroundColor: cfg.bg }}
+      >
+        {status}
+      </span>
+    )
+  }
+
   return (
-    <span
-      className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
-      style={{ color: cfg.color, backgroundColor: cfg.bg }}
-    >
-      {status}
+    <span ref={ref} className="relative inline-block">
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
+        className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
+        style={{ color: cfg.color, backgroundColor: cfg.bg }}
+        title="Change status"
+      >
+        {status}
+      </button>
+      {open && (
+        <div className="absolute z-20 left-0 mt-1"
+          style={{ backgroundColor: '#fff', border: '0.5px solid #e8e0d8', borderRadius: 5, padding: 4, minWidth: 132 }}>
+          {STATUSES.map(opt => (
+            <button
+              key={opt}
+              onClick={(e) => { e.stopPropagation(); setOpen(false); onSet(opt) }}
+              className="block w-full text-left text-xs px-2 py-1.5 rounded transition-colors"
+              style={{
+                color: opt === status ? BRAND : '#6b6b6b',
+                fontWeight: opt === status ? 600 : 400,
+                backgroundColor: opt === status ? '#faf7f3' : 'transparent',
+              }}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
     </span>
   )
 }
@@ -358,6 +402,25 @@ export default function Launches() {
       setLaunches(prev => [...prev, data])
     }
     setShowForm(false)
+  }
+
+  // ── Set status from the card chip (writes the same field as the form) ─────────
+
+  const handleSetStatus = async (launchId, status) => {
+    const { data, error } = await supabase
+      .from('launches')
+      .update({ status })
+      .eq('id', launchId)
+      .eq('user_id', user.id)
+      .select()
+      .single()
+
+    if (error || !data) {
+      console.error('[Launches] status update error:', error)
+      alert(`Failed to update status: ${error?.message || 'Unknown error'}. Please try again.`)
+      return
+    }
+    setLaunches(prev => prev.map(l => l.id === launchId ? data : l))
   }
 
   // ── Toggle detail panel ──────────────────────────────────────────────────────
@@ -654,7 +717,7 @@ export default function Launches() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <p className="font-bold text-gray-900 leading-snug">{launch.offer_name}</p>
-                        <StatusPill status={launch.status} />
+                        <StatusPill status={launch.status} onSet={(s) => handleSetStatus(launch.id, s)} />
                       </div>
                       {meta && <p className="text-xs text-gray-400">{meta}</p>}
                     </div>
