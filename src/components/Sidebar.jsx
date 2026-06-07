@@ -66,6 +66,7 @@ function NavItem({ to, icon, label, dot, dotColor, external, onClose }) {
 
 export default function Sidebar({ onClose }) {
   const { displayName, displayTitle, initials, logout } = useAuth()
+  const [influenceOpen, setInfluenceOpen] = useState(false)
   const [cashOpen, setCashOpen] = useState(false)
   const [identityOpen, setIdentityOpen] = useState(false)
   const navigate = useNavigate()
@@ -76,6 +77,7 @@ export default function Sidebar({ onClose }) {
     navigate('/login')
   }
 
+  const influenceActive = location.pathname.startsWith('/influence')
   const cashActive     = location.pathname.startsWith('/cash')
   const identityActive = location.pathname.startsWith('/identity')
 
@@ -127,7 +129,46 @@ export default function Sidebar({ onClose }) {
           </p>
         </div>
 
-        <NavItem to="/influence" dot dotColor={PHASE_COLORS.influence} label="Influence" onClose={onClose} />
+        {/* Influence with submenu */}
+        <div className="mx-2">
+          <button
+            onClick={() => { setInfluenceOpen(!influenceOpen); navigate('/influence') }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 transition-all"
+            style={{
+              color: influenceActive ? '#ffffff' : 'rgba(245,236,224,0.38)',
+              backgroundColor: influenceActive ? 'rgba(0,0,0,0.20)' : 'transparent',
+              borderLeft: influenceActive ? '1.5px solid #f0d0d0' : '1.5px solid transparent',
+              fontFamily: NAV_FONT,
+              fontSize: '11.5px',
+              fontWeight: influenceActive ? 400 : 300,
+              borderRadius: '2px',
+            }}
+          >
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: PHASE_COLORS.influence }} />
+            <span className="flex-1 text-left">Influence</span>
+            <span style={{ color: 'rgba(245,236,224,0.25)', fontSize: '9px' }}>{influenceOpen ? '▾' : '▸'}</span>
+          </button>
+          {influenceOpen && (
+            <div className="mt-0.5 space-y-0.5" style={{ marginLeft: '42px' }}>
+              <NavLink
+                to="/influence/daily-marketing-checklist"
+                onClick={onClose}
+                className="flex items-center px-3 py-1.5 transition-all"
+                style={({ isActive }) => ({
+                  fontFamily: NAV_FONT,
+                  fontSize: '10px',
+                  fontWeight: 300,
+                  color: isActive ? '#ffffff' : 'rgba(245,236,224,0.40)',
+                  backgroundColor: isActive ? 'rgba(0,0,0,0.15)' : 'transparent',
+                  borderRadius: '2px',
+                })}
+              >
+                Daily Marketing Checklist
+              </NavLink>
+            </div>
+          )}
+        </div>
+
         <NavItem to="/visibility" dot dotColor={PHASE_COLORS.visibility} label="Visibility" onClose={onClose} />
 
         {/* Cash with submenu */}

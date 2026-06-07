@@ -5,6 +5,7 @@ import Layout from './components/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Influence from './pages/Influence'
+import DailyMarketingChecklist from './pages/DailyMarketingChecklist'
 import Visibility from './pages/Visibility'
 import Cash from './pages/Cash'
 import MoneyDashboard from './pages/MoneyDashboard'
@@ -51,6 +52,7 @@ function AppRoutes() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="influence" element={<Influence />} />
+        <Route path="influence/daily-marketing-checklist" element={<DailyMarketingChecklist />} />
         <Route path="visibility" element={<Visibility />} />
         <Route path="cash" element={<Cash />} />
         <Route path="cash/money-dashboard" element={<MoneyDashboard />} />
