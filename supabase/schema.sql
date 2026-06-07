@@ -357,6 +357,7 @@ CREATE TABLE IF NOT EXISTS quick_links (
   url TEXT NOT NULL,
   side TEXT NOT NULL CHECK (side IN ('business', 'personal')),
   sort_order INTEGER NOT NULL DEFAULT 0,
+  pinned BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

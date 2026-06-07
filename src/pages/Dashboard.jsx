@@ -5,6 +5,7 @@ import { getMonthKey, todayFormatted } from '../lib/utils'
 import { getTodaysInsight } from '../lib/insights'
 import YourFocus from '../components/YourFocus'
 import BrainDump from '../components/BrainDump'
+import PinnedLinks from '../components/PinnedLinks'
 
 const BRAND = '#3d0c0c'
 
@@ -511,6 +512,9 @@ export default function Dashboard() {
           Login to WMHQ ↗
         </a>
       </div>
+
+      {/* Pinned quick links */}
+      <PinnedLinks userId={user.id} />
 
       {/* Portal video notice */}
       <div style={{ backgroundColor: '#fdf8f5', border: '0.5px solid rgba(240,208,208,0.5)', borderLeft: '2px solid rgba(240,208,208,0.7)', borderRadius: '4px', padding: '13px 16px', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '11px', fontWeight: 300, color: '#3d0c0c' }}>

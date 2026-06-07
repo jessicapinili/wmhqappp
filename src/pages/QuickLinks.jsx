@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { EditIcon } from '../lib/icons'
 
 const BRAND = '#3d0c0c'
 const NAME_MAX = 40
+const MAX_PINNED = 3
 const SIDES = [
   { key: 'business', label: 'Business' },
   { key: 'personal', label: 'Personal' },
@@ -28,6 +29,76 @@ function ExternalIcon() {
       <polyline points="15 3 21 3 21 9" />
       <line x1="10" y1="14" x2="21" y2="3" />
     </svg>
+  )
+}
+function LinkGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  )
+}
+function GripIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" />
+      <circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" />
+      <circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
+    </svg>
+  )
+}
+function CopyIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  )
+}
+function CheckIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+function PinIcon({ filled }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor"
+      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 17v5" />
+      <path d="M9 10.76V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v5.76a2 2 0 0 0 .59 1.42L18 14H6l2.41-1.82A2 2 0 0 0 9 10.76z" />
+    </svg>
+  )
+}
+
+/* ── Favicon (fetched at render, neutral fallback on failure) ── */
+function Favicon({ url, size = 16 }) {
+  const [err, setErr] = useState(false)
+  let domain = ''
+  try { domain = new URL(url).hostname } catch { /* ignore */ }
+  if (err || !domain) {
+    return (
+      <span className="flex-shrink-0 flex items-center justify-center" style={{ width: size, height: size, color: '#b8a898' }}>
+        <LinkGlyph />
+      </span>
+    )
+  }
+  return (
+    <img
+      src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+      alt=""
+      width={size}
+      height={size}
+      loading="lazy"
+      className="flex-shrink-0"
+      style={{ borderRadius: 3 }}
+      onError={() => setErr(true)}
+    />
   )
 }
 
@@ -100,9 +171,20 @@ function LinkForm({ initial, onSave, onCancel, onDelete }) {
 }
 
 /* ── Link row ── */
-function LinkRow({ link, onOpen, onEdit }) {
+function LinkRow({ link, dragging, onOpen, onTogglePin, onEdit, onGrip }) {
+  const [copied, setCopied] = useState(false)
+  const doCopy = () => {
+    try { navigator.clipboard?.writeText(link.url) } catch { /* ignore */ }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1200)
+  }
   return (
-    <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ backgroundColor: '#faf7f5', border: '0.5px solid #e8e0d8' }}>
+    <div className="rounded-xl px-3 py-3 flex items-center gap-2.5"
+      style={{ backgroundColor: dragging ? '#f3ece6' : '#faf7f5', border: '0.5px solid #e8e0d8' }}>
+      <button onPointerDown={onGrip} className="flex-shrink-0 cursor-grab" style={{ color: '#c4b5af', touchAction: 'none' }} title="Drag to reorder">
+        <GripIcon />
+      </button>
+      <Favicon url={link.url} />
       <p className="flex-1 min-w-0 text-sm font-semibold truncate" style={{ color: '#1a0606' }}>{link.name}</p>
       <button
         onClick={onOpen}
@@ -112,7 +194,14 @@ function LinkRow({ link, onOpen, onEdit }) {
       >
         Open <ExternalIcon />
       </button>
-      <button onClick={onEdit} className="edit-btn flex-shrink-0"><EditIcon /></button>
+      <button onClick={onTogglePin} className="edit-btn flex-shrink-0" title={link.pinned ? 'Unpin from Dashboard' : 'Pin to Dashboard'}
+        style={link.pinned ? { color: BRAND } : undefined}>
+        <PinIcon filled={!!link.pinned} />
+      </button>
+      <button onClick={doCopy} className="edit-btn flex-shrink-0" title="Copy link">
+        {copied ? <CheckIcon /> : <CopyIcon />}
+      </button>
+      <button onClick={onEdit} className="edit-btn flex-shrink-0" title="Edit"><EditIcon /></button>
     </div>
   )
 }
@@ -124,6 +213,13 @@ export default function QuickLinks() {
   const [loaded, setLoaded] = useState(false)
   const [adding, setAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
+  const [pinMsg, setPinMsg] = useState('')
+
+  const [dragId, setDragId] = useState(null)
+  const dragIdRef = useRef(null)
+  const dragSideRef = useRef(null)
+  const rowRefs = useRef({})
+  const listsRef = useRef({ business: [], personal: [] })
 
   useEffect(() => {
     if (!user?.id) return
@@ -137,10 +233,9 @@ export default function QuickLinks() {
   const openLink = (url) => { window.open(url, '_blank', 'noopener,noreferrer') }
 
   const saveAdd = async (vals) => {
-    const sameSide = links.filter(l => l.side === vals.side)
-    const sort_order = sameSide.length
+    const sort_order = links.filter(l => l.side === vals.side).length
     const { data: row } = await supabase.from('quick_links')
-      .insert({ user_id: user.id, ...vals, sort_order }).select().single()
+      .insert({ user_id: user.id, ...vals, sort_order, pinned: false }).select().single()
     if (row) setLinks(prev => [...prev, row])
     setAdding(false)
   }
@@ -159,6 +254,69 @@ export default function QuickLinks() {
     setEditingId(null)
   }
 
+  const pinnedCount = links.filter(l => l.pinned).length
+  const togglePin = async (link) => {
+    if (!link.pinned && pinnedCount >= MAX_PINNED) {
+      setPinMsg(`You can pin up to ${MAX_PINNED} links at one time`)
+      setTimeout(() => setPinMsg(''), 2500)
+      return
+    }
+    const next = !link.pinned
+    setLinks(prev => prev.map(l => l.id === link.id ? { ...l, pinned: next } : l))
+    await supabase.from('quick_links').update({ pinned: next }).eq('id', link.id)
+  }
+
+  /* ── Drag (pointer based, within a column only) ── */
+  const onGripMove = useCallback((e) => {
+    if (dragIdRef.current == null) return
+    e.preventDefault()
+    const order = listsRef.current[dragSideRef.current] || []
+    const y = e.clientY
+    let target = order.length - 1
+    for (let i = 0; i < order.length; i++) {
+      const node = rowRefs.current[order[i].id]
+      if (!node) continue
+      const r = node.getBoundingClientRect()
+      if (y < r.top + r.height / 2) { target = i; break }
+    }
+    const from = order.findIndex(o => o.id === dragIdRef.current)
+    if (from === -1 || from === target) return
+    const next = [...order]
+    const [moved] = next.splice(from, 1)
+    next.splice(target, 0, moved)
+    const sortById = {}
+    next.forEach((l, i) => { sortById[l.id] = i })
+    setLinks(prev => prev.map(l => sortById[l.id] != null ? { ...l, sort_order: sortById[l.id] } : l))
+  }, [])
+
+  const onGripUp = useCallback(() => {
+    if (dragIdRef.current == null) return
+    window.removeEventListener('pointermove', onGripMove)
+    window.removeEventListener('pointerup', onGripUp)
+    const ordered = listsRef.current[dragSideRef.current] || []
+    dragIdRef.current = null
+    dragSideRef.current = null
+    setDragId(null)
+    Promise.all(ordered.map((l, i) =>
+      supabase.from('quick_links').update({ sort_order: i }).eq('id', l.id)
+    )).catch(err => console.error('Failed to persist order:', err))
+  }, [onGripMove])
+
+  const onGrip = useCallback((e, link) => {
+    if (e.button != null && e.button !== 0) return
+    e.preventDefault()
+    dragIdRef.current = link.id
+    dragSideRef.current = link.side
+    setDragId(link.id)
+    window.addEventListener('pointermove', onGripMove, { passive: false })
+    window.addEventListener('pointerup', onGripUp)
+  }, [onGripMove, onGripUp])
+
+  useEffect(() => () => {
+    window.removeEventListener('pointermove', onGripMove)
+    window.removeEventListener('pointerup', onGripUp)
+  }, [onGripMove, onGripUp])
+
   if (!loaded) return null
 
   const bySide = (side) => links
@@ -167,28 +325,35 @@ export default function QuickLinks() {
 
   const renderColumn = (side, label) => {
     const list = bySide(side)
+    listsRef.current[side] = list
     return (
       <div>
         <p className="label" style={{ marginBottom: 12 }}>{label}</p>
         <div className="space-y-2.5">
-          {list.map(link => (
-            editingId === link.id ? (
-              <LinkForm
-                key={link.id}
-                initial={link}
-                onSave={(vals) => saveEdit(link.id, vals)}
-                onCancel={() => setEditingId(null)}
-                onDelete={() => deleteLink(link.id)}
-              />
-            ) : (
-              <LinkRow
-                key={link.id}
-                link={link}
-                onOpen={() => openLink(link.url)}
-                onEdit={() => { setEditingId(link.id); setAdding(false) }}
-              />
+          {list.map(link => {
+            const setRef = (el) => { if (el) rowRefs.current[link.id] = el; else delete rowRefs.current[link.id] }
+            return (
+              <div key={link.id} ref={setRef}>
+                {editingId === link.id ? (
+                  <LinkForm
+                    initial={link}
+                    onSave={(vals) => saveEdit(link.id, vals)}
+                    onCancel={() => setEditingId(null)}
+                    onDelete={() => deleteLink(link.id)}
+                  />
+                ) : (
+                  <LinkRow
+                    link={link}
+                    dragging={dragId === link.id}
+                    onOpen={() => openLink(link.url)}
+                    onTogglePin={() => togglePin(link)}
+                    onEdit={() => { setEditingId(link.id); setAdding(false) }}
+                    onGrip={(e) => onGrip(e, link)}
+                  />
+                )}
+              </div>
             )
-          ))}
+          })}
           {list.length === 0 && (
             <p className="text-sm italic" style={{ color: '#b8a898' }}>No links yet.</p>
           )}
@@ -211,6 +376,11 @@ export default function QuickLinks() {
         </span>
       </div>
 
+      {/* Pin announcement */}
+      <div style={{ backgroundColor: '#fdf8f5', border: '0.5px solid rgba(240,208,208,0.5)', borderLeft: '2px solid rgba(240,208,208,0.7)', borderRadius: '4px', padding: '13px 16px', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '11px', fontWeight: 300, color: '#3d0c0c' }}>
+        ✦ You can pin up to {MAX_PINNED} links to your Dashboard for one-tap access. Tap the pin on any link.
+      </div>
+
       {/* Add link */}
       <div>
         {adding ? (
@@ -219,6 +389,9 @@ export default function QuickLinks() {
           <button onClick={() => { setAdding(true); setEditingId(null) }} className="btn-brand">
             + Add link
           </button>
+        )}
+        {pinMsg && (
+          <p className="text-xs mt-2" style={{ color: BRAND }}>{pinMsg}</p>
         )}
       </div>
 
