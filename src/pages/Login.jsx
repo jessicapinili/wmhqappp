@@ -1,8 +1,11 @@
 import React, { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
   const { login } = useAuth()
+  const location = useLocation()
+  const successMessage = location.state?.message
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -47,6 +50,12 @@ export default function Login() {
             Sign in to access your portal.
           </p>
 
+          {successMessage && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-4 py-3 text-sm mb-4">
+              {successMessage}
+            </div>
+          )}
+
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">
               {error}
@@ -77,6 +86,11 @@ export default function Login() {
                 required
                 autoComplete="current-password"
               />
+            </div>
+            <div className="text-right -mt-2">
+              <Link to="/forgot-password" className="text-xs text-gray-400 hover:text-gray-600">
+                Forgot password?
+              </Link>
             </div>
             <button
               type="submit"
