@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { HeartIcon } from '../lib/icons'
+import { EditIcon, HeartIcon } from '../lib/icons'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -141,8 +141,17 @@ const BLANK_FORM = {
   revenueGoal: '', capacity: '', status: '',
 }
 
-function LaunchForm({ onSave, onCancel }) {
-  const [form, setForm] = useState(BLANK_FORM)
+function LaunchForm({ onSave, onCancel, initial }) {
+  const [form, setForm] = useState(initial ? {
+    name:         initial.offer_name || '',
+    type:         initial.offer_type || '',
+    primaryFocus: '',
+    startDate:    initial.start_date || '',
+    endDate:      initial.end_date || '',
+    revenueGoal:  initial.revenue_goal != null ? String(initial.revenue_goal) : '',
+    capacity:     initial.capacity != null ? String(initial.capacity) : '',
+    status:       initial.status || '',
+  } : BLANK_FORM)
   const [errors, setErrors] = useState({})
 
   const set = (k, v) => {
@@ -189,7 +198,7 @@ function LaunchForm({ onSave, onCancel }) {
   return (
     <div className="form-card space-y-4 mb-5">
       <div className="flex justify-between items-center">
-        <p className="font-bold text-sm text-gray-900">Add Launch</p>
+        <p className="font-bold text-sm text-gray-900">{initial ? 'Edit Launch' : 'Add Launch'}</p>
         <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
       </div>
 
@@ -304,7 +313,7 @@ function LaunchForm({ onSave, onCancel }) {
           Cancel
         </button>
         <button onClick={handleSave} className="btn-brand">
-          Save Launch
+          {initial ? 'Save Changes' : 'Save Launch'}
         </button>
       </div>
     </div>
@@ -322,6 +331,7 @@ export default function Launches() {
   const [openDetailId, setOpenDetailId] = useState(null)
   const [detailEdit, setDetailEdit] = useState({ revenueSecured: '', enrolled: '', notes: '' })
   const [showForm, setShowForm] = useState(false)
+  const [editingLaunchId, setEditingLaunchId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
 
@@ -408,6 +418,43 @@ export default function Launches() {
       setLaunches(prev => [...prev, data])
     }
     setShowForm(false)
+  }
+
+  // ── Edit launch (updates the same record; never touches revenue/enrolments/notes) ──
+
+  const handleEditLaunch = async (launchId, formData) => {
+    const year = new Date(formData.startDate + 'T00:00:00').getFullYear()
+
+    const payload = {
+      offer_name:   formData.name,
+      offer_type:   formData.type,
+      start_date:   formData.startDate,
+      end_date:     formData.endDate,
+      revenue_goal: formData.revenueGoal,
+      capacity:     formData.capacity,
+      status:       formData.status,
+      year,
+    }
+
+    const { data, error } = await supabase
+      .from('launches')
+      .update(payload)
+      .eq('id', launchId)
+      .eq('user_id', user.id)
+      .select()
+      .single()
+
+    if (error || !data) {
+      console.error('[Launches] edit update error:', error)
+      alert(`Failed to save changes: ${error?.message || 'Unknown error'}. Please try again.`)
+      return
+    }
+
+    // If the new start date moved the launch to a different year, drop it from this view.
+    setLaunches(prev => data.year !== selectedYear
+      ? prev.filter(l => l.id !== launchId)
+      : prev.map(l => l.id === launchId ? data : l))
+    setEditingLaunchId(null)
   }
 
   // ── Set status from the card chip (writes the same field as the form) ─────────
@@ -716,6 +763,17 @@ export default function Launches() {
               const startDays = daysUntil(launch.start_date)
               const meta = [launch.offer_type, fmtDateRange(launch.start_date, launch.end_date)].filter(Boolean).join(' · ')
 
+              if (editingLaunchId === launch.id) {
+                return (
+                  <LaunchForm
+                    key={launch.id}
+                    initial={launch}
+                    onSave={(fd) => handleEditLaunch(launch.id, fd)}
+                    onCancel={() => setEditingLaunchId(null)}
+                  />
+                )
+              }
+
               return (
                 <div key={launch.id} className="rounded-xl px-4 py-3.5" style={{ backgroundColor: '#faf7f5', border: '0.5px solid #e8e0d8' }}>
                   {/* Header */}
@@ -727,16 +785,25 @@ export default function Launches() {
                       </div>
                       {meta && <p className="text-xs text-gray-400">{meta}</p>}
                     </div>
-                    <button
-                      onClick={() => handleToggleDetail(launch)}
-                      className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0"
-                      style={isOpen
-                        ? { backgroundColor: BRAND, color: '#fff' }
-                        : { backgroundColor: '#f7f7f7', color: '#6B7280' }
-                      }
-                    >
-                      {isOpen ? 'Close ▴' : 'Detail ▾'}
-                    </button>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={() => { setEditingLaunchId(launch.id); setOpenDetailId(null) }}
+                        className="edit-btn"
+                        title="Edit launch"
+                      >
+                        <EditIcon />
+                      </button>
+                      <button
+                        onClick={() => handleToggleDetail(launch)}
+                        className="text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                        style={isOpen
+                          ? { backgroundColor: BRAND, color: '#fff' }
+                          : { backgroundColor: '#f7f7f7', color: '#6B7280' }
+                        }
+                      >
+                        {isOpen ? 'Close ▴' : 'Detail ▾'}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Started launches: goal, bar, performance stats */}
