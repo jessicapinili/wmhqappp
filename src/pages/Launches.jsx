@@ -24,12 +24,13 @@ const PRIMARY_FOCUS_OPTIONS = [
 ]
 
 const STATUSES = ['Planning', 'Warming', 'Live', 'Closed', 'Evergreen']
+// One reusable status colour mapping: pale tint, darker matching text, subtle border.
 const STATUS_CONFIG = {
-  'Planning':  { color: '#6B7280', bg: '#F3F4F6' },
-  'Warming':   { color: '#D97706', bg: '#FEF3C7' },
-  'Live':      { color: '#059669', bg: '#D1FAE5' },
-  'Closed':    { color: '#6B7280', bg: '#F3F4F6' },
-  'Evergreen': { color: '#2563EB', bg: '#DBEAFE' },
+  'Planning':  { color: '#6D3FC0', bg: '#F1EAFE', border: '#D8C5F5' },
+  'Warming':   { color: '#A86600', bg: '#FFF4D6', border: '#F4D38A' },
+  'Live':      { color: '#267447', bg: '#E7F5EC', border: '#B8DDC6' },
+  'Closed':    { color: '#A83232', bg: '#FBE8E8', border: '#EDBABA' },
+  'Evergreen': { color: '#346A9A', bg: '#E8F1FA', border: '#BCD3E8' },
 }
 
 const THIS_YEAR = new Date().getFullYear()
@@ -83,13 +84,13 @@ function StatusPill({ status, onSet }) {
     return () => document.removeEventListener('mousedown', h)
   }, [open])
 
-  const cfg = STATUS_CONFIG[status] || { color: '#6B7280', bg: '#F3F4F6' }
+  const cfg = STATUS_CONFIG[status] || { color: '#6B7280', bg: '#F3F4F6', border: '#E5E7EB' }
 
   if (!onSet) {
     return (
       <span
-        className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
-        style={{ color: cfg.color, backgroundColor: cfg.bg }}
+        className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap border"
+        style={{ color: cfg.color, backgroundColor: cfg.bg, borderColor: cfg.border }}
       >
         {status}
       </span>
@@ -100,8 +101,8 @@ function StatusPill({ status, onSet }) {
     <span ref={ref} className="relative inline-block">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
-        className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
-        style={{ color: cfg.color, backgroundColor: cfg.bg }}
+        className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap border focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-300"
+        style={{ color: cfg.color, backgroundColor: cfg.bg, borderColor: cfg.border }}
         title="Change status"
       >
         {status}
@@ -113,21 +114,22 @@ function StatusPill({ status, onSet }) {
       </button>
       {open && (
         <div className="absolute z-20 left-0 mt-1"
-          style={{ backgroundColor: '#fff', border: '0.5px solid #e8e0d8', borderRadius: 5, padding: 4, minWidth: 132 }}>
-          {STATUSES.map(opt => (
-            <button
-              key={opt}
-              onClick={(e) => { e.stopPropagation(); setOpen(false); onSet(opt) }}
-              className="block w-full text-left text-xs px-2 py-1.5 rounded transition-colors"
-              style={{
-                color: opt === status ? BRAND : '#6b6b6b',
-                fontWeight: opt === status ? 600 : 400,
-                backgroundColor: opt === status ? '#faf7f3' : 'transparent',
-              }}
-            >
-              {opt}
-            </button>
-          ))}
+          style={{ backgroundColor: '#fff', border: '0.5px solid #e8e0d8', borderRadius: 5, padding: 4, minWidth: 140 }}>
+          {STATUSES.map(opt => {
+            const oc = STATUS_CONFIG[opt] || { color: '#6b6b6b' }
+            const selected = opt === status
+            return (
+              <button
+                key={opt}
+                onClick={(e) => { e.stopPropagation(); setOpen(false); onSet(opt) }}
+                className="flex items-center gap-2 w-full text-left text-xs px-2 py-1.5 rounded transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-300"
+                style={{ color: selected ? oc.color : '#6b6b6b', fontWeight: selected ? 600 : 400 }}
+              >
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: oc.color }} />
+                {opt}
+              </button>
+            )
+          })}
         </div>
       )}
     </span>
