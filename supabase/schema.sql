@@ -189,6 +189,7 @@ CREATE TABLE IF NOT EXISTS content_tracker_entries (
   content_about TEXT,
   led_to_action TEXT,
   reflection TEXT,
+  logged_date DATE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

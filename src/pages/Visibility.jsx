@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getWeekKey } from '../lib/utils'
-import { format, startOfWeek, endOfWeek } from 'date-fns'
+import { format, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import { EditIcon, DeleteIcon, HeartIcon } from '../lib/icons'
 
 const BRAND = '#3d0c0c'
 
 const weekKey = getWeekKey()
 const now = new Date()
+const weekMonday = startOfWeek(now, { weekStartsOn: 1 })
 const weekStart = format(startOfWeek(now, { weekStartsOn: 1 }), 'dd MMM')
 const weekEnd = format(endOfWeek(now, { weekStartsOn: 1 }), 'dd MMM yyyy')
 
@@ -160,6 +161,12 @@ const ACTIONS = ['DM/Enquiry', 'Link Click', 'Sale/Sign Up', 'No Direct Action']
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const todayDayName = format(now, 'EEE')
 
+// The day an entry belongs to: the selected day it was logged against
+// (logged_date), falling back to created_at for entries saved before this.
+const entryDayName = (e) => e.logged_date
+  ? format(new Date(e.logged_date + 'T00:00:00'), 'EEE')
+  : format(new Date(e.created_at), 'EEE')
+
 // Funnel stage: soft editorial palette — each has a selected-pill colour and a tag treatment
 const STAGE_COLORS = {
   Attract:  { sel: '#EDD5BA', bg: '#FAF0E6', text: '#7A4E20', border: '#E5C49A' },
@@ -188,7 +195,7 @@ function ContentTracker({ userId }) {
       .order('created_at', { ascending: false }).then(({ data }) => { setEntries(data || []); setLoading(false) })
   }, [userId])
 
-  const daysWithEntries = new Set(entries.map(e => format(new Date(e.created_at), 'EEE')))
+  const daysWithEntries = new Set(entries.map(entryDayName))
 
   const stats = {
     total: entries.length,
@@ -205,7 +212,8 @@ function ContentTracker({ userId }) {
       setEntries(prev => prev.map(x => x.id === editId ? data : x))
       setEditId(null)
     } else {
-      const { data } = await supabase.from('content_tracker_entries').insert({ user_id: userId, week_key: weekKey, ...form }).select().single()
+      const loggedDate = format(addDays(weekMonday, Math.max(0, DAYS.indexOf(selectedDay))), 'yyyy-MM-dd')
+      const { data } = await supabase.from('content_tracker_entries').insert({ user_id: userId, week_key: weekKey, logged_date: loggedDate, ...form }).select().single()
       setEntries(prev => [data, ...prev])
     }
     resetForm()
@@ -298,7 +306,7 @@ function ContentTracker({ userId }) {
           </p>
           <div className="space-y-2">
             {entries.map(e => {
-              const entryDay = format(new Date(e.created_at), 'EEE')
+              const entryDay = entryDayName(e)
               return (
                 <div key={e.id} className="group flex items-center gap-3 px-4 py-3 rounded-xl border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
                   <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
