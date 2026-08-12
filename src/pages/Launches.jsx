@@ -102,15 +102,6 @@ function fmtDateRange(start, end) {
   return null
 }
 
-function getQuarter(dateStr) {
-  if (!dateStr) return null
-  const m = new Date(dateStr + 'T00:00:00').getMonth() + 1
-  if (m <= 3) return 'Q1'
-  if (m <= 6) return 'Q2'
-  if (m <= 9) return 'Q3'
-  return 'Q4'
-}
-
 // Whole days from today to the given date (negative once the date has passed).
 function daysUntil(dateStr) {
   if (!dateStr) return null
@@ -527,57 +518,57 @@ function CampaignCard({ campaign, onOpen }) {
   const endDays = daysUntil(campaign.end_date)
   const startDays = daysUntil(campaign.start_date)
 
-  const meta = [
-    model || 'Campaign model not set',
-    campaign.primary_goal || 'Goal not set',
-    range || 'No fixed dates',
-  ].join(' · ')
+  const started = RESULT_STAGES.includes(stage)
+  const meta = [model || 'Campaign model not set', campaign.primary_goal || 'Goal not set'].join(' · ')
+
+  // Footer note under the bar: sales and time left, or the pre-launch countdown.
+  const statusNote = started
+    ? [
+        `${made} sale${made !== 1 ? 's' : ''}`,
+        stage === 'Open' && endDays != null
+          ? (endDays >= 0 ? `${endDays} days left` : 'End date passed')
+          : null,
+      ].filter(Boolean).join(' · ')
+    : stage === 'Pre-launch'
+      ? (startDays != null
+          ? (startDays > 0 ? `Opens in ${startDays} days` : 'Start date reached')
+          : 'Pre-launch')
+      : 'In planning'
 
   return (
-    <button
-      onClick={onOpen}
-      className="w-full text-left rounded-xl px-4 py-3.5 transition-colors hover:bg-white"
-      style={{ backgroundColor: '#faf7f5', border: '0.5px solid #e8e0d8' }}
-    >
+    <div className="rounded-xl px-4 py-4 flex flex-col" style={{ backgroundColor: '#faf7f5', border: '0.5px solid #e8e0d8' }}>
+      {/* Title + stage */}
       <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-gray-900 leading-snug">{campaign.offer_name || 'Untitled campaign'}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{meta}</p>
-        </div>
+        <p className="font-bold text-gray-900 leading-snug min-w-0">{campaign.offer_name || 'Untitled campaign'}</p>
         <StageBadge stage={stage} />
       </div>
+      <p className="text-xs text-gray-400 mt-1">{meta}</p>
+      <p className="text-xs text-gray-400 mt-0.5">{range || 'No fixed dates'}</p>
 
-      {RESULT_STAGES.includes(stage) ? (
-        <div className="mt-3">
-          <div className="flex items-center justify-between gap-3 mb-1.5 flex-wrap">
-            <span className="text-xs font-semibold text-gray-700">
-              {fmtMoney(revenue, cur)}{goal > 0 && ` of ${fmtMoney(goal, cur)}`}
-            </span>
-            {pct != null && (
-              <span className="text-xs font-bold" style={{ color: pct >= 100 ? '#267447' : BRAND }}>{pct}% of goal</span>
-            )}
-          </div>
-          {goal > 0 && <GoalBar pct={pct} />}
-          <div className="flex flex-wrap gap-x-5 gap-y-1 mt-2.5 text-xs text-gray-500">
-            <span>{made} sale{made !== 1 ? 's' : ''}</span>
-            {stage === 'Open' && endDays != null && (
-              <span>{endDays >= 0 ? `${endDays} days remaining` : 'End date passed'}</span>
-            )}
-          </div>
-        </div>
-      ) : stage === 'Pre-launch' ? (
-        <p className="text-xs text-gray-500 mt-2">
-          {startDays != null
-            ? (startDays > 0 ? `Opens in ${startDays} days` : 'Start date reached')
-            : 'Pre-launch'}
-          {goal > 0 && ` · Goal ${fmtMoney(goal, cur)}`}
+      {/* Figures */}
+      <div className="mt-3 flex items-baseline justify-between gap-3 flex-wrap">
+        <p className="stat-number">{started ? fmtMoney(revenue, cur) : fmtMoney(goal, cur)}</p>
+        <p className="text-xs text-gray-400">
+          {started ? (goal > 0 ? `of ${fmtMoney(goal, cur)}` : 'secured') : 'revenue goal'}
         </p>
-      ) : (
-        <p className="text-xs text-gray-500 mt-2">
-          In planning{goal > 0 && ` · Goal ${fmtMoney(goal, cur)}`}
-        </p>
-      )}
-    </button>
+      </div>
+
+      {started && goal > 0 && <div className="mt-2"><GoalBar pct={pct} /></div>}
+
+      <div className="flex items-center justify-between gap-3 mt-2 flex-wrap">
+        <span className="text-xs text-gray-500">{statusNote}</span>
+        {started && pct != null && (
+          <span className="text-xs font-bold" style={{ color: pct >= 100 ? '#267447' : BRAND }}>{pct}% of goal</span>
+        )}
+      </div>
+
+      {/* mt-auto keeps the buttons aligned across cards of differing height */}
+      <div className="mt-auto pt-4">
+        <button onClick={onOpen} className="btn-brand-outline w-full">
+          View Campaign
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -1534,31 +1525,6 @@ export default function Launches() {
     return { total: launches.length, revenueGoal, salesRevenue, salesMade, next, displayCurrency, mixed }
   }, [launches])
 
-  // Year Patterns strip — unchanged behaviour, now using preserved fields.
-  const insights = useMemo(() => {
-    if (launches.length < 2) return null
-    const totalRev = launches.reduce((s, l) => s + salesRevenueOf(l), 0)
-    const totalSales = launches.reduce((s, l) => s + salesMadeOf(l), 0)
-    const avgRevPerLaunch = Math.round(totalRev / launches.length)
-    const avgSales = (totalSales / launches.length).toFixed(1)
-
-    const qRevenue = { Q1: 0, Q2: 0, Q3: 0, Q4: 0 }
-    launches.forEach(l => {
-      const q = getQuarter(l.start_date)
-      if (q) qRevenue[q] += salesRevenueOf(l)
-    })
-    const [bestQKey, bestQVal] = Object.entries(qRevenue).sort((a, b) => b[1] - a[1])[0]
-    const bestQuarter = bestQVal > 0 ? `${bestQKey} ${selectedYear}` : '—'
-
-    const withGoals = launches.filter(l => num0(l.revenue_goal) > 0)
-    const hitGoal = withGoals.filter(l => salesRevenueOf(l) >= num0(l.revenue_goal)).length
-    const goalHitRate = withGoals.length > 0
-      ? `${Math.round((hitGoal / withGoals.length) * 100)}% of campaigns hit target`
-      : '—'
-
-    return { avgRevPerLaunch, avgSales, bestQuarter, goalHitRate }
-  }, [launches, selectedYear])
-
   const openCampaign = launches.find(l => l.id === openId) || null
   const defaultCurrency = launches.length > 0 ? currencyOf(launches[0]) : 'AUD'
 
@@ -1695,33 +1661,9 @@ export default function Launches() {
             ) : filteredLaunches.length === 0 ? (
               <p className="text-sm text-gray-400 italic py-8 text-center">No campaigns in {filter}.</p>
             ) : (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {filteredLaunches.map(l => (
                   <CampaignCard key={l.id} campaign={l} onOpen={() => setOpenId(l.id)} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Insight strip */}
-          <div className="card-section">
-            <p className="font-bold text-xs text-gray-500 uppercase tracking-wide mb-3">Year Patterns</p>
-            {!insights ? (
-              <p className="text-sm text-gray-400 italic">
-                Add more campaigns to see patterns across your year.
-              </p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                {[
-                  ['Avg Revenue / Campaign', fmtMoney(insights.avgRevPerLaunch, summary.displayCurrency)],
-                  ['Avg Sales / Campaign',   insights.avgSales],
-                  ['Best Quarter',           insights.bestQuarter],
-                  ['Goal Hit Rate',          insights.goalHitRate],
-                ].map(([label, val]) => (
-                  <div key={label}>
-                    <p className="stat-number">{val}</p>
-                    <p className="text-xs text-gray-500 mt-1">{label}</p>
-                  </div>
                 ))}
               </div>
             )}
