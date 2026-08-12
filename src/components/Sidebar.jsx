@@ -114,6 +114,12 @@ export default function Sidebar({ onClose }) {
       {/* Nav */}
       <nav className="flex-1 py-3 space-y-0.5">
         <NavItem to="/dashboard" icon="⊞" label="Dashboard" onClose={onClose} />
+        <NavItem
+          to="https://womanmasteryhq.com/onboarding-plan/"
+          icon="🧭"
+          label="Where Do I Start?"
+          external
+        />
         <NavItem to="/quick-links" icon="🔗" label="Quick Links" onClose={onClose} />
 
         {/* Phases section label */}
@@ -268,12 +274,6 @@ export default function Sidebar({ onClose }) {
           to="https://tools.womanmasteryhqportal.com"
           icon="🔧"
           label="WMHQ Tools"
-          external
-        />
-        <NavItem
-          to="https://jmpinili.notion.site/wmhq-onboarding-dashboard?source=copy_link"
-          icon="🧭"
-          label="Where Do I Start?"
           external
         />
       </nav>
