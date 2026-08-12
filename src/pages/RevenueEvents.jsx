@@ -1,74 +1,227 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getQuarterFromMonth } from '../lib/utils'
-import { EditIcon, DeleteIcon } from '../lib/icons'
 
 const BRAND = '#3d0c0c'
-const ACTIVE_STATUSES = ['Planning', 'Warming', 'Live', 'Evergreen']
 
+// New event types (current form options). Legacy values saved by members are
+// preserved and shown alongside these wherever they appear.
 const EVENT_TYPES = [
-  'Launch (live or evergreen push)',
-  'Offer Relaunch / Reposition',
-  'New Offer Creation',
-  'Price Increase / Repackaging',
-  'Sales Campaign (non-launch push)',
-  'Lead Magnet Release',
-  'Email Nurture Build or Overhaul',
-  'Funnel Build / Optimisation',
-  'Paid Ads Campaign Launch',
-  'Audience Growth Sprint (visibility push tied to revenue)',
-  'Collaboration / Partnership Campaign',
-  'Webinar / Masterclass / Training Event',
-  'Waitlist Build + Conversion Push',
-  'Seasonal Campaign (EOFY, Black Friday, New Year etc)',
+  'Lead generation activity',
+  'Workshop or event',
+  'Offer launch',
+  'Promotion',
+  'Evergreen campaign',
+  'Partnership',
+  'New offer development',
+  'Other',
 ]
+
+const PRIMARY_GOALS = [
+  'Grow audience',
+  'Generate leads',
+  'Build waitlist',
+  'Launch new offer',
+  'Sell existing offer',
+  'Fill a program',
+  'Increase recurring revenue',
+  'Retain or renew clients',
+]
+
 const CURRENCIES = ['AUD', 'NZD', 'USD', 'EUR', 'CAD', 'JPY', 'SEK', 'PLN']
+
+// Visible statuses for new events. Legacy statuses keep displaying as stored.
+const VISIBLE_STATUSES = ['Planned', 'Live', 'Complete', 'Cancelled']
+const CLOSED_STATUSES = ['Closed', 'Complete', 'Cancelled']
+
 const STATUS_CONFIG = {
-  'Planning':  { color: '#6B7280', bg: '#F3F4F6' },
-  'Warming':   { color: '#D97706', bg: '#FEF3C7' },
-  'Live':      { color: '#059669', bg: '#D1FAE5' },
-  'Closed':    { color: '#9c3034', bg: '#FEE2E2' },
-  'Evergreen': { color: '#2563EB', bg: '#DBEAFE' },
+  // Current set
+  'Planned':   { color: '#6D3FC0', bg: '#F1EAFE', border: '#D8C5F5' },
+  'Live':      { color: '#267447', bg: '#E7F5EC', border: '#B8DDC6' },
+  'Complete':  { color: '#346A9A', bg: '#E8F1FA', border: '#BCD3E8' },
+  'Cancelled': { color: '#A83232', bg: '#FBE8E8', border: '#EDBABA' },
+  // Legacy set (existing member data keeps displaying unchanged)
+  'Planning':  { color: '#6B7280', bg: '#F3F4F6', border: '#E5E7EB' },
+  'Warming':   { color: '#A86600', bg: '#FFF4D6', border: '#F4D38A' },
+  'Closed':    { color: '#9c3034', bg: '#FEE2E2', border: '#F5C6C6' },
+  'Evergreen': { color: '#2563EB', bg: '#DBEAFE', border: '#BFDBFE' },
 }
-const STATUSES = Object.keys(STATUS_CONFIG)
+
 const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4']
-const PRIMARY_FOCUS_OPTIONS = [
-  'Grow Audience', 'Build Waitlist', 'Launch New Offer',
-  'Re-launch Existing', 'Generate Leads', 'Fill Program', 'Increase MRR',
-]
+const UNSCHEDULED = 'Unscheduled'
 
 const currentYear = new Date().getFullYear()
 const currentMonth = new Date().getMonth() + 1
 const currentQuarter = getQuarterFromMonth(currentMonth)
-const todayStr = new Date().toISOString().split('T')[0] // 'YYYY-MM-DD'
+const todayStr = new Date().toISOString().split('T')[0]
+const isDesktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 640px)').matches
+
+// Include a stored legacy value in a dropdown list so editing never destroys it.
+function withStored(list, value) {
+  return value && !list.includes(value) ? [value, ...list] : list
+}
 
 /**
  * Derive year and quarter from a start_date string ('YYYY-MM-DD').
- * Falls back to fallbackYear + currentQuarter if no date provided.
+ * No usable date: keep the fallback year and leave quarter unset (Unscheduled).
  */
 function deriveYearQuarter(startDate, fallbackYear = currentYear) {
-  if (!startDate) return { year: fallbackYear, quarter: currentQuarter }
+  if (!startDate) return { year: fallbackYear, quarter: null }
   // Use 'T00:00:00' to avoid timezone-shifting the date to the previous day
   const d = new Date(startDate + 'T00:00:00')
+  if (isNaN(d.getTime())) return { year: fallbackYear, quarter: null }
   return { year: d.getFullYear(), quarter: getQuarterFromMonth(d.getMonth() + 1) }
 }
 
-// ─── EVENT FORM ────────────────────────────────────────────────────────────────
+function isClosedEvent(e) {
+  return e.is_closed || CLOSED_STATUSES.includes(e.status)
+}
 
-function EventForm({ onSave, onCancel, initial, selectedYear }) {
+function fmtShortDate(d) {
+  if (!d) return null
+  const dt = new Date(d + 'T00:00:00')
+  if (isNaN(dt.getTime())) return null
+  return dt.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
+}
+
+function dateRangeLabel(e) {
+  const s = fmtShortDate(e.start_date)
+  const en = fmtShortDate(e.end_date)
+  if (s && en && s !== en) return `${s} – ${en}`
+  if (s) return s
+  return null
+}
+
+// ─── STATUS BADGE ──────────────────────────────────────────────────────────────
+
+function StatusBadge({ status }) {
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG['Planned']
+  return (
+    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap border flex-shrink-0"
+      style={{ color: cfg.color, backgroundColor: cfg.bg, borderColor: cfg.border }}>
+      {status || 'Planned'}
+    </span>
+  )
+}
+
+// ─── THREE-DOT MENU ────────────────────────────────────────────────────────────
+
+function DotMenu({ event, onEdit, onMarkComplete, onReopen, onConvert, onDelete }) {
+  const [open, setOpen] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const ref = useRef(null)
+
+  const close = () => { setOpen(false); setConfirming(false) }
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e) => { if (ref.current && !ref.current.contains(e.target)) close() }
+    const onKey = (e) => { if (e.key === 'Escape') close() }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const closed = isClosedEvent(event)
+  const item = (label, fn, danger = false) => (
+    <button
+      key={label}
+      onClick={(e) => { e.stopPropagation(); close(); fn() }}
+      className="block w-full text-left text-xs px-3 py-2 rounded transition-colors hover:bg-gray-50"
+      style={{ color: danger ? '#9c3034' : '#4b5563' }}
+    >
+      {label}
+    </button>
+  )
+
+  return (
+    <span ref={ref} className="relative inline-block flex-shrink-0">
+      <button
+        onClick={(e) => { e.stopPropagation(); if (open) { close() } else { setOpen(true) } }}
+        className="edit-btn"
+        title="Event actions"
+        aria-label="Event actions"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute z-20 right-0 mt-1" role="menu"
+          style={{ backgroundColor: '#fff', border: '0.5px solid #e8e0d8', borderRadius: 6, padding: 4, minWidth: 200 }}>
+          {confirming ? (
+            <div className="px-3 py-2">
+              <p className="text-xs font-semibold text-gray-800 mb-2">Delete this event?</p>
+              <p className="text-xs text-gray-400 mb-2.5">This cannot be undone.</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); close() }}
+                  className="flex-1 text-xs py-1.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); close(); onDelete() }}
+                  className="flex-1 text-xs font-semibold py-1.5 rounded text-white"
+                  style={{ backgroundColor: '#9c3034' }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {item('Edit event', onEdit)}
+              {closed ? item('Reopen event', onReopen) : item('Mark complete', onMarkComplete)}
+              {item('Convert to Launch Campaign', onConvert)}
+              <button
+                onClick={(e) => { e.stopPropagation(); setConfirming(true) }}
+                className="block w-full text-left text-xs px-3 py-2 rounded transition-colors hover:bg-gray-50"
+                style={{ color: '#9c3034' }}
+              >
+                Delete event
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </span>
+  )
+}
+
+// ─── EVENT FORM (add + edit in place) ──────────────────────────────────────────
+
+function EventForm({ onSave, onCancel, onConvert, initial, selectedYear }) {
   const blank = {
-    offer_name: '', event_type: '', status: 'Planning',
+    offer_name: '', event_type: '', status: 'Planned',
     start_date: '', end_date: '', currency: 'AUD',
     revenue_goal: '', primary_focus: '', revenue_achieved: '', notes: '',
   }
   const [form, setForm] = useState(initial
-    ? { ...blank, ...initial, revenue_goal: initial.revenue_goal ?? '', revenue_achieved: initial.revenue_achieved ?? '' }
+    ? { ...blank, ...initial, revenue_goal: initial.revenue_goal ?? '', revenue_achieved: initial.revenue_achieved ?? '', event_type: initial.event_type ?? '', primary_focus: initial.primary_focus ?? '', notes: initial.notes ?? '', start_date: initial.start_date ?? '', end_date: initial.end_date ?? '' }
     : blank
   )
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
   const derived = deriveYearQuarter(form.start_date, selectedYear)
+
+  const typeOptions = withStored(EVENT_TYPES, initial?.event_type)
+  const goalOptions = withStored(PRIMARY_GOALS, initial?.primary_focus)
+  const statusOptions = withStored(VISIBLE_STATUSES, initial?.status)
+
+  const save = () => {
+    if (!form.offer_name.trim()) { alert('Please enter a name for this event.'); return }
+    // Type is required for new events; editing a legacy event never forces it.
+    if (!initial && !form.event_type) { alert('Please choose an event type.'); return }
+    onSave(form)
+  }
 
   return (
     <div className="form-card space-y-4">
@@ -76,58 +229,71 @@ function EventForm({ onSave, onCancel, initial, selectedYear }) {
         <p className="font-bold text-sm text-gray-900">
           {initial ? 'Edit Revenue Event' : 'Add Revenue Event'}
         </p>
-        <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+        <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 text-xl leading-none" aria-label="Close">×</button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
-          <label className="label">Offer Name</label>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2">
+          <label className="label" htmlFor="re-name">Revenue Event Name</label>
           <input
+            id="re-name"
             className="input-field"
             value={form.offer_name}
             onChange={e => set('offer_name', e.target.value)}
-            placeholder="e.g. 12-Week Group Coaching"
           />
         </div>
 
         <div>
-          <label className="label">Type</label>
-          <select className="input-field" value={form.event_type} onChange={e => set('event_type', e.target.value)}>
+          <label className="label" htmlFor="re-type">Revenue Event Type</label>
+          <select id="re-type" className="input-field" value={form.event_type} onChange={e => set('event_type', e.target.value)}>
             <option value="">Select...</option>
-            {EVENT_TYPES.map(t => <option key={t}>{t}</option>)}
+            {typeOptions.map(t => <option key={t}>{t}</option>)}
           </select>
         </div>
 
         <div>
-          <label className="label">Status</label>
-          <select className="input-field" value={form.status} onChange={e => set('status', e.target.value)}>
-            {STATUSES.map(s => <option key={s}>{s}</option>)}
+          <label className="label" htmlFor="re-status">Status</label>
+          <select id="re-status" className="input-field" value={form.status} onChange={e => set('status', e.target.value)}>
+            {statusOptions.map(s => <option key={s}>{s}</option>)}
+          </select>
+        </div>
+
+        <div className="sm:col-span-2">
+          <p className="label" style={{ marginBottom: 6 }}>Planned Dates</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label" htmlFor="re-start">Start Date</label>
+              <input id="re-start" className="input-field" type="date" value={form.start_date} onChange={e => set('start_date', e.target.value)} />
+              {form.start_date && derived.quarter && (
+                <p className="text-xs text-gray-400 mt-1">Saved as {derived.year} / {derived.quarter}</p>
+              )}
+            </div>
+            <div>
+              <label className="label" htmlFor="re-end">End Date (optional)</label>
+              <input id="re-end" className="input-field" type="date" value={form.end_date} onChange={e => set('end_date', e.target.value)} />
+            </div>
+          </div>
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="label" htmlFor="re-goal">Primary Goal</label>
+          <select id="re-goal" className="input-field" value={form.primary_focus} onChange={e => set('primary_focus', e.target.value)}>
+            <option value="">Select...</option>
+            {goalOptions.map(o => <option key={o}>{o}</option>)}
           </select>
         </div>
 
         <div>
-          <label className="label">Launch Start Date</label>
-          <input className="input-field" type="date" value={form.start_date} onChange={e => set('start_date', e.target.value)} />
-          {form.start_date && (
-            <p className="text-xs text-gray-400 mt-1">→ Saved as {derived.year} / {derived.quarter}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="label">Launch End Date</label>
-          <input className="input-field" type="date" value={form.end_date} onChange={e => set('end_date', e.target.value)} />
-        </div>
-
-        <div>
-          <label className="label">Currency</label>
-          <select className="input-field" value={form.currency} onChange={e => set('currency', e.target.value)}>
+          <label className="label" htmlFor="re-currency">Currency</label>
+          <select id="re-currency" className="input-field" value={form.currency || 'AUD'} onChange={e => set('currency', e.target.value)}>
             {CURRENCIES.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
 
         <div>
-          <label className="label">Revenue Goal</label>
+          <label className="label" htmlFor="re-revgoal">Revenue Goal (optional)</label>
           <input
+            id="re-revgoal"
             className="input-field"
             type="number"
             value={form.revenue_goal}
@@ -136,154 +302,74 @@ function EventForm({ onSave, onCancel, initial, selectedYear }) {
           />
         </div>
 
-        <div className="col-span-2">
-          <label className="label">Primary Focus</label>
-          <select className="input-field" value={form.primary_focus} onChange={e => set('primary_focus', e.target.value)}>
-            <option value="">Select...</option>
-            {PRIMARY_FOCUS_OPTIONS.map(o => <option key={o}>{o}</option>)}
-          </select>
-        </div>
-
-        <div className="col-span-2">
-          <label className="label">Revenue Achieved at Close</label>
+        <div className="sm:col-span-2">
+          <label className="label" htmlFor="re-achieved">Revenue Achieved (optional)</label>
           <input
+            id="re-achieved"
             className="input-field"
             type="number"
             value={form.revenue_achieved}
             onChange={e => set('revenue_achieved', e.target.value)}
-            placeholder="Enter final revenue once the event is completed"
+            placeholder="Log final revenue once the event completes"
           />
-          <p className="text-xs text-gray-400 mt-1">Update this after the event closes.</p>
         </div>
 
-        <div className="col-span-2">
-          <label className="label">Short Notes (optional)</label>
-          <textarea className="textarea-field" rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} />
+        <div className="sm:col-span-2">
+          <label className="label" htmlFor="re-notes">Revenue Event Notes (optional)</label>
+          <textarea id="re-notes" className="textarea-field" rows={2} value={form.notes} onChange={e => set('notes', e.target.value)} />
         </div>
       </div>
 
-      <div className="flex gap-3 pt-1">
-        <button onClick={onCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
-          Cancel
-        </button>
-        <button onClick={() => onSave(form)} className="btn-brand">
-          Save Event
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        {initial && onConvert ? (
+          <div>
+            <p className="text-xs text-gray-400 mb-1">Is this becoming a structured sales campaign?</p>
+            <button onClick={onConvert} className="text-xs font-semibold" style={{ color: BRAND }}>
+              Convert to Launch Campaign →
+            </button>
+          </div>
+        ) : <span />}
+        <div className="flex gap-3">
+          <button onClick={onCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+            Cancel
+          </button>
+          <button onClick={save} className="btn-brand">
+            Save Event
+          </button>
+        </div>
       </div>
     </div>
   )
 }
 
-// ─── STATUS BADGE ──────────────────────────────────────────────────────────────
+// ─── COMPACT EVENT ROW ─────────────────────────────────────────────────────────
 
-function StatusBadge({ status }) {
-  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG['Planning']
-  return (
-    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-      style={{ color: cfg.color, backgroundColor: cfg.bg, border: cfg.border || 'none' }}>
-      {status}
-    </span>
-  )
-}
-
-// ─── EVENT CARD ────────────────────────────────────────────────────────────────
-
-function EventCard({ event, onEdit, onDelete, onToggleClose, onLogRevenue }) {
-  const [logVal, setLogVal] = useState('')
-  const fmt = (d) => {
-    if (!d) return '—'
-    const [y, m, day] = d.split('-')
-    return `${day}/${m}/${y}`
-  }
-
-  const doLog = () => {
-    if (logVal === '') return
-    onLogRevenue(Number(logVal))
-    setLogVal('')
-  }
-
-  const isClosed = event.status === 'Closed' || event.is_closed
-
-  // Build compact date range string without emojis
-  const dateRange = (event.start_date || event.end_date)
-    ? `${fmt(event.start_date)} – ${fmt(event.end_date)}`
-    : null
-
-  // Dot-separated meta line: type · dates · focus
-  const metaParts = [event.event_type, dateRange, event.primary_focus].filter(Boolean)
+function EventRow({ event, onOpen, onEdit, onMarkComplete, onReopen, onConvert, onDelete }) {
+  const meta = [
+    event.event_type || 'Type not set',
+    dateRangeLabel(event) || 'Date not set',
+    event.primary_focus || 'Goal not set',
+  ].join(' · ')
 
   return (
-    <div className={`card group ${isClosed ? 'opacity-90' : ''}`} style={{ backgroundColor: '#faf7f5' }}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          {/* Title row */}
-          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <p className="font-bold text-gray-900">{event.offer_name || 'Untitled Event'}</p>
-            <StatusBadge status={event.status} />
-            {isClosed && event.revenue_achieved && (
-              <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#059669' }}>
-                COMPLETED
-              </span>
-            )}
-          </div>
-
-          {/* Dot-separated meta line */}
-          {metaParts.length > 0 && (
-            <p className="text-xs text-gray-400 mb-2">{metaParts.join(' · ')}</p>
+    <div className="rounded-xl px-3.5 py-2.5" style={{ backgroundColor: '#faf7f5', border: '0.5px solid #e8e0d8' }}>
+      <div className="flex items-center gap-2.5">
+        <button onClick={onOpen} className="flex-1 min-w-0 text-left py-0.5">
+          <p className="text-sm font-semibold text-gray-900 leading-snug">{event.offer_name || 'Untitled event'}</p>
+          <p className="text-xs text-gray-400 mt-0.5">{meta}</p>
+          {event.notes && (
+            <p className="text-xs text-gray-400 italic truncate mt-0.5">{event.notes}</p>
           )}
-
-          {/* Revenue lines */}
-          <div className="space-y-0.5">
-            {event.revenue_goal ? (
-              <p className="text-xs text-gray-500">Goal: {event.currency || 'AUD'} ${Number(event.revenue_goal).toLocaleString()}</p>
-            ) : null}
-            {event.revenue_achieved ? (
-              <p className="text-xs font-semibold" style={{ color: '#059669' }}>
-                Achieved: {event.currency || 'AUD'} ${Number(event.revenue_achieved).toLocaleString()} ✓
-              </p>
-            ) : null}
-          </div>
-
-          {event.notes && <p className="text-xs text-gray-400 italic mt-1.5">{event.notes}</p>}
-
-          {isClosed && !event.revenue_achieved && (
-            <div className="mt-1.5">
-              <p className="text-xs text-amber-600 mb-1.5">Don't forget to log your final revenue.</p>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="number"
-                  className="input-field"
-                  style={{ maxWidth: 160 }}
-                  value={logVal}
-                  onChange={e => setLogVal(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') doLog() }}
-                  placeholder={`${event.currency || 'AUD'} 0`}
-                />
-                <button onClick={doLog} className="btn-brand" disabled={logVal === ''}>Log it</button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Action icons — visible on hover */}
-        <div className="flex flex-col gap-1 transition-opacity">
-          <button onClick={onEdit} className="edit-btn"><EditIcon /></button>
-          <button onClick={onDelete} className="delete-btn"><DeleteIcon /></button>
-        </div>
-      </div>
-
-      {/* Bottom action */}
-      <div className="mt-3 pt-3 flex gap-2" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-        <button
-          onClick={onToggleClose}
-          className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-          style={isClosed
-            ? { border: '1px solid rgba(0,0,0,0.1)', color: '#6b7280', backgroundColor: 'transparent' }
-            : { backgroundColor: '#FEE2E2', color: '#DC2626' }
-          }
-        >
-          {isClosed ? 'Reopen Event' : 'Mark as Closed'}
         </button>
+        <StatusBadge status={event.status} />
+        <DotMenu
+          event={event}
+          onEdit={onEdit}
+          onMarkComplete={onMarkComplete}
+          onReopen={onReopen}
+          onConvert={onConvert}
+          onDelete={onDelete}
+        />
       </div>
     </div>
   )
@@ -293,22 +379,24 @@ function EventCard({ event, onEdit, onDelete, onToggleClose, onLogRevenue }) {
 
 export default function RevenueEvents() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [events, setEvents] = useState([])
   const [selectedYear, setSelectedYear] = useState(currentYear)
-  const [viewMode, setViewMode] = useState('year')          // 'year' | 'quarter'
-  const [selectedQuarter, setSelectedQuarter] = useState(currentQuarter)
+  const [quarterFilter, setQuarterFilter] = useState('all')     // 'all' | 'Q1'..'Q4'
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [expanded, setExpanded] = useState({})
   const [showForm, setShowForm] = useState(false)
-  const [editEvent, setEditEvent] = useState(null)
+  const [editingId, setEditingId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const addFormRef = useRef(null)
 
   // Scroll the add form into view when it opens at the top.
   useEffect(() => {
-    if (showForm && !editEvent && addFormRef.current) {
+    if (showForm && addFormRef.current) {
       addFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
-  }, [showForm, editEvent])
+  }, [showForm])
 
   // ── Load all events for this user (client-side year/quarter filtering) ────────
   const loadEvents = async () => {
@@ -350,16 +438,94 @@ export default function RevenueEvents() {
     }
   }, [yearOptions])
 
+  // ── Grouping ──────────────────────────────────────────────────────────────────
+
+  // Year events; events with no year are never hidden (they join Unscheduled).
+  const yearEvents = useMemo(
+    () => events.filter(e => e.year === selectedYear || e.year == null),
+    [events, selectedYear]
+  )
+
+  const typeOptionsForFilter = useMemo(() => {
+    const present = [...new Set(events.map(e => e.event_type).filter(Boolean))]
+    const extras = present.filter(t => !EVENT_TYPES.includes(t)).sort()
+    return [...EVENT_TYPES, ...extras]
+  }, [events])
+
+  const matchesType = (e) => typeFilter === 'all' || e.event_type === typeFilter
+
+  const groups = useMemo(() => {
+    const g = { Q1: [], Q2: [], Q3: [], Q4: [], [UNSCHEDULED]: [] }
+    yearEvents.filter(matchesType).forEach(e => {
+      if (e.year != null && QUARTERS.includes(e.quarter)) g[e.quarter].push(e)
+      else g[UNSCHEDULED].push(e)
+    })
+    return g
+  }, [yearEvents, typeFilter])
+
+  // Default expansion: current quarter open; others open on desktop when small.
+  useEffect(() => {
+    if (loading) return
+    const next = {}
+    QUARTERS.forEach(q => {
+      const count = yearEvents.filter(e => e.quarter === q && e.year != null).length
+      const isCurrent = q === currentQuarter && selectedYear === currentYear
+      next[q] = isCurrent || (isDesktop && count > 0 && count <= 3)
+    })
+    const unsCount = yearEvents.filter(e => e.year == null || !QUARTERS.includes(e.quarter)).length
+    next[UNSCHEDULED] = isDesktop && unsCount > 0
+    setExpanded(next)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYear, loading])
+
+  const toggleQuarter = (q) => setExpanded(prev => ({ ...prev, [q]: !prev[q] }))
+
+  // ── Snapshot metrics (reflect the active filters) ─────────────────────────────
+
+  const visibleEvents = useMemo(() => {
+    let list = yearEvents.filter(matchesType)
+    if (quarterFilter !== 'all') list = list.filter(e => e.quarter === quarterFilter && e.year != null)
+    return list
+  }, [yearEvents, quarterFilter, typeFilter])
+
+  const totalGoal = useMemo(
+    () => visibleEvents.reduce((s, e) => s + (Number(e.revenue_goal) || 0), 0),
+    [visibleEvents]
+  )
+
+  const totalAchieved = useMemo(
+    () => visibleEvents
+      .filter(isClosedEvent)
+      .reduce((s, e) => s + (Number(e.revenue_achieved) || 0), 0),
+    [visibleEvents]
+  )
+
+  const securedPct = totalGoal > 0 ? Math.min(100, Math.round((totalAchieved / totalGoal) * 100)) : 0
+  const remaining = Math.max(0, totalGoal - totalAchieved)
+
+  const activeCount = useMemo(
+    () => visibleEvents.filter(e => !isClosedEvent(e)).length,
+    [visibleEvents]
+  )
+
+  const nextEvent = useMemo(
+    () => visibleEvents
+      .filter(e => e.start_date && e.start_date >= todayStr && !isClosedEvent(e))
+      .sort((a, b) => a.start_date.localeCompare(b.start_date))[0] || null,
+    [visibleEvents]
+  )
+
   // ── CRUD handlers ─────────────────────────────────────────────────────────────
 
   const handleSave = async (form) => {
     // Quarter and year are always derived from start_date — never manually stored
     const { year, quarter } = deriveYearQuarter(form.start_date, selectedYear)
+    const editing = editingId ? events.find(e => e.id === editingId) : null
 
     const payload = {
       offer_name:       form.offer_name       || null,
       event_type:       form.event_type       || null,
-      status:           form.status           || 'Planning',
+      status:           form.status           || 'Planned',
       start_date:       form.start_date       || null,
       end_date:         form.end_date         || null,
       currency:         form.currency         || 'AUD',
@@ -369,15 +535,15 @@ export default function RevenueEvents() {
       notes:            form.notes            || null,
       year,
       quarter,
-      // Keep is_closed in sync with status so both columns stay consistent
-      is_closed: form.status === 'Closed',
+      // Keep is_closed in sync with the status so both columns stay consistent
+      is_closed: CLOSED_STATUSES.includes(form.status),
     }
 
-    if (editEvent) {
+    if (editing) {
       const { data, error } = await supabase
         .from('revenue_events')
         .update(payload)
-        .eq('id', editEvent.id)
+        .eq('id', editing.id)
         .eq('user_id', user.id)   // safety guard: user can only edit own rows
         .select()
         .single()
@@ -387,7 +553,7 @@ export default function RevenueEvents() {
         alert('Failed to save changes. Please try again.')
         return
       }
-      setEvents(prev => prev.map(x => x.id === editEvent.id ? data : x))
+      setEvents(prev => prev.map(x => x.id === editing.id ? data : x))
     } else {
       const { data, error } = await supabase
         .from('revenue_events')
@@ -404,12 +570,11 @@ export default function RevenueEvents() {
     }
 
     setShowForm(false)
-    setEditEvent(null)
+    setEditingId(null)
   }
 
+  // Deletion is confirmed inline inside the event menu before this runs.
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this event?')) return
-
     const { error } = await supabase
       .from('revenue_events')
       .delete()
@@ -422,127 +587,56 @@ export default function RevenueEvents() {
       return
     }
     setEvents(prev => prev.filter(x => x.id !== id))
+    if (editingId === id) setEditingId(null)
   }
 
-  const handleToggleClose = async (event) => {
-    // Determine new closed state: treat either flag as authoritative
-    const alreadyClosed = event.status === 'Closed' || event.is_closed
-    const nowClosed = !alreadyClosed
-
+  const setEventStatus = async (event, status) => {
     const { data, error } = await supabase
       .from('revenue_events')
-      .update({ is_closed: nowClosed, status: nowClosed ? 'Closed' : 'Planning' })
+      .update({ status, is_closed: CLOSED_STATUSES.includes(status) })
       .eq('id', event.id)
       .eq('user_id', user.id)
       .select()
       .single()
 
     if (error || !data) {
-      console.error('revenue_events toggle failed:', error)
+      console.error('revenue_events status update failed:', error)
       alert('Failed to update status. Please try again.')
       return
     }
     setEvents(prev => prev.map(x => x.id === event.id ? data : x))
   }
 
-  // Inline log of final revenue on a closed event (writes the existing field).
-  const handleLogRevenue = async (event, value) => {
-    if (value == null || isNaN(value)) return
-    const { data, error } = await supabase
-      .from('revenue_events')
-      .update({ revenue_achieved: value })
-      .eq('id', event.id)
-      .eq('user_id', user.id)
-      .select()
-      .single()
-    if (error || !data) {
-      console.error('revenue_events log revenue failed:', error)
-      alert('Failed to log revenue. Please try again.')
-      return
-    }
-    setEvents(prev => prev.map(x => x.id === event.id ? data : x))
+  // Conversion into Launch Campaigns is not built yet; this action connects the
+  // member to the existing Launches page without changing the Launch system.
+  const handleConvert = () => {
+    navigate('/cash/launches')
   }
-
-  // ── Derived / memoized values ─────────────────────────────────────────────────
-
-  const yearEvents = useMemo(
-    () => events.filter(e => e.year === selectedYear),
-    [events, selectedYear]
-  )
-
-  const quarterEvents = useMemo(
-    () => yearEvents.filter(e => e.quarter === selectedQuarter),
-    [yearEvents, selectedQuarter]
-  )
-
-  // Snapshot metrics apply to the currently active view
-  const visibleEvents = viewMode === 'quarter' ? quarterEvents : yearEvents
-
-  const totalGoal = useMemo(
-    () => visibleEvents.reduce((s, e) => s + (Number(e.revenue_goal) || 0), 0),
-    [visibleEvents]
-  )
-
-  const totalAchieved = useMemo(
-    () => visibleEvents
-      .filter(e => e.status === 'Closed' || e.is_closed)
-      .reduce((s, e) => s + (Number(e.revenue_achieved) || 0), 0),
-    [visibleEvents]
-  )
-
-  // Progress: revenue secured against goal (respects the Year/Quarter view)
-  const securedPct = totalGoal > 0 ? Math.min(100, Math.round((totalAchieved / totalGoal) * 100)) : 0
-  const remaining = Math.max(0, totalGoal - totalAchieved)
-
-  // Active = Planning | Warming | Live | Evergreen (not closed)
-  const activeCount = useMemo(
-    () => visibleEvents.filter(e => ACTIVE_STATUSES.includes(e.status) && !e.is_closed).length,
-    [visibleEvents]
-  )
-
-  // Next Launch = earliest upcoming active event (start_date >= today)
-  const nextLaunch = useMemo(
-    () => visibleEvents
-      .filter(e => e.start_date && e.start_date >= todayStr && ACTIVE_STATUSES.includes(e.status) && !e.is_closed)
-      .sort((a, b) => a.start_date.localeCompare(b.start_date))[0] || null,
-    [visibleEvents]
-  )
-
-  const groupedByQuarter = useMemo(
-    () => QUARTERS.reduce((acc, q) => {
-      acc[q] = yearEvents.filter(e => e.quarter === q)
-      return acc
-    }, {}),
-    [yearEvents]
-  )
-
-  // Year view: show a quarter if it has events OR it's the current Q in the current year
-  const quartersToShow = useMemo(
-    () => QUARTERS.filter(q =>
-      groupedByQuarter[q]?.length > 0 ||
-      (q === currentQuarter && selectedYear === currentYear)
-    ),
-    [groupedByQuarter, selectedYear]
-  )
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
 
-  const openAdd = () => { setEditEvent(null); setShowForm(true) }
-  const openEdit = (event) => { setEditEvent(event); setShowForm(true) }
+  const openAdd = () => { setEditingId(null); setShowForm(true) }
   const fmtNum = (n) => `$${Number(n || 0).toLocaleString()}`
+
+  const groupsToRender = quarterFilter === 'all'
+    ? [...QUARTERS, UNSCHEDULED]
+    : [quarterFilter]
+
+  const totalListed = groupsToRender.reduce((s, g) => s + (groups[g]?.length || 0), 0)
+  const yearHasNoEvents = yearEvents.length === 0
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-5">
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-4 h-4 rounded-full" style={{ backgroundColor: '#cdd5ae' }} />
             <h1 className="page-title">Revenue Events</h1>
           </div>
-          <p className="text-sm text-gray-500">Plan and track your revenue-driving launches in one clear snapshot.</p>
+          <p className="text-sm text-gray-500">Map the activities that grow your audience, leads and revenue across the year.</p>
         </div>
 
         {/* Year selector — top right */}
@@ -564,46 +658,12 @@ export default function RevenueEvents() {
 
       {/* ── Snapshot card ── */}
       <div className="p-5 text-white" style={{ borderRadius: '5px', backgroundColor: BRAND }}>
-        {/* Year / Quarter toggle inside snapshot */}
-        <div className="flex justify-end mb-4">
-          <div className="flex bg-white/10 rounded-lg p-0.5 gap-0.5 flex-wrap">
-            <button
-              onClick={() => setViewMode('year')}
-              className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
-                viewMode === 'year' ? 'bg-white text-gray-900' : 'text-white/70 hover:text-white'
-              }`}
-            >
-              Year
-            </button>
-            <button
-              onClick={() => setViewMode('quarter')}
-              className={`px-3 py-1 rounded-md text-xs font-semibold transition-colors ${
-                viewMode === 'quarter' ? 'bg-white text-gray-900' : 'text-white/70 hover:text-white'
-              }`}
-            >
-              Quarter
-            </button>
-            {viewMode === 'quarter' && QUARTERS.map(q => (
-              <button
-                key={q}
-                onClick={() => setSelectedQuarter(q)}
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors ${
-                  selectedQuarter === q ? 'bg-white text-gray-900' : 'text-white/70 hover:text-white'
-                }`}
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Metrics */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             ['Total Revenue Goal', fmtNum(totalGoal)],
             ['Revenue Secured',    fmtNum(totalAchieved)],
             ['Active Events',      activeCount],
-            ['Next Launch',        nextLaunch?.offer_name || '—'],
+            ['Next Event',         nextEvent?.offer_name || '—'],
           ].map(([label, val]) => (
             <div key={label} className="text-center">
               <p className="truncate" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '26px', fontWeight: 300, fontStyle: 'italic' }}>{val}</p>
@@ -628,19 +688,19 @@ export default function RevenueEvents() {
 
       {/* ── Muted explanatory strip ── */}
       <p className="text-xs text-gray-400 text-center -mt-2">
-        {viewMode === 'year'
-          ? `All ${selectedYear} events grouped by quarter. Snapshot reflects the full year.`
-          : `${selectedQuarter} ${selectedYear} events only. Snapshot reflects this quarter.`
+        {quarterFilter === 'all'
+          ? `All ${selectedYear} events grouped by quarter. Snapshot reflects the current filters.`
+          : `${quarterFilter} ${selectedYear} events only. Snapshot reflects the current filters.`
         }
       </p>
 
       {/* ── Add form (opens at top, below the snapshot) ── */}
-      {showForm && !editEvent && (
+      {showForm && (
         <div ref={addFormRef}>
           <EventForm
             initial={null}
             onSave={handleSave}
-            onCancel={() => { setShowForm(false); setEditEvent(null) }}
+            onCancel={() => setShowForm(false)}
             selectedYear={selectedYear}
           />
         </div>
@@ -648,94 +708,134 @@ export default function RevenueEvents() {
 
       {/* ── Main list card ── */}
       <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <p className="font-medium text-sm text-gray-600">
-            {viewMode === 'year'
-              ? `${yearEvents.length} revenue event${yearEvents.length !== 1 ? 's' : ''} in ${selectedYear}.`
-              : `${quarterEvents.length} revenue event${quarterEvents.length !== 1 ? 's' : ''} in ${selectedQuarter}.`
-            }
-          </p>
-          {!showForm && (
-            <button onClick={openAdd} className="btn-brand">
-              + Add Revenue Event
-            </button>
-          )}
+        {/* Filters */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex gap-1.5 flex-wrap">
+            {['all', ...QUARTERS].map(q => (
+              <button
+                key={q}
+                onClick={() => setQuarterFilter(q)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                  quarterFilter === q ? 'text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                style={quarterFilter === q ? { backgroundColor: BRAND } : {}}
+              >
+                {q === 'all' ? 'All' : q}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <label className="sr-only" htmlFor="re-type-filter">Event type filter</label>
+            <select
+              id="re-type-filter"
+              className="input-field"
+              style={{ width: 'auto', maxWidth: 220, paddingTop: 8, paddingBottom: 8 }}
+              value={typeFilter}
+              onChange={e => setTypeFilter(e.target.value)}
+            >
+              <option value="all">All Types</option>
+              {typeOptionsForFilter.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            {!showForm && (
+              <button onClick={openAdd} className="btn-brand">
+                + Add Revenue Event
+              </button>
+            )}
+          </div>
         </div>
 
         {loading ? (
           <p className="text-sm text-gray-400 py-6 text-center">Loading events…</p>
         ) : loadError ? (
           <p className="text-sm text-red-500 py-6 text-center">{loadError}</p>
-        ) : viewMode === 'year' ? (
-          quartersToShow.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-400 text-sm mb-3">No events for {selectedYear} yet.</p>
-              <button onClick={openAdd} className="btn-brand">
-                Add First Event
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {quartersToShow.map(q => (
-                <div key={q}>
-                  <p className="font-bold text-gray-500 text-xs uppercase tracking-wide mb-3">
-                    {q} {selectedYear}
-                  </p>
-                  {groupedByQuarter[q].length === 0 ? (
-                    <p className="text-xs text-gray-400 italic pl-1">No events this quarter yet.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {groupedByQuarter[q].map(event => (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          onEdit={() => openEdit(event)}
-                          onDelete={() => handleDelete(event.id)}
-                          onToggleClose={() => handleToggleClose(event)}
-                          onLogRevenue={(val) => handleLogRevenue(event, val)}
-                        />
-                      ))}
+        ) : yearHasNoEvents ? (
+          <div className="text-center py-8">
+            <p className="text-gray-400 text-sm mb-3 max-w-md mx-auto">
+              No Revenue Events planned yet. Start mapping the activities that will grow your audience, leads and revenue this year.
+            </p>
+            <button onClick={openAdd} className="btn-brand">
+              + Add Revenue Event
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {groupsToRender.map(g => {
+              const list = groups[g] || []
+              // Unscheduled only renders when it has events
+              if (g === UNSCHEDULED && list.length === 0) return null
+              const isOpen = quarterFilter !== 'all' ? true : !!expanded[g]
+              const label = g === UNSCHEDULED ? UNSCHEDULED : `${g} ${selectedYear}`
+
+              return (
+                <div key={g} className="rounded-xl" style={{ border: '0.5px solid #e8e0d8' }}>
+                  <button
+                    onClick={() => toggleQuarter(g)}
+                    className={`w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50 transition-colors text-left ${isOpen ? 'rounded-t-xl' : 'rounded-xl'}`}
+                    aria-expanded={isOpen}
+                  >
+                    <span className="text-sm font-semibold text-gray-800">
+                      {label}
+                      <span className="text-gray-400 font-normal"> · {list.length} event{list.length !== 1 ? 's' : ''}</span>
+                    </span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ca3af"
+                      strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                      style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-3 pb-3 pt-1 space-y-2 rounded-b-xl" style={{ backgroundColor: '#fdfcfb' }}>
+                      {list.length === 0 ? (
+                        <div className="py-4 text-center">
+                          <p className="text-xs text-gray-400 italic mb-2">
+                            {typeFilter !== 'all'
+                              ? `No matching events in ${g}.`
+                              : `No Revenue Events planned for ${g} yet.`}
+                          </p>
+                          {typeFilter === 'all' && (
+                            <button onClick={openAdd} className="text-xs font-semibold" style={{ color: BRAND }}>
+                              + Add Revenue Event
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        list.map(event => (
+                          editingId === event.id ? (
+                            <EventForm
+                              key={event.id}
+                              initial={event}
+                              onSave={handleSave}
+                              onCancel={() => setEditingId(null)}
+                              onConvert={handleConvert}
+                              selectedYear={selectedYear}
+                            />
+                          ) : (
+                            <EventRow
+                              key={event.id}
+                              event={event}
+                              onOpen={() => { setEditingId(event.id); setShowForm(false) }}
+                              onEdit={() => { setEditingId(event.id); setShowForm(false) }}
+                              onMarkComplete={() => setEventStatus(event, 'Complete')}
+                              onReopen={() => setEventStatus(event, 'Planned')}
+                              onConvert={handleConvert}
+                              onDelete={() => handleDelete(event.id)}
+                            />
+                          )
+                        ))
+                      )}
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          )
-        ) : (
-          // Quarter view — flat list
-          quarterEvents.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-400 text-sm mb-3">No events for {selectedQuarter} {selectedYear} yet.</p>
-              <button onClick={openAdd} className="btn-brand">
-                Add First Event
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {quarterEvents.map(event => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onEdit={() => openEdit(event)}
-                  onDelete={() => handleDelete(event.id)}
-                  onToggleClose={() => handleToggleClose(event)}
-                  onLogRevenue={(val) => handleLogRevenue(event, val)}
-                />
-              ))}
-            </div>
-          )
+              )
+            })}
+
+            {totalListed === 0 && (
+              <p className="text-sm text-gray-400 italic text-center py-4">No events match the current filters.</p>
+            )}
+          </div>
         )}
       </div>
-
-      {/* ── Edit form (inline below list, where it currently opens) ── */}
-      {showForm && editEvent && (
-        <EventForm
-          initial={editEvent}
-          onSave={handleSave}
-          onCancel={() => { setShowForm(false); setEditEvent(null) }}
-          selectedYear={selectedYear}
-        />
-      )}
     </div>
   )
 }
