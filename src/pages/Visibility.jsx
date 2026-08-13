@@ -80,7 +80,7 @@ function ContentSystem({ userId }) {
   }
 
   const resetAll = async () => {
-    if (!window.confirm('Clear all columns? This cannot be undone.')) return
+    if (!window.confirm('Clear all themes? This cannot be undone.')) return
     await supabase.from('content_system').delete().eq('user_id', userId)
     setColumns([
       { theme_name: '', topics: ['', '', '', ''] },
@@ -96,11 +96,11 @@ function ContentSystem({ userId }) {
     <div>
       <div className="flex items-center justify-between mb-4">
         <p className="insight-box flex-1">
-          ✓ Content System never resets — your framework stays here permanently.
+          Content System never resets. Your framework stays here permanently.
         </p>
         <button
           onClick={resetAll}
-          title="Clear all columns"
+          title="Clear all themes"
           className="ml-2 text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -109,8 +109,33 @@ function ContentSystem({ userId }) {
           </svg>
         </button>
       </div>
-      <div className="rounded-lg px-3 py-2.5 mb-4 text-sm font-medium" style={{ backgroundColor: '#FFF8F8', border: '1px solid rgba(61,12,12,0.18)', color: '#3d0c0c' }}>
+      <a
+        href="https://www.jessicapinili.com/login"
+        target="_blank"
+        rel="noopener"
+        className="block rounded-lg px-3 py-2.5 mb-4 text-sm font-medium"
+        style={{ backgroundColor: '#FFF8F8', border: '1px solid rgba(61,12,12,0.18)', color: '#3d0c0c' }}
+      >
         <HeartIcon /> Watch: CEO Visibility Training → Creating Content Pillars
+      </a>
+
+      {/* What themes and topics mean */}
+      <div className="card mb-4">
+        <p className="label">How the Content System works</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Themes</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              The broader conversations and problems you want the brand to become known for.
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Topics</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              The repeatable subjects that sit underneath each theme.
+            </p>
+          </div>
+        </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {columns.map((col, idx) => {
@@ -120,11 +145,15 @@ function ContentSystem({ userId }) {
           if (saved[idx] && !editing[idx]) {
             return (
               <div key={idx} className={`rounded-xl p-4 ${isMyStory ? 'text-white' : 'border'}`} style={isMyStory ? { backgroundColor: BRAND } : { backgroundColor: '#FFF8F8', borderColor: 'rgba(107,16,16,0.15)' }}>
-                <p className={`font-black text-sm mb-3 ${isMyStory ? 'text-white' : 'text-gray-900'}`}>{col.theme_name || colDef.name}</p>
+                <p className={`font-black text-sm mb-3 ${isMyStory ? 'text-white' : 'text-gray-900'}`}>
+                  {col.theme_name || (isMyStory ? colDef.name : 'Name this theme')}
+                </p>
+                <p className="label" style={isMyStory ? { color: 'rgba(255,255,255,0.6)' } : {}}>Topics</p>
                 <div className="space-y-2">
                   {col.topics.map((t, ti) => (
                     <p key={ti} className={`text-sm leading-relaxed ${isMyStory ? 'text-white/90' : 'text-gray-700'}`}>
-                      <span className="font-bold" style={isMyStory ? { color: 'rgba(255,255,255,0.6)' } : { color: '#9a4a52' }}>{ti + 1}. </span>{t}
+                      <span className="font-bold" style={isMyStory ? { color: 'rgba(255,255,255,0.6)' } : { color: '#9a4a52' }}>{ti + 1}. </span>
+                      {t || <span style={isMyStory ? { color: 'rgba(255,255,255,0.5)' } : { color: '#b8a898' }}>Add a repeatable subject</span>}
                     </p>
                   ))}
                 </div>
@@ -136,16 +165,19 @@ function ContentSystem({ userId }) {
           return (
             <div key={idx} className={`rounded-xl p-4 border ${isMyStory ? 'border-brand/30' : 'border-gray-100 bg-gray-50'}`} style={isMyStory ? { backgroundColor: '#FFF8F8' } : {}}>
               <div className="mb-3">
-                <label className="label">{isMyStory ? 'My Story Column' : `Column ${idx + 1} Name`}</label>
+                <label className="label">Theme Name</label>
                 <input className="input-field text-sm" value={col.theme_name} onChange={e => updateCol(idx, 'theme_name', e.target.value)} placeholder={colDef.name} />
+                <p className="text-xs text-gray-400 mt-1">The broader conversation you want to be known for.</p>
               </div>
+              <p className="label">Topics</p>
+              <p className="text-xs text-gray-400 mb-2">The repeatable subjects that sit underneath each theme.</p>
               {[0, 1, 2, 3].map(ti => (
                 <div key={ti} className="mb-2">
                   <label className="label text-[10px]">Topic {ti + 1}</label>
-                  <input className="input-field text-xs" value={col.topics[ti]} onChange={e => updateTopic(idx, ti, e.target.value)} placeholder={`Content topic ${ti + 1}`} />
+                  <input className="input-field text-xs" value={col.topics[ti]} onChange={e => updateTopic(idx, ti, e.target.value)} placeholder="Add a repeatable subject" />
                 </div>
               ))}
-              <button onClick={() => saveColumn(idx)} className="mt-2 btn-brand text-xs py-1.5 px-3 rounded-lg">Save Column</button>
+              <button onClick={() => saveColumn(idx)} className="mt-2 btn-brand text-xs py-1.5 px-3 rounded-lg">Save Theme</button>
             </div>
           )
         })}
