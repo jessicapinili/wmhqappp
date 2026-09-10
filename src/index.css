@@ -84,6 +84,39 @@
     background-color: #faf7f3;
   }
 
+  /* ── Dashed outline button ───────────────────────── */
+  .btn-dashed {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background-color: transparent;
+    color: #3d0c0c;
+    border: 1px dashed #3d0c0c;
+    border-radius: 3px;
+    padding: 9px 16px;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+  }
+  .btn-dashed:hover {
+    background-color: rgba(61, 12, 12, 0.05);
+  }
+
+  /* ── Footer social links ─────────────────────────── */
+  .social-link {
+    display: inline-flex;
+    transition: color 0.15s ease, transform 0.15s ease;
+  }
+  .social-link:hover {
+    color: #f5ece0 !important;
+    transform: translateY(-1px);
+  }
+
   /* ── Section wrapper ─────────────────────────────── */
   .card-section {
     background-color: #ffffff;
