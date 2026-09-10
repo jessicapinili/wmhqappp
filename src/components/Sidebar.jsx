@@ -316,6 +316,13 @@ export default function Sidebar({ onClose }) {
           label="WMHQ Tools"
           external
         />
+
+        <NavItem
+          to="https://womanmasteryhq.com/jp-hotline-access/"
+          icon="📞"
+          label="JP Hotline Access"
+          external
+        />
       </nav>
 
       {/* Bottom profile section */}
