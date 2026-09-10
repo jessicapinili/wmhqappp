@@ -368,7 +368,15 @@ input[type="range"]::-moz-range-thumb {
 /* ── Print ─────────────────────────────────────────── */
 @media print {
   .no-print { display: none !important; }
+
+  /* Save my record: print only the marked region, keeping links live. */
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; left: 0; top: 0; width: 100%; }
 }
+
+/* ── Content Challenge wheel ───────────────────────── */
+.wheel-scroll::-webkit-scrollbar { display: none; }
 
 /* ── Accordion ─────────────────────────────────────── */
 .accordion-content {

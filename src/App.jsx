@@ -10,6 +10,7 @@ import QuickLinks from './pages/QuickLinks'
 import Influence from './pages/Influence'
 import DailyMarketingChecklist from './pages/DailyMarketingChecklist'
 import Visibility from './pages/Visibility'
+import ContentChallenge from './pages/ContentChallenge'
 import Cash from './pages/Cash'
 import MoneyDashboard from './pages/MoneyDashboard'
 import RevenueEvents from './pages/RevenueEvents'
@@ -60,6 +61,7 @@ function AppRoutes() {
         <Route path="influence" element={<Influence />} />
         <Route path="influence/daily-marketing-checklist" element={<DailyMarketingChecklist />} />
         <Route path="visibility" element={<Visibility />} />
+        <Route path="visibility/content-challenge" element={<ContentChallenge />} />
         <Route path="cash" element={<Cash />} />
         <Route path="cash/money-dashboard" element={<MoneyDashboard />} />
         <Route path="cash/revenue-events" element={<RevenueEvents />} />

@@ -67,6 +67,7 @@ function NavItem({ to, icon, label, dot, dotColor, external, onClose }) {
 export default function Sidebar({ onClose }) {
   const { displayName, displayTitle, initials, logout } = useAuth()
   const [influenceOpen, setInfluenceOpen] = useState(false)
+  const [visibilityOpen, setVisibilityOpen] = useState(false)
   const [cashOpen, setCashOpen] = useState(false)
   const [identityOpen, setIdentityOpen] = useState(false)
   const navigate = useNavigate()
@@ -78,6 +79,7 @@ export default function Sidebar({ onClose }) {
   }
 
   const influenceActive = location.pathname.startsWith('/influence')
+  const visibilityActive = location.pathname.startsWith('/visibility')
   const cashActive     = location.pathname.startsWith('/cash')
   const identityActive = location.pathname.startsWith('/identity')
 
@@ -176,7 +178,45 @@ export default function Sidebar({ onClose }) {
           )}
         </div>
 
-        <NavItem to="/visibility" dot dotColor={PHASE_COLORS.visibility} label="Visibility" onClose={onClose} />
+        {/* Visibility with submenu */}
+        <div className="mx-2">
+          <button
+            onClick={() => { setVisibilityOpen(!visibilityOpen); navigate('/visibility') }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 transition-all"
+            style={{
+              color: visibilityActive ? '#ffffff' : 'rgba(245,236,224,0.38)',
+              backgroundColor: visibilityActive ? 'rgba(0,0,0,0.20)' : 'transparent',
+              borderLeft: visibilityActive ? '1.5px solid #f0d0d0' : '1.5px solid transparent',
+              fontFamily: NAV_FONT,
+              fontSize: '11.5px',
+              fontWeight: visibilityActive ? 400 : 300,
+              borderRadius: '2px',
+            }}
+          >
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: PHASE_COLORS.visibility }} />
+            <span className="flex-1 text-left">Visibility</span>
+            <span style={{ color: 'rgba(245,236,224,0.25)', fontSize: '9px' }}>{visibilityOpen ? '\u25be' : '\u25b8'}</span>
+          </button>
+          {visibilityOpen && (
+            <div className="mt-0.5 space-y-0.5" style={{ marginLeft: '42px' }}>
+              <NavLink
+                to="/visibility/content-challenge"
+                onClick={onClose}
+                className="flex items-center px-3 py-1.5 transition-all"
+                style={({ isActive }) => ({
+                  fontFamily: NAV_FONT,
+                  fontSize: '10px',
+                  fontWeight: 300,
+                  color: isActive ? '#ffffff' : 'rgba(245,236,224,0.40)',
+                  backgroundColor: isActive ? 'rgba(0,0,0,0.15)' : 'transparent',
+                  borderRadius: '2px',
+                })}
+              >
+                Content Challenge
+              </NavLink>
+            </div>
+          )}
+        </div>
 
         {/* Cash with submenu */}
         <div className="mx-2">
