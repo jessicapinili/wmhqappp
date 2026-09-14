@@ -22,7 +22,7 @@ import WeeklyReview from './pages/WeeklyReview'
 import Profile from './pages/Profile'
 
 function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth()
+  const { user, loading, recovering } = useAuth()
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f2f2f2]">
@@ -34,12 +34,15 @@ function ProtectedRoute({ children }) {
     )
   }
   if (!user) return <Navigate to="/login" replace />
+  // A recovery session is not a login. Nothing in the portal opens until a new password is set.
+  if (recovering) return <Navigate to="/reset-password" replace />
   return children
 }
 
 function PublicRoute({ children }) {
-  const { user, loading } = useAuth()
+  const { user, loading, recovering } = useAuth()
   if (loading) return null
+  if (user && recovering) return <Navigate to="/reset-password" replace />
   if (user) return <Navigate to="/dashboard" replace />
   return children
 }
