@@ -95,7 +95,7 @@ const ENERGY_CAPTIONS = {
 }
 
 const MODE_BAR_COLORS = {
-  full_power: '#6b1a1a',
+  full_power: '#3d0c0c',
   flowing: '#c49090',
   low_slow: '#d4b0b0',
   rest_mode: '#e8c8c8',
@@ -185,7 +185,7 @@ function WeeklyTracker({ weekDays, weekLogs, todayKey }) {
                 )}
               </div>
               {log && <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: barColor }} />}
-              <p className="text-[9px] font-semibold" style={{ color: isToday ? '#6b1a1a' : '#b0a0a0' }}>
+              <p className="text-[9px] font-semibold" style={{ color: isToday ? '#3d0c0c' : '#b0a0a0' }}>
                 {DAY_LABELS[i]}
               </p>
               {log && <p className="text-[9px] font-bold" style={{ color: '#9c7070' }}>{log.energy}</p>}
@@ -295,8 +295,7 @@ function CapacityCheckin() {
         {locked && (
           <button
             onClick={() => setLocked(false)}
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-            style={{ color: '#9c7070', border: '1px solid #e8d8d8', backgroundColor: '#fdf9f9' }}
+            className="btn-brand-outline"
           >
             Edit
           </button>
@@ -305,10 +304,10 @@ function CapacityCheckin() {
 
       {locked && !lockFlash ? (
         <div>
-          <div className="flex items-center gap-5 p-4 rounded-xl mb-5"
+          <div className="flex items-center gap-5 p-4 rounded mb-5"
             style={{ backgroundColor: '#faf1f1', border: '1px solid #f0e0e0' }}>
             <div className="flex items-center gap-2.5">
-              <span style={{ color: '#6b1a1a' }}>{selectedMode ? MODE_ICON_MAP[selectedMode.key] : null}</span>
+              <span style={{ color: '#3d0c0c' }}>{selectedMode ? MODE_ICON_MAP[selectedMode.key] : null}</span>
               <div>
                 <p className="text-xs font-bold text-gray-700">{selectedMode?.label || '—'}</p>
                 <p className="text-[10px] text-gray-400">{selectedMode?.descriptor}</p>
@@ -316,7 +315,7 @@ function CapacityCheckin() {
             </div>
             <div className="w-px self-stretch" style={{ backgroundColor: '#e8d8d8' }} />
             <div>
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '28px', fontWeight: 300, fontStyle: 'italic', color: '#6b1a1a' }}>{energy}</span>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '28px', fontWeight: 300, fontStyle: 'italic', color: '#3d0c0c' }}>{energy}</span>
               <span className="text-sm text-gray-400"> / 10</span>
               <p className="text-[10px] text-gray-400 mt-0.5">{ENERGY_CAPTIONS[energy]}</p>
             </div>
@@ -335,13 +334,13 @@ function CapacityCheckin() {
                 <button
                   key={m.key}
                   onClick={() => setMode(m.key)}
-                  className="rounded-xl p-3 text-left transition-all"
+                  className="rounded p-3 text-left transition-all"
                   style={isSelected
                     ? { backgroundColor: '#faf1f1', border: '1.5px solid #c49090' }
                     : { backgroundColor: '#fdf9f7', border: '1.5px solid #ede6e1' }}
                 >
-                  <span style={{ color: isSelected ? '#6b1a1a' : '#c4b5af' }}>{MODE_ICON_MAP[m.key]}</span>
-                  <p className="text-xs font-bold mt-2" style={{ color: isSelected ? '#6b1a1a' : '#374151' }}>{m.label}</p>
+                  <span style={{ color: isSelected ? '#3d0c0c' : '#c4b5af' }}>{MODE_ICON_MAP[m.key]}</span>
+                  <p className="text-xs font-bold mt-2" style={{ color: isSelected ? '#3d0c0c' : '#374151' }}>{m.label}</p>
                   <p className="text-[10px] mt-0.5" style={{ color: isSelected ? '#9c7070' : '#9ca3af' }}>{m.descriptor}</p>
                 </button>
               )
@@ -359,10 +358,10 @@ function CapacityCheckin() {
               value={energy}
               onChange={e => { setEnergy(parseInt(e.target.value)); setLocked(false) }}
               className="w-full capacity-slider"
-              style={{ background: `linear-gradient(to right, #6b1a1a ${trackPct}%, #f0e0e0 ${trackPct}%)` }}
+              style={{ background: `linear-gradient(to right, #3d0c0c ${trackPct}%, #f0e0e0 ${trackPct}%)` }}
             />
             <div className="flex items-baseline gap-2 mt-3">
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '34px', fontWeight: 300, fontStyle: 'italic', color: '#6b1a1a' }}>{energy}</span>
+              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '34px', fontWeight: 300, fontStyle: 'italic', color: '#3d0c0c' }}>{energy}</span>
               <span className="text-sm text-gray-400">/ 10</span>
               <span className="text-xs text-gray-500 ml-1">{ENERGY_CAPTIONS[energy]}</span>
             </div>
@@ -370,7 +369,7 @@ function CapacityCheckin() {
 
           {/* Section C: Insight box */}
           {mode && selectedMode && (
-            <div className="rounded-lg p-4 mb-5" style={{ backgroundColor: '#faf1f1', borderLeft: '3px solid #6b1a1a' }}>
+            <div className="rounded p-4 mb-5" style={{ backgroundColor: '#faf1f1', border: '1.5px dotted #3d0c0c' }}>
               <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#9c7070' }}>Today's Focus</p>
               <p className="text-sm text-gray-700">{selectedMode.insight}</p>
             </div>
@@ -381,12 +380,8 @@ function CapacityCheckin() {
             <button
               onClick={handleLockIn}
               disabled={!mode || lockFlash}
-              className="text-sm font-semibold px-5 py-2 rounded-xl transition-all"
-              style={lockFlash
-                ? { backgroundColor: '#d1fae5', color: '#065f46', border: '1px solid #a7f3d0' }
-                : mode
-                  ? { backgroundColor: '#6b1a1a', color: '#fff' }
-                  : { backgroundColor: '#f3f4f6', color: '#9ca3af', cursor: 'not-allowed' }}
+              className="btn-brand"
+              style={{ opacity: mode || lockFlash ? 1 : 0.5, cursor: mode && !lockFlash ? 'pointer' : 'default' }}
             >
               {lockFlash ? 'Locked in ✓' : 'Lock in check-in'}
             </button>
