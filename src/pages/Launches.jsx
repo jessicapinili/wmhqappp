@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { HeartIcon } from '../lib/icons'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -1562,6 +1561,17 @@ export default function Launches() {
         </div>
       </div>
 
+      {/* What this page is for */}
+      <div className="rounded-lg px-4 py-3"
+        style={{ backgroundColor: '#eef2e2', border: '1.5px dotted #6b7d3f', color: '#1a0606' }}>
+        <p className="font-bold" style={{ fontSize: '13px', color: '#4a5a24' }}>
+          What's a Launch Campaign?
+        </p>
+        <p className="mt-1 leading-relaxed" style={{ fontSize: '12px' }}>
+          Your execution space for a specific sales campaign. Use this when you’re actively launching or promoting an offer and want to track the campaign dates, revenue goal, purchase options, sales, results and review what worked.
+        </p>
+      </div>
+
       {/* Error banner */}
       {loadError && <div className="insight-box">{loadError}</div>}
 
@@ -1588,11 +1598,6 @@ export default function Launches() {
             Campaigns use more than one currency. Totals are shown in {summary.displayCurrency}.
           </p>
         )}
-      </div>
-
-      {/* CEO training box */}
-      <div style={{ backgroundColor: '#fdf8f5', border: '0.5px solid rgba(240,208,208,0.5)', borderLeft: '2px solid rgba(240,208,208,0.7)', borderRadius: '4px', padding: '13px 16px', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '11px', fontWeight: 300, color: '#3d0c0c' }}>
-        <HeartIcon /> Use: CEO Cash Dashboard → <a href="https://tools.womanmasteryhqportal.com/" target="_blank" rel="noopener noreferrer" style={{ color: '#3d0c0c', textDecoration: 'underline', textUnderlineOffset: '3px' }}>Launch Campaign</a>
       </div>
 
       {openCampaign ? (

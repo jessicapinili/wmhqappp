@@ -656,6 +656,17 @@ export default function RevenueEvents() {
         </div>
       </div>
 
+      {/* What this page is for */}
+      <div className="rounded-lg px-4 py-3"
+        style={{ backgroundColor: '#eef2e2', border: '1.5px dotted #6b7d3f', color: '#1a0606' }}>
+        <p className="font-bold" style={{ fontSize: '13px', color: '#4a5a24' }}>
+          What's a Revenue Event?
+        </p>
+        <p className="mt-1 leading-relaxed" style={{ fontSize: '12px' }}>
+          Your big-picture revenue plan. Map the offers, promotions, lead-generation activities, workshops, partnerships and campaigns you plan to run across the year. Not every Revenue Event needs to become a full launch.
+        </p>
+      </div>
+
       {/* ── Snapshot card ── */}
       <div className="p-5 text-white" style={{ borderRadius: '5px', backgroundColor: BRAND }}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
