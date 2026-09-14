@@ -1405,6 +1405,20 @@ export default function Cash() {
         </p>
       </div>
 
+      {/* Vault resources for this pillar */}
+      <div className="rounded-lg px-4 py-3"
+        style={{ backgroundColor: '#eef2e2', border: '1.5px dotted #6b7d3f', color: '#1a0606' }}>
+        <p className="font-bold" style={{ fontSize: '13px', color: '#4a5a24' }}>
+          WMHQ Vault Resources [Under CEO Cash]
+        </p>
+        <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
+          <li>📓 Business Health Checker Checklist</li>
+          <li>📓 Brand Presence &amp; Revenue Ideas</li>
+          <li>💻 Your Relationship with Sales</li>
+          <li>📁 The entire Money mindset Module</li>
+        </ul>
+      </div>
+
       <RevenueSnapshot userId={user.id} />
 
       <QuarterlyReview userId={user.id} />

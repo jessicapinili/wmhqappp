@@ -778,6 +778,28 @@ export default function Identity() {
         </p>
       </div>
 
+      {/* Vault resources and tools for this pillar */}
+      <div className="rounded-lg px-4 py-3"
+        style={{ backgroundColor: '#f1edf8', border: '1.5px dotted #6a4c93', color: '#1a0606' }}>
+        <p className="font-bold" style={{ fontSize: '13px', color: '#4f3577' }}>
+          WMHQ Vault Resources [Under Subconscious Mastery]
+        </p>
+        <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
+          <li>📓 Subconscious Identity</li>
+          <li>💻 The Fear Process</li>
+          <li>💻 The Upside Down Y Identity framework</li>
+          <li>🎧 What is Your Subconscious Identity</li>
+        </ul>
+
+        <p className="font-bold mt-3" style={{ fontSize: '13px', color: '#4f3577' }}>
+          WMHQ Tools [Under WMHQ Tools]
+        </p>
+        <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
+          <li>🤳🏽 Capacity Breakthrough Method</li>
+          <li>🤳🏽 Belief Breakthrough Tool</li>
+        </ul>
+      </div>
+
       {/* Wizard (in-page) or Start new button */}
       {wizardOpen ? (
         <WizardInPage
