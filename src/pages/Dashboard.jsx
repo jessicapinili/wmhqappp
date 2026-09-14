@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getMonthKey, todayFormatted } from '../lib/utils'
@@ -512,6 +513,19 @@ export default function Dashboard() {
         >
           Login to WMHQ ↗
         </a>
+      </div>
+
+      {/* Announcement */}
+      <div role="status" className="rounded-lg px-4 py-3"
+        style={{ backgroundColor: '#eef2e2', border: '1.5px dotted #6b7d3f', color: '#3f4a23' }}>
+        <p className="font-bold" style={{ fontSize: '13px' }}>WMHQ 30-Day Content Challenge is live!</p>
+        <p className="mt-1 leading-relaxed" style={{ fontSize: '12px' }}>
+          Navigate to the VISIBILITY tab and then click{' '}
+          <Link to="/visibility/content-challenge" className="font-semibold underline"
+            style={{ color: '#3f4a23', textUnderlineOffset: '2px' }}>
+            Content Challenge
+          </Link>. Please read the details.
+        </p>
       </div>
 
       {/* Pinned quick links */}
