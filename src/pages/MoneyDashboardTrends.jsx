@@ -26,8 +26,8 @@ import {
   fmt,
 } from '../lib/moneyDashboardCalc'
 
-const BRAND = '#6B1020'
-const BEIGE = '#FAF7F2'
+const BRAND = '#3d0c0c'
+const BEIGE = '#faf7f3'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -204,7 +204,7 @@ function ComparisonCard({ title, subtitle, currentTotal, change, previousTotal, 
   const hasChange = change !== null && change !== undefined
   return (
     <div style={{
-      borderRadius: '12px', padding: '16px 18px',
+      borderRadius: '5px', padding: '16px 18px',
       background: soft ? BEIGE : '#FFFFFF',
       border: '0.5px solid rgba(0,0,0,0.08)',
     }}>
@@ -267,7 +267,7 @@ function TrendDebriefBlock({ watch, nextMove }) {
 
 function ProfitLeverCard({ title, description }) {
   return (
-    <div style={{ borderRadius: '12px', padding: '16px 18px', background: '#FFFFFF', border: '0.5px solid rgba(0,0,0,0.08)' }}>
+    <div style={{ borderRadius: '5px', padding: '16px 18px', background: '#FFFFFF', border: '0.5px solid rgba(0,0,0,0.08)' }}>
       <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500, marginBottom: '6px' }}>{title}</p>
       <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.55)', lineHeight: 1.6 }}>{description}</p>
     </div>
@@ -403,7 +403,7 @@ export default function MoneyDashboardTrends({ settings }) {
 
   if (entries.length === 0) {
     return (
-      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '40px 20px', border: '0.5px solid rgba(0,0,0,0.12)', textAlign: 'center' }}>
+      <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '40px 20px', border: '0.5px solid #e8e0d8', textAlign: 'center' }}>
         <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '20px', fontWeight: 500, marginBottom: '8px' }}>No data yet</p>
         <p style={{ fontSize: '14px', color: 'rgba(0,0,0,0.5)' }}>Save your first weekly entry on the Weekly tab to start seeing trends.</p>
       </div>
@@ -422,7 +422,7 @@ export default function MoneyDashboardTrends({ settings }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
       {/* ── Momentum right now ── */}
-      <div style={{ background: BEIGE, borderRadius: '12px', padding: '20px 22px', borderTop: '0.5px solid rgba(0,0,0,0.08)', borderRight: '0.5px solid rgba(0,0,0,0.08)', borderBottom: '0.5px solid rgba(0,0,0,0.08)', borderLeft: `3px solid ${BRAND}` }}>
+      <div style={{ background: BEIGE, borderRadius: '5px', padding: '20px 22px', borderTop: '0.5px solid rgba(0,0,0,0.08)', borderRight: '0.5px solid rgba(0,0,0,0.08)', borderBottom: '0.5px solid rgba(0,0,0,0.08)', borderLeft: `3px solid ${BRAND}` }}>
         <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: BRAND, marginBottom: '8px' }}>
           MOMENTUM RIGHT NOW
         </p>
@@ -436,7 +436,7 @@ export default function MoneyDashboardTrends({ settings }) {
       </div>
 
       {/* ── Period comparison cards ── */}
-      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+      <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
         <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '14px' }}>Compare periods</p>
 
         {/* Row 1: full weight */}
@@ -453,7 +453,7 @@ export default function MoneyDashboardTrends({ settings }) {
       </div>
 
       {/* ── Trend chart card ── */}
-      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+      <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
 
         {/* Chart header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
@@ -463,13 +463,13 @@ export default function MoneyDashboardTrends({ settings }) {
           </div>
 
           {/* WTD / MTD / QTD / YTD toggle */}
-          <div style={{ display: 'flex', gap: '2px', background: '#F2F2F2', borderRadius: '10px', padding: '3px' }}>
+          <div style={{ display: 'flex', gap: '2px', background: '#F2F2F2', borderRadius: '5px', padding: '3px' }}>
             {['wtd', 'mtd', 'qtd', 'ytd'].map(p => (
               <button
                 key={p}
                 onClick={() => setActivePeriod(p)}
                 style={{
-                  padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500,
+                  padding: '5px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 500,
                   border: 'none', cursor: 'pointer', letterSpacing: '0.02em', fontFamily: 'DM Sans, sans-serif',
                   background: activePeriod === p ? '#FFFFFF' : 'transparent',
                   color: activePeriod === p ? '#1A1A1A' : 'rgba(0,0,0,0.45)',
@@ -483,7 +483,7 @@ export default function MoneyDashboardTrends({ settings }) {
         </div>
 
         {/* Period stats strip */}
-        <div style={{ background: BEIGE, borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+        <div style={{ background: BEIGE, borderRadius: '4px', padding: '12px 16px', marginBottom: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
           <div>
             <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>Period total</p>
             <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A' }}>{periodStatLabel}</p>
@@ -535,14 +535,14 @@ export default function MoneyDashboardTrends({ settings }) {
       </div>
 
       {/* ── WMHQ Trend Debrief ── */}
-      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+      <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
         <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>WMHQ trend debrief</p>
         <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)', marginBottom: '16px' }}>A read of your recent trajectory.</p>
         <TrendDebriefBlock watch={trendDebrief.watch} nextMove={trendDebrief.nextMove} />
       </div>
 
       {/* ── Profit Levers ── */}
-      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+      <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
         <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Profit levers</p>
         <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)', marginBottom: '16px' }}>The highest-leverage moves for your business model right now.</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

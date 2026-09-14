@@ -13,7 +13,7 @@ import {
   fmt,
 } from '../lib/moneyDashboardCalc'
 
-const BRAND = '#6B1020'
+const BRAND = '#3d0c0c'
 
 const DEFAULT_FIXED_COSTS = [
   { name: 'Rent / workspace',            amount: 0, frequency: 'monthly' },
@@ -44,10 +44,10 @@ function CurrencyInput({ label, hint, value, onChange }) {
           placeholder="0"
           style={{
             width: '100%', padding: '11px 14px 11px 26px', fontSize: '14px',
-            background: '#FAF7F2', border: '0.5px solid rgba(0,0,0,0.12)',
-            borderRadius: '8px', fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
+            background: '#faf7f3', border: '0.5px solid #e8e0d8',
+            borderRadius: '4px', fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
           }}
-          onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+          onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(61,12,12,0.1)' }}
           onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
         />
       </div>
@@ -70,10 +70,10 @@ function NumberInput({ label, hint, value, onChange }) {
         placeholder="0"
         style={{
           width: '100%', padding: '11px 14px', fontSize: '14px',
-          background: '#FAF7F2', border: '0.5px solid rgba(0,0,0,0.12)',
-          borderRadius: '8px', fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
+          background: '#faf7f3', border: '0.5px solid #e8e0d8',
+          borderRadius: '4px', fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
         }}
-        onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+        onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(61,12,12,0.1)' }}
         onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
       />
       {hint && <p style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)', marginTop: '4px' }}>{hint}</p>}
@@ -97,10 +97,10 @@ function FixedCostRow({ cost, onChange, onRemove }) {
           placeholder="e.g. Software"
           style={{
             width: '100%', padding: '11px 14px', fontSize: '14px',
-            background: '#FAF7F2', border: '0.5px solid rgba(0,0,0,0.12)',
-            borderRadius: '8px', fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
+            background: '#faf7f3', border: '0.5px solid #e8e0d8',
+            borderRadius: '4px', fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
           }}
-          onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+          onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(61,12,12,0.1)' }}
           onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
         />
       </div>
@@ -118,10 +118,10 @@ function FixedCostRow({ cost, onChange, onRemove }) {
             placeholder="0"
             style={{
               width: '100%', padding: '11px 14px 11px 22px', fontSize: '14px',
-              background: '#FAF7F2', border: '0.5px solid rgba(0,0,0,0.12)',
-              borderRadius: '8px', fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
+              background: '#faf7f3', border: '0.5px solid #e8e0d8',
+              borderRadius: '4px', fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
             }}
-            onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+            onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(61,12,12,0.1)' }}
             onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
           />
         </div>
@@ -135,8 +135,8 @@ function FixedCostRow({ cost, onChange, onRemove }) {
           onChange={e => onChange('frequency', e.target.value)}
           style={{
             width: '100%', padding: '11px 14px', fontSize: '14px',
-            background: '#FAF7F2', border: '0.5px solid rgba(0,0,0,0.12)',
-            borderRadius: '8px', fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
+            background: '#faf7f3', border: '0.5px solid #e8e0d8',
+            borderRadius: '4px', fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
             cursor: 'pointer',
           }}
         >
@@ -148,12 +148,7 @@ function FixedCostRow({ cost, onChange, onRemove }) {
       <button
         onClick={onRemove}
         title="Remove"
-        style={{
-          width: '28px', height: '28px', borderRadius: '6px', border: '0.5px solid rgba(0,0,0,0.12)',
-          background: '#FAF7F2', color: 'rgba(0,0,0,0.4)', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
-          marginBottom: '1px',
-        }}
+        className="delete-btn" style={{ fontSize: '16px', marginBottom: '1px' }}
       >
         ×
       </button>
@@ -169,7 +164,7 @@ function WeeklyBaselineBanner({ costs, currency }) {
 
   return (
     <div style={{
-      background: '#FAF7F2', borderRadius: '12px', padding: '18px 20px',
+      background: '#faf7f3', borderRadius: '5px', padding: '18px 20px',
       borderTop: '0.5px solid rgba(0,0,0,0.08)', borderRight: '0.5px solid rgba(0,0,0,0.08)',
       borderBottom: '0.5px solid rgba(0,0,0,0.08)', borderLeft: `3px solid ${BRAND}`,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -197,8 +192,8 @@ function WeeklyBaselineBanner({ costs, currency }) {
 function Card({ eyebrow, children }) {
   return (
     <div style={{
-      background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px',
-      border: '0.5px solid rgba(0,0,0,0.12)',
+      background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px',
+      border: '0.5px solid #e8e0d8',
     }}>
       {eyebrow && (
         <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '16px' }}>
@@ -404,24 +399,14 @@ export default function MoneyDashboardBaseline({ settings }) {
       <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '4px' }}>
         <button
           onClick={handleCancel}
-          style={{
-            background: 'white', color: 'rgba(0,0,0,0.6)', border: '0.5px solid rgba(0,0,0,0.12)',
-            fontSize: '13px', padding: '10px 22px', borderRadius: '8px', cursor: 'pointer',
-            fontFamily: 'DM Sans, sans-serif',
-          }}
+          className="btn-brand-outline"
         >
           Cancel
         </button>
         <button
           onClick={handleSave}
           disabled={saving}
-          style={{
-            background: saving ? '#9B7E85' : BRAND, color: 'white', border: 'none',
-            fontSize: '13px', fontWeight: 500, padding: '10px 24px',
-            borderRadius: '8px', letterSpacing: '0.04em', textTransform: 'uppercase',
-            cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'DM Sans, sans-serif',
-            display: 'flex', alignItems: 'center', gap: '6px',
-          }}
+          className="btn-brand" style={{ opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}
         >
           {saved ? (
             <>

@@ -8,7 +8,7 @@ import MoneyDashboardWeekly from './MoneyDashboardWeekly'
 import MoneyDashboardTrends from './MoneyDashboardTrends'
 import MoneyDashboardBaseline from './MoneyDashboardBaseline'
 
-const BRAND = '#6B1020'
+const BRAND = '#3d0c0c'
 const CASH_DOT = '#cdd5ae'
 
 // ─── Model picker modal (shown when business_model is not set) ─────────────────
@@ -31,7 +31,7 @@ function ModelPickerModal({ onSelect, loading }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' }}>
           {/* Service card */}
-          <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px', border: '0.5px solid rgba(0,0,0,0.12)', textAlign: 'left' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px', border: '0.5px solid #e8e0d8', textAlign: 'left' }}>
             <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '8px' }}>Service-based</p>
             <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.6)', lineHeight: 1.6, marginBottom: '16px' }}>
               Coaches, consultants, service providers, agencies. You charge for your time or expertise.
@@ -39,20 +39,14 @@ function ModelPickerModal({ onSelect, loading }) {
             <button
               onClick={() => onSelect('service')}
               disabled={loading}
-              style={{
-                width: '100%', background: BRAND, color: 'white', border: 'none',
-                fontSize: '13px', fontWeight: 500, padding: '10px 0', borderRadius: '8px',
-                letterSpacing: '0.04em', textTransform: 'uppercase', cursor: 'pointer',
-                fontFamily: 'DM Sans, sans-serif',
-                opacity: loading ? 0.6 : 1,
-              }}
+              className="btn-brand w-full justify-center" style={{ opacity: loading ? 0.6 : 1 }}
             >
               Choose service
             </button>
           </div>
 
           {/* Product card */}
-          <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px', border: '0.5px solid rgba(0,0,0,0.12)', textAlign: 'left' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px', border: '0.5px solid #e8e0d8', textAlign: 'left' }}>
             <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '8px' }}>Product-based</p>
             <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.6)', lineHeight: 1.6, marginBottom: '16px' }}>
               Physical or digital products, e-commerce, courses, software. You charge per unit sold or download.
@@ -60,13 +54,7 @@ function ModelPickerModal({ onSelect, loading }) {
             <button
               onClick={() => onSelect('product')}
               disabled={loading}
-              style={{
-                width: '100%', background: '#1A1A1A', color: 'white', border: 'none',
-                fontSize: '13px', fontWeight: 500, padding: '10px 0', borderRadius: '8px',
-                letterSpacing: '0.04em', textTransform: 'uppercase', cursor: 'pointer',
-                fontFamily: 'DM Sans, sans-serif',
-                opacity: loading ? 0.6 : 1,
-              }}
+              className="btn-brand w-full justify-center" style={{ opacity: loading ? 0.6 : 1 }}
             >
               Choose product
             </button>
@@ -85,7 +73,7 @@ function ChangeModelModal({ currentModel, onConfirm, onCancel, loading }) {
   const other = currentModel === 'product' ? 'Service-Based' : 'Product-Based'
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', padding: '24px' }}>
-      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', maxWidth: '400px', width: '100%' }}>
+      <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '24px', maxWidth: '400px', width: '100%' }}>
         <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '8px' }}>Change business model?</p>
         <p style={{ fontSize: '14px', color: 'rgba(0,0,0,0.6)', lineHeight: 1.6, marginBottom: '20px' }}>
           Switching to <strong>{other}</strong> will change the labels and fields shown going forward. Your existing data is preserved.
@@ -93,14 +81,14 @@ function ChangeModelModal({ currentModel, onConfirm, onCancel, loading }) {
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
             onClick={onCancel}
-            style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '0.5px solid rgba(0,0,0,0.12)', fontSize: '13px', fontWeight: 500, color: 'rgba(0,0,0,0.6)', background: 'white', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+            className="btn-brand-outline" style={{ flex: 1 }}
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 500, color: 'white', background: BRAND, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', opacity: loading ? 0.6 : 1 }}
+            className="btn-brand justify-center" style={{ flex: 1, opacity: loading ? 0.6 : 1 }}
           >
             {loading ? 'Switching…' : 'Switch model'}
           </button>
@@ -119,13 +107,13 @@ function TabBar({ active, onChange }) {
     { key: 'baseline', label: 'Baseline' },
   ]
   return (
-    <div style={{ display: 'flex', gap: '2px', borderRadius: '12px', padding: '4px', backgroundColor: '#ebe5e0', width: 'fit-content' }}>
+    <div style={{ display: 'flex', gap: '2px', borderRadius: '5px', padding: '4px', backgroundColor: '#ebe5e0', width: 'fit-content' }}>
       {tabs.map(tab => (
         <button
           key={tab.key}
           onClick={() => onChange(tab.key)}
           style={{
-            padding: '8px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: 500,
+            padding: '8px 20px', borderRadius: '4px', fontSize: '14px', fontWeight: 500,
             border: 'none', cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'DM Sans, sans-serif',
             ...(active === tab.key
               ? { backgroundColor: '#fff', color: '#1a1a1a', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }

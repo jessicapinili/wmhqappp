@@ -28,8 +28,8 @@ import {
 } from '../lib/moneyDashboardCalc'
 import { EXPLANATIONS } from '../lib/wmhq-explanations'
 
-const BRAND = '#6B1020'
-const BEIGE = '#FAF7F2'
+const BRAND = '#3d0c0c'
+const BEIGE = '#faf7f3'
 const CURRENCIES = ['AUD', 'NZD', 'USD', 'EUR', 'CAD', 'GBP', 'SGD']
 
 const VARIABLE_CATEGORIES = [
@@ -47,7 +47,7 @@ const VARIABLE_CATEGORIES = [
 
 const inputStyle = {
   width: '100%', padding: '11px 14px', fontSize: '14px', background: BEIGE,
-  border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: '8px',
+  border: '0.5px solid #e8e0d8', borderRadius: '4px',
   fontFamily: 'DM Sans, sans-serif', boxSizing: 'border-box',
 }
 
@@ -65,7 +65,7 @@ function CurrencyInput({ label, hint, value, onChange }) {
           onChange={e => onChange(e.target.value === '' ? '' : Number(e.target.value))}
           placeholder="0"
           style={{ ...inputStyle, paddingLeft: '26px' }}
-          onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+          onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(61,12,12,0.1)' }}
           onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
         />
       </div>
@@ -86,7 +86,7 @@ function NumberInput({ label, hint, value, onChange }) {
         onChange={e => onChange(e.target.value === '' ? '' : Number(e.target.value))}
         placeholder="0"
         style={inputStyle}
-        onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+        onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(61,12,12,0.1)' }}
         onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
       />
       {hint && <p style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)', marginTop: '4px' }}>{hint}</p>}
@@ -99,7 +99,7 @@ function NumberInput({ label, hint, value, onChange }) {
 function StepCard({ step, title, subtitle, children, extraLabel, extraChildren }) {
   const [expanded, setExpanded] = useState(false)
   return (
-    <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+    <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
         <div>
           <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
@@ -149,7 +149,7 @@ function AtAGlancePanel({ revenue, grossProfit, netProfit, netMargin, directCost
 
   return (
     <div style={{
-      background: BEIGE, borderRadius: '12px', padding: '18px 20px',
+      background: BEIGE, borderRadius: '5px', padding: '18px 20px',
       borderTop: '0.5px solid rgba(0,0,0,0.08)',
       borderRight: '0.5px solid rgba(0,0,0,0.08)',
       borderBottom: '0.5px solid rgba(0,0,0,0.08)',
@@ -175,7 +175,7 @@ function AtAGlancePanel({ revenue, grossProfit, netProfit, netMargin, directCost
       </div>
 
       {/* Divider */}
-      <div style={{ height: '0.5px', background: `rgba(107,16,32,0.12)`, margin: '12px 0' }} />
+      <div style={{ height: '0.5px', background: `rgba(61,12,12,0.12)`, margin: '12px 0' }} />
 
       {/* Bottom row: 3 cost metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
@@ -201,7 +201,7 @@ function SnapshotCard({ label, value, metricKey, metricValue, explanation, simpl
   const [expanded, setExpanded] = useState(false)
   const exp = explanation ? (simpleMode ? explanation.simple : explanation.expert) : null
   return (
-    <div style={{ borderRadius: '12px', overflow: 'hidden', background: '#fff', border: '1px solid rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ borderRadius: '5px', overflow: 'hidden', background: '#fff', border: '1px solid rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#9ca3af' }}>{label}</p>
         <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '22px', fontWeight: 500, color: '#1A1A1A' }}>{value}</p>
@@ -225,13 +225,13 @@ function SnapshotCard({ label, value, metricKey, metricValue, explanation, simpl
           {expanded && (
             <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {exp.howItWorks && (
-                <div style={{ borderRadius: '8px', padding: '12px', background: '#f9f7f5' }}>
+                <div style={{ borderRadius: '4px', padding: '12px', background: '#f9f7f5' }}>
                   <p style={{ fontSize: '9px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9ca3af', marginBottom: '6px' }}>How it works</p>
                   <p style={{ fontSize: '12px', color: '#4b5563', lineHeight: 1.6 }}>{exp.howItWorks}</p>
                 </div>
               )}
               {exp.whyItMatters && (
-                <div style={{ borderRadius: '8px', padding: '12px', background: '#f9f7f5' }}>
+                <div style={{ borderRadius: '4px', padding: '12px', background: '#f9f7f5' }}>
                   <p style={{ fontSize: '9px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#9ca3af', marginBottom: '6px' }}>Why it matters</p>
                   <p style={{ fontSize: '12px', color: '#4b5563', lineHeight: 1.6 }}>{exp.whyItMatters}</p>
                 </div>
@@ -311,7 +311,7 @@ function OperatingExpensesStep({ baselineCosts, variableExpenses, onAddExpense, 
   }
 
   return (
-    <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+    <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
         <div>
           <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
@@ -323,7 +323,7 @@ function OperatingExpensesStep({ baselineCosts, variableExpenses, onAddExpense, 
       </div>
 
       {/* Block A: Baseline reminder banner */}
-      <div style={{ background: '#FAEEDA', borderRadius: '8px', padding: '10px 14px', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: '#FAEEDA', borderRadius: '4px', padding: '10px 14px', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <p style={{ fontSize: '13px', color: '#7a5c10' }}>
           From your baseline: auto-included in your total.
         </p>
@@ -383,13 +383,13 @@ function OperatingExpensesStep({ baselineCosts, variableExpenses, onAddExpense, 
                 onChange={e => onUpdateExpense(i, 'amount', e.target.value === '' ? '' : Number(e.target.value))}
                 placeholder="0"
                 style={{ ...inputStyle, paddingLeft: '26px' }}
-                onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+                onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(61,12,12,0.1)' }}
                 onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
               />
             </div>
             <button
               onClick={() => onRemoveExpense(i)}
-              style={{ width: '28px', height: '28px', borderRadius: '6px', border: '0.5px solid rgba(0,0,0,0.12)', background: BEIGE, color: 'rgba(0,0,0,0.4)', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1px' }}
+              className="delete-btn" style={{ fontSize: '16px', marginBottom: '1px' }}
             >×</button>
           </div>
         ))}
@@ -400,7 +400,7 @@ function OperatingExpensesStep({ baselineCosts, variableExpenses, onAddExpense, 
             <button
               key={tag}
               onClick={() => handleQuickAdd(tag === 'Dev' ? 'Professional development' : tag === 'Contractor' ? 'Contractor (one-off)' : tag)}
-              style={{ fontSize: '12px', fontWeight: 500, color: BRAND, background: '#fdf5f5', border: '0.5px solid rgba(107,16,32,0.15)', borderRadius: '14px', padding: '4px 10px', cursor: 'pointer' }}
+              style={{ fontSize: '12px', fontWeight: 500, color: BRAND, background: '#fdf5f5', border: '0.5px solid rgba(61,12,12,0.15)', borderRadius: '14px', padding: '4px 10px', cursor: 'pointer' }}
             >
               + {tag}
             </button>
@@ -619,7 +619,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
         )}
 
         {/* Debrief hero */}
-        <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)', borderTop: `3px solid ${BRAND}` }}>
+        <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8', borderTop: `3px solid ${BRAND}` }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '20px' }}>
             <div>
               <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.16em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>{activeWeek.label}</p>
@@ -628,7 +628,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
             </div>
             <button
               onClick={() => { setEditMode(true) }}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 500, padding: '6px 12px', borderRadius: '8px', color: BRAND, background: '#fdf5f5', border: '0.5px solid rgba(107,16,32,0.12)', cursor: 'pointer', flexShrink: 0 }}
+              className="btn-brand-outline" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}
             >
               <svg width="11" height="11" viewBox="0 0 13 13" fill="none">
                 <path d="M9 1.5L11.5 4L4 11.5H1.5V9L9 1.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
@@ -643,7 +643,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
         <FinancialSnapshot snapshot={snapshot} isProduct={isProduct} currency={currency} fmtC={fmtC} simpleMode={simpleMode} onToggleSimpleMode={onToggleSimpleMode} />
 
         {/* Revenue trend */}
-        <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+        <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <div>
               <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500, marginBottom: '2px' }}>Revenue trend</p>
@@ -652,7 +652,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
               </p>
             </div>
             {recentEntries.length > 0 && (
-              <button onClick={onViewTrends} style={{ fontSize: '12px', fontWeight: 500, padding: '6px 12px', borderRadius: '8px', color: BRAND, background: '#fdf5f5', border: 'none', cursor: 'pointer' }}>
+              <button onClick={onViewTrends} className="btn-brand-outline">
                 View full trends →
               </button>
             )}
@@ -672,23 +672,23 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
         {!isPastWeek && missedWeeks.length > 0 && (
           <MissedWeeksBanner missedWeeks={missedWeeks} onChoose={() => setShowBackfillModal(true)} />
         )}
-        <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+        <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
             <div>
               <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Ready when you are</p>
               <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)' }}>Enter your numbers for {activeWeek.label}.</p>
             </div>
-            <button onClick={() => setReviewStarted(true)} style={{ background: BRAND, color: 'white', border: 'none', fontSize: '13px', fontWeight: 500, padding: '10px 24px', borderRadius: '8px', letterSpacing: '0.04em', textTransform: 'uppercase', cursor: 'pointer', flexShrink: 0, fontFamily: 'DM Sans, sans-serif' }}>
+            <button onClick={() => setReviewStarted(true)} className="btn-brand" style={{ flexShrink: 0 }}>
               Begin weekly review
             </button>
           </div>
         </div>
 
         {recentEntries.length > 0 && (
-          <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+          <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500 }}>Revenue trend</p>
-              <button onClick={onViewTrends} style={{ fontSize: '12px', fontWeight: 500, padding: '6px 12px', borderRadius: '8px', color: BRAND, background: '#fdf5f5', border: 'none', cursor: 'pointer' }}>
+              <button onClick={onViewTrends} className="btn-brand-outline">
                 View full trends →
               </button>
             </div>
@@ -714,7 +714,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
 
       {/* Edit mode banner */}
       {editMode && !isPastWeek && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderRadius: '10px', background: '#f0f4ff', border: '1px solid #c7d2fe' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', borderRadius: '5px', background: '#f0f4ff', border: '1px solid #c7d2fe' }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4F46E5', flexShrink: 0 }} />
           <p style={{ fontSize: '12px', fontWeight: 500, color: '#3730a3' }}>Editing {activeWeek.label}</p>
         </div>
@@ -844,7 +844,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
       />
 
       {/* ── Week notes ── */}
-      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+      <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
         <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500, marginBottom: '4px' }}>Week notes</p>
         <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)', marginBottom: '12px' }}>Optional context for this week.</p>
         <textarea
@@ -853,7 +853,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
           value={notes}
           onChange={e => setNotes(e.target.value)}
           style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }}
-          onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(107,16,32,0.1)' }}
+          onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = '0 0 0 2px rgba(61,12,12,0.1)' }}
           onBlur={e => { e.target.style.borderColor = 'rgba(0,0,0,0.12)'; e.target.style.boxShadow = 'none' }}
         />
       </div>
@@ -866,12 +866,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
         <button
           onClick={handleSaveEntry}
           disabled={saving}
-          style={{
-            background: saving ? '#9B7E85' : BRAND, color: 'white', border: 'none',
-            fontSize: '13px', fontWeight: 500, padding: '10px 24px', borderRadius: '8px',
-            letterSpacing: '0.04em', textTransform: 'uppercase', cursor: saving ? 'not-allowed' : 'pointer',
-            fontFamily: 'DM Sans, sans-serif', display: 'flex', alignItems: 'center', gap: '6px',
-          }}
+          className="btn-brand" style={{ opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}
         >
           {saveConfirmed ? (
             <>
@@ -897,7 +892,7 @@ function MissedWeeksBanner({ missedWeeks, onChoose }) {
   const weekList = missedWeeks.map(w => w.label).join(', ')
   return (
     <div style={{
-      background: '#FAEEDA', borderRadius: '10px', padding: '14px 18px',
+      background: '#FAEEDA', borderRadius: '5px', padding: '14px 18px',
       display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px',
       border: '0.5px solid rgba(122,92,16,0.2)',
     }}>
@@ -911,12 +906,7 @@ function MissedWeeksBanner({ missedWeeks, onChoose }) {
       </div>
       <button
         onClick={onChoose}
-        style={{
-          fontSize: '12px', fontWeight: 500, color: BRAND,
-          background: 'white', border: '0.5px solid rgba(107,16,32,0.15)',
-          borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', whiteSpace: 'nowrap',
-          fontFamily: 'DM Sans, sans-serif', flexShrink: 0,
-        }}
+        className="btn-brand-outline" style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
       >
         Choose a week to log →
       </button>
@@ -931,7 +921,7 @@ function BackfillModal({ missedWeeks, onConfirm, onCancel }) {
   const agoLabel = (n) => n === 1 ? 'last week' : `${n} weeks ago`
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', padding: '24px' }}>
-      <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '24px', maxWidth: '440px', width: '100%' }}>
+      <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '24px', maxWidth: '440px', width: '100%' }}>
         <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '20px', fontWeight: 500, marginBottom: '6px' }}>Log a missed week</p>
         <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)', marginBottom: '20px' }}>Pick which one you want to add.</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
@@ -940,7 +930,7 @@ function BackfillModal({ missedWeeks, onConfirm, onCancel }) {
               key={w.start}
               style={{
                 display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px',
-                borderRadius: '8px', cursor: 'pointer',
+                borderRadius: '4px', cursor: 'pointer',
                 border: `1px solid ${selected?.start === w.start ? BRAND : 'rgba(0,0,0,0.1)'}`,
                 background: selected?.start === w.start ? '#fdf5f5' : 'white',
               }}
@@ -962,14 +952,14 @@ function BackfillModal({ missedWeeks, onConfirm, onCancel }) {
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
             onClick={onCancel}
-            style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '0.5px solid rgba(0,0,0,0.12)', fontSize: '13px', fontWeight: 500, color: 'rgba(0,0,0,0.6)', background: 'white', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+            className="btn-brand-outline" style={{ flex: 1 }}
           >
             Cancel
           </button>
           <button
             onClick={() => selected && onConfirm(selected)}
             disabled={!selected}
-            style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', fontSize: '13px', fontWeight: 500, color: 'white', background: selected ? BRAND : '#9B7E85', cursor: selected ? 'pointer' : 'not-allowed', fontFamily: 'DM Sans, sans-serif' }}
+            className="btn-brand justify-center" style={{ flex: 1, opacity: selected ? 1 : 0.5, cursor: selected ? 'pointer' : 'not-allowed' }}
           >
             Open this week →
           </button>
@@ -983,7 +973,7 @@ function BackfillModal({ missedWeeks, onConfirm, onCancel }) {
 
 function ContextStrip({ week, model, currency, onCurrencyChange, streak, lastSaved, isPast, onBackToCurrent }) {
   return (
-    <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '16px 20px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+    <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '16px 20px', border: '0.5px solid #e8e0d8' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px' }}>
           <div>
@@ -1008,7 +998,7 @@ function ContextStrip({ week, model, currency, onCurrencyChange, streak, lastSav
                   <div style={{ width: '1px', height: '32px', background: 'rgba(0,0,0,0.08)' }} />
                   <div>
                     <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '2px' }}>Streak</p>
-                    <p style={{ fontSize: '14px', fontWeight: 500, color: '#6B1020' }}>{streak} {streak === 1 ? 'week' : 'week streak'}</p>
+                    <p style={{ fontSize: '14px', fontWeight: 500, color: '#3d0c0c' }}>{streak} {streak === 1 ? 'week' : 'week streak'}</p>
                   </div>
                 </>
               )}
@@ -1032,7 +1022,7 @@ function ContextStrip({ week, model, currency, onCurrencyChange, streak, lastSav
           <select
             value={currency}
             onChange={e => onCurrencyChange(e.target.value)}
-            style={{ padding: '8px 12px', fontSize: '13px', background: '#FAF7F2', border: '0.5px solid rgba(0,0,0,0.12)', borderRadius: '8px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
+            style={{ padding: '8px 12px', fontSize: '13px', background: '#faf7f3', border: '0.5px solid #e8e0d8', borderRadius: '4px', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
           >
             {CURRENCIES.map(c => <option key={c}>{c}</option>)}
           </select>
@@ -1045,9 +1035,9 @@ function ContextStrip({ week, model, currency, onCurrencyChange, streak, lastSav
 // ─── Financial Snapshot (unchanged visually) ──────────────────────────────────
 
 function FinancialSnapshot({ snapshot, isProduct, currency, fmtC, simpleMode, onToggleSimpleMode }) {
-  const BRAND = '#6B1020'
+  const BRAND = '#3d0c0c'
   return (
-    <div style={{ background: '#FFFFFF', borderRadius: '12px', padding: '20px 22px', border: '0.5px solid rgba(0,0,0,0.12)' }}>
+    <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '4px' }}>
         <div>
           <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '2px' }}>Financial snapshot</p>
@@ -1065,7 +1055,7 @@ function FinancialSnapshot({ snapshot, isProduct, currency, fmtC, simpleMode, on
             }}
           >
             Explain like I'm new
-            <span style={{ width: '28px', height: '16px', borderRadius: '8px', background: simpleMode ? BRAND : '#d1d5db', position: 'relative', display: 'inline-block' }}>
+            <span style={{ width: '28px', height: '16px', borderRadius: '4px', background: simpleMode ? BRAND : '#d1d5db', position: 'relative', display: 'inline-block' }}>
               <span style={{ position: 'absolute', top: '2px', width: '12px', height: '12px', borderRadius: '50%', background: 'white', left: simpleMode ? '14px' : '2px', transition: 'left 0.15s' }} />
             </span>
           </button>
