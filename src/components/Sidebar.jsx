@@ -115,7 +115,7 @@ export default function Sidebar({ onClose }) {
 
       {/* Nav */}
       <nav className="flex-1 py-3 space-y-0.5">
-        <NavItem to="/dashboard" icon="⊞" label="Dashboard" onClose={onClose} />
+        <NavItem to="/dashboard" icon="💻" label="Dashboard" onClose={onClose} />
         <NavItem
           to="https://womanmasteryhq.com/onboarding-plan/"
           icon="🗒️"
