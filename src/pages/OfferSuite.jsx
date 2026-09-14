@@ -215,13 +215,12 @@ function TierSection({ tier, offers, isProduct, onAdd, onDelete }) {
   const count = offers.length
 
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--card-border)' }}>
+    <div className="rounded-xl overflow-hidden" style={{ border: `2px solid ${tier.color}` }}>
       {/* Header — clicking expands/collapses */}
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center bg-[#f7f7f7] hover:bg-[#f7f7f7] transition-colors text-left"
       >
-        <div className="w-1 self-stretch flex-shrink-0" style={{ backgroundColor: tier.color }} />
         <div className="flex-1 flex items-center justify-between px-4 py-3.5">
           <div>
             <p className="font-bold text-sm text-gray-900">{tier.label}</p>

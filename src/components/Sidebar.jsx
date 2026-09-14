@@ -118,8 +118,8 @@ export default function Sidebar({ onClose }) {
         <NavItem to="/dashboard" icon="⊞" label="Dashboard" onClose={onClose} />
         <NavItem
           to="https://womanmasteryhq.com/onboarding-plan/"
-          icon="🧭"
-          label="Where Do I Start?"
+          icon="🗒️"
+          label="Onboard HERE"
           external
         />
         <NavItem to="/quick-links" icon="🔗" label="Quick Links" onClose={onClose} />
