@@ -840,6 +840,19 @@ export default function Influence() {
         </p>
       </div>
 
+      {/* Vault resources for this pillar */}
+      <div className="rounded-lg px-4 py-3"
+        style={{ backgroundColor: '#eef5fb', border: '1.5px dotted #3f6f9a', color: '#1a0606' }}>
+        <p className="font-bold" style={{ fontSize: '13px', color: '#244a6e' }}>
+          WMHQ Vault Resources [Under CEO Influence]
+        </p>
+        <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
+          <li>📝 Ideal Buyer Avatar Worksheet</li>
+          <li>📝 USP One-Liner Worksheet</li>
+          <li>🎧 Take messaging from vague → tangible</li>
+        </ul>
+      </div>
+
       <CoreOneLiner userId={user.id} />
       <ProductOneLiners userId={user.id} />
       <BrandWorldview userId={user.id} />
