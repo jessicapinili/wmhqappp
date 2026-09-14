@@ -475,6 +475,14 @@ export default function Visibility() {
           <li>📓 Visibility Content &amp; Marketing System</li>
           <li>💻 All 4 "Content Type" trainings</li>
         </ul>
+
+        <p className="font-bold mt-3" style={{ fontSize: '13px', color: '#9a4d17' }}>
+          WMHQ Tools [Under WMHQ Tools]
+        </p>
+        <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
+          <li>🤳🏽 Signature Series Builder</li>
+          <li>🤳🏽 Hook Suite</li>
+        </ul>
       </div>
 
       {/* Tabs */}

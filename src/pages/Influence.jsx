@@ -851,6 +851,14 @@ export default function Influence() {
           <li>📝 USP One-Liner Worksheet</li>
           <li>🎧 Take messaging from vague → tangible</li>
         </ul>
+
+        <p className="font-bold mt-3" style={{ fontSize: '13px', color: '#244a6e' }}>
+          WMHQ Tools [Under WMHQ Tools]
+        </p>
+        <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
+          <li>🤳🏽 Offer Generator</li>
+          <li>🤳🏽 Influence Research Builder</li>
+        </ul>
       </div>
 
       <CoreOneLiner userId={user.id} />

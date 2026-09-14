@@ -1415,7 +1415,15 @@ export default function Cash() {
           <li>📓 Business Health Checker Checklist</li>
           <li>📓 Brand Presence &amp; Revenue Ideas</li>
           <li>💻 Your Relationship with Sales</li>
-          <li>📁 The entire Money mindset Module</li>
+          <li>📁 The entire Money Mindset Module</li>
+        </ul>
+
+        <p className="font-bold mt-3" style={{ fontSize: '13px', color: '#4a5a24' }}>
+          WMHQ Tools [Under WMHQ Tools]
+        </p>
+        <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
+          <li>🤳🏽 Conversion Calculator</li>
+          <li>🤳🏽 I.L.N (Calculate Your Ideal Lifestyle Number)</li>
         </ul>
       </div>
 
