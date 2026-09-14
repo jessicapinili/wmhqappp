@@ -471,6 +471,21 @@ export default function Visibility() {
         </p>
       </div>
 
+      {/* Vault resources for this pillar */}
+      {/* Inline margin: the page wrapper's space-y-0 zeroes class margins on later children */}
+      <div className="rounded-lg px-4 py-3"
+        style={{ backgroundColor: '#fef3e8', border: '1.5px dotted #c2692a', color: '#1a0606', marginBottom: '16px' }}>
+        <p className="font-bold" style={{ fontSize: '13px', color: '#9a4d17' }}>
+          WMHQ Vault Resources [Under CEO Visibility]
+        </p>
+        <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
+          <li>💻 Creating Content Pillars</li>
+          <li>💻 Funnel &amp; Positioning Type Examples</li>
+          <li>📓 Visibility Content &amp; Marketing System</li>
+          <li>💻 All 4 "Content Type" trainings</li>
+        </ul>
+      </div>
+
       {/* Tabs */}
       <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ backgroundColor: '#fff8f8' }}>
         {TABS.map(t => (
