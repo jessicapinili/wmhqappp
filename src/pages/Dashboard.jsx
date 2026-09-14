@@ -537,11 +537,11 @@ export default function Dashboard() {
       </div>
 
       {/* Insight of the Day */}
-      <div className="card-section" style={{ borderLeft: `3px solid ${BRAND}` }}>
+      <div className="card-section" style={{ border: `1.5px dotted ${BRAND}` }}>
         <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: BRAND }}>
-          JP × WMHQ — Insight of the Day
+          JP x WMHQ [INSIGHT OF YOUR DAY]
         </p>
-        <p className="text-gray-800 font-medium text-base leading-relaxed italic">
+        <p className="text-gray-800 font-medium text-base leading-relaxed">
           "{insight}"
         </p>
       </div>
