@@ -109,15 +109,6 @@ function ContentSystem({ userId }) {
           </svg>
         </button>
       </div>
-      <a
-        href="https://www.jessicapinili.com/login"
-        target="_blank"
-        rel="noopener"
-        className="block rounded-lg px-3 py-2.5 mb-4 text-sm font-medium"
-        style={{ backgroundColor: '#FFF8F8', border: '1px solid rgba(61,12,12,0.18)', color: '#3d0c0c' }}
-      >
-        <HeartIcon /> Watch: CEO Visibility Training → Creating Content Pillars
-      </a>
 
       {/* What themes and topics mean */}
       <div className="card mb-4">
