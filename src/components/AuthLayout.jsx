@@ -71,7 +71,7 @@ function AuthFooter() {
           </a>
         </div>
         <p className="text-xs" style={{ color: 'rgba(245,236,224,0.45)' }}>
-          © {new Date().getFullYear()} Jessica Marie Group Pty Ltd. All rights reserved.
+          © {new Date().getFullYear()} Jessica Marie Holdings Pty Ltd. All rights reserved.
         </p>
       </div>
     </footer>
