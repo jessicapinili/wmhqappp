@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { CreativeDirectionFields, CreativeDirectionRead, creativeToForm, cleanCreative, countCreative, CREATIVE_INTRO } from '../lib/creativeDirection'
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -66,7 +68,6 @@ const LEGACY_TYPE_TO_MODEL = {
 }
 
 const THIS_YEAR = new Date().getFullYear()
-const YEAR_OPTIONS = [THIS_YEAR - 1, THIS_YEAR]
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -579,9 +580,14 @@ const BLANK_CAMPAIGN = {
   start_date: '', end_date: '', currency: 'AUD', revenue_goal: '',
 }
 
-function CreateWizard({ onCreate, onCancel, defaultCurrency }) {
+function CreateWizard({ onCreate, onCancel, defaultCurrency, prefill }) {
   const [step, setStep] = useState(1)
-  const [form, setForm] = useState({ ...BLANK_CAMPAIGN, currency: defaultCurrency || 'AUD' })
+  const [form, setForm] = useState({
+    ...BLANK_CAMPAIGN,
+    currency: defaultCurrency || 'AUD',
+    ...(prefill?.form || {}),
+  })
+  const [creative, setCreative] = useState(creativeToForm(prefill?.creative_direction))
   const [draftOptions, setDraftOptions] = useState([])
   const [modalOption, setModalOption] = useState(null)   // { option, index } | 'new'
   const [error, setError] = useState('')
@@ -623,12 +629,15 @@ function CreateWizard({ onCreate, onCancel, defaultCurrency }) {
       <div className="flex justify-between items-center">
         <div>
           <p className="font-bold text-sm text-gray-900">Add Launch Campaign</p>
-          <p className="text-xs text-gray-400 mt-0.5">Step {step} of 2 · {step === 1 ? 'Campaign' : 'Target'}</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Step {step} of 3 · {step === 1 ? 'Campaign' : step === 2 ? 'Target' : 'Creative direction'}
+          </p>
         </div>
         <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 text-xl leading-none" aria-label="Close">×</button>
       </div>
 
-      {step === 1 ? (
+      {step === 1 && (
+        <SectionCard title="Campaign" subtitle="The what, when and how it runs.">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <label className="label" htmlFor="cw-name">Campaign Name</label>
@@ -682,7 +691,11 @@ function CreateWizard({ onCreate, onCancel, defaultCurrency }) {
               onChange={e => set('end_date', e.target.value)} />
           </div>
         </div>
-      ) : (
+        </SectionCard>
+      )}
+
+      {step === 2 && (
+        <SectionCard title="Target" subtitle="Your revenue goal and the ways someone can buy.">
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -713,25 +726,45 @@ function CreateWizard({ onCreate, onCancel, defaultCurrency }) {
 
           <EstimatedSales revenueGoal={form.revenue_goal} options={draftOptions} currency={form.currency} />
         </div>
+        </SectionCard>
+      )}
+
+      {step === 3 && (
+        <SectionCard title="Creative direction" subtitle={CREATIVE_INTRO}>
+          <CreativeDirectionFields value={creative} onChange={setCreative} idPrefix="cw-cd" />
+        </SectionCard>
       )}
 
       {error && <p className="text-xs text-red-500">{error}</p>}
 
-      <div className="flex gap-3 pt-1">
-        {step === 2 && (
-          <button onClick={() => setStep(1)} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+      <div className="flex flex-wrap items-center gap-3 pt-1">
+        {step > 1 && (
+          <button onClick={() => setStep(step - 1)} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
             Back
           </button>
         )}
-        {step === 1 ? (
+        {step === 1 && (
           <>
             <button onClick={onCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
               Cancel
             </button>
             <button onClick={next} className="btn-brand">Continue</button>
           </>
-        ) : (
-          <button onClick={() => onCreate(form, draftOptions)} className="btn-brand">Create Campaign</button>
+        )}
+        {step === 2 && (
+          <>
+            <button onClick={() => onCreate(form, draftOptions, cleanCreative(creative))} className="btn-brand">
+              Create Campaign
+            </button>
+            <button onClick={() => setStep(3)} className="text-xs font-semibold" style={{ color: BRAND }}>
+              {countCreative(creative) > 0 ? 'Creative direction →' : 'Add creative direction (optional) →'}
+            </button>
+          </>
+        )}
+        {step === 3 && (
+          <button onClick={() => onCreate(form, draftOptions, cleanCreative(creative))} className="btn-brand">
+            Create Campaign
+          </button>
         )}
       </div>
 
@@ -763,11 +796,21 @@ function ReadField({ label, value, muted = 'Not set', full }) {
   )
 }
 
-// "Edit" affordance shown above a saved section.
-function EditBar({ onEdit, label = 'Edit' }) {
+// Titled panel used by every workspace section, so the campaign reads the same
+// way as a revenue event: a heading strip, then the content.
+function SectionCard({ title, subtitle, action, children }) {
   return (
-    <div className="flex justify-end mb-3">
-      <button onClick={onEdit} className="btn-brand-outline">{label}</button>
+    <div className="rounded-lg" style={{ backgroundColor: '#ffffff', border: '1px solid #d9cec6' }}>
+      <div className="px-4 py-3" style={{ backgroundColor: '#f3ece6', borderBottom: '1px solid #d9cec6', borderTopLeftRadius: 7, borderTopRightRadius: 7 }}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-bold" style={{ color: '#1a0606' }}>{title}</p>
+            {subtitle && <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#6b5a52' }}>{subtitle}</p>}
+          </div>
+          {action}
+        </div>
+      </div>
+      <div className="px-4 py-4">{children}</div>
     </div>
   )
 }
@@ -805,6 +848,7 @@ function Workspace({
       review_hesitation: campaign.review_hesitation || '',
       review_repeat: campaign.review_repeat || '',
       review_change: campaign.review_change || '',
+      creative_direction: creativeToForm(campaign.creative_direction),
     })
     setEditing(null)
     setConfirmDelete(false)
@@ -839,6 +883,7 @@ function Workspace({
       review_hesitation: campaign.review_hesitation || '',
       review_repeat: campaign.review_repeat || '',
       review_change: campaign.review_change || '',
+      creative_direction: creativeToForm(campaign.creative_direction),
     })
     setEditing(null)
     setError('')
@@ -964,7 +1009,11 @@ function Workspace({
         {/* ── Campaign tab ── */}
         {tab === 'Campaign' && editing !== 'campaign' && (
           <div role="tabpanel">
-            <EditBar onEdit={() => setEditing('campaign')} />
+            <SectionCard
+              title="Campaign details"
+              subtitle="The what, when and how much."
+              action={<button onClick={() => setEditing('campaign')} className="btn-brand-outline flex-shrink-0">Edit</button>}
+            >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <ReadField label="Launch Campaign Name" value={campaign.offer_name} muted="Not set" />
               <ReadField label="Campaign Model" value={modelOf(campaign)} muted="Campaign model not set" />
@@ -974,6 +1023,26 @@ function Workspace({
               <ReadField label="Launch Start Date" value={fmtDate(campaign.start_date)} muted="Date not set" />
               <ReadField label="Launch End Date" value={fmtDate(campaign.end_date)} muted="Date not set" />
             </div>
+            </SectionCard>
+            {/* Creative direction, carried over from the revenue event or added here */}
+            <div className="rounded-lg mt-5" style={{ backgroundColor: '#ffffff', border: '1px solid #d9cec6' }}>
+              <div className="px-4 py-3 flex items-start justify-between gap-3"
+                style={{ backgroundColor: '#f3ece6', borderBottom: '1px solid #d9cec6', borderTopLeftRadius: 7, borderTopRightRadius: 7 }}>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: '#1a0606' }}>Creative direction</p>
+                  <p className="text-xs mt-0.5 leading-relaxed" style={{ color: '#6b5a52' }}>
+                    {countCreative(campaign.creative_direction) > 0
+                      ? 'The thinking behind this campaign.'
+                      : 'Optional. Shape the idea whenever you are ready.'}
+                  </p>
+                </div>
+                <button onClick={() => setEditing('creative')} className="btn-brand-outline flex-shrink-0">Edit</button>
+              </div>
+              <div className="px-4 py-4">
+                <CreativeDirectionRead value={campaign.creative_direction} />
+              </div>
+            </div>
+
             <div className="pt-3 mt-4" style={{ borderTop: '1px solid #ede6e1' }}>
               {confirmDelete ? (
                 <div className="flex items-center gap-3 flex-wrap">
@@ -996,8 +1065,22 @@ function Workspace({
             </div>
           </div>
         )}
+        {tab === 'Campaign' && editing === 'creative' && (
+          <div role="tabpanel">
+            <p className="text-sm font-bold mb-1" style={{ color: '#1a0606' }}>Creative direction</p>
+            <p className="text-xs mb-3 leading-relaxed" style={{ color: '#6b5a52' }}>{CREATIVE_INTRO}</p>
+            <CreativeDirectionFields
+              value={draft.creative_direction}
+              onChange={v => set('creative_direction', v)}
+              idPrefix="ws-cd"
+            />
+            <div className="mt-4"><EditActions /></div>
+          </div>
+        )}
         {tab === 'Campaign' && editing === 'campaign' && (
-          <div role="tabpanel" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div role="tabpanel">
+            <SectionCard title="Campaign details" subtitle="The what, when and how much.">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className="label" htmlFor="ws-name">Launch Campaign Name</label>
               <input id="ws-name" className="input-field" value={draft.offer_name}
@@ -1051,14 +1134,23 @@ function Workspace({
               <p className="text-xs text-gray-400 sm:col-span-2">No fixed dates. Evergreen campaigns can run without them.</p>
             )}
             <div className="sm:col-span-2"><EditActions /></div>
+            </div>
+            </SectionCard>
           </div>
         )}
 
         {/* ── Target tab ── */}
         {tab === 'Target' && (
-          <div role="tabpanel" className="space-y-4">
+          <div role="tabpanel">
+            <SectionCard
+              title="Target"
+              subtitle="Your revenue goal and the ways someone can buy."
+              action={editing !== 'target'
+                ? <button onClick={() => setEditing('target')} className="btn-brand-outline flex-shrink-0">Edit</button>
+                : null}
+            >
             {editing === 'target' ? (
-              <>
+              <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label" htmlFor="ws-cur">Currency</label>
@@ -1074,10 +1166,9 @@ function Workspace({
                   </div>
                 </div>
                 <EditActions />
-              </>
+              </div>
             ) : (
               <>
-                <EditBar onEdit={() => setEditing('target')} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <ReadField label="Currency" value={currencyOf(campaign)} />
                   <ReadField label="Revenue Goal"
@@ -1087,7 +1178,7 @@ function Workspace({
               </>
             )}
 
-            <div>
+            <div className="mt-4">
               <p className="label" style={{ marginBottom: 8 }}>Purchase Options</p>
               <PurchaseOptionsList
                 options={options}
@@ -1099,13 +1190,23 @@ function Workspace({
               />
             </div>
 
-            <EstimatedSales revenueGoal={draft.revenue_goal} options={options} currency={cur} />
+            <div className="mt-4">
+              <EstimatedSales revenueGoal={draft.revenue_goal} options={options} currency={cur} />
+            </div>
+            </SectionCard>
           </div>
         )}
 
         {/* ── Results tab ── */}
         {tab === 'Results' && (
           <div role="tabpanel">
+            <SectionCard
+              title="Results"
+              subtitle="What this campaign has actually brought in."
+              action={resultsActive && editing !== 'results'
+                ? <button onClick={() => setEditing('results')} className="btn-brand-outline flex-shrink-0">Update results</button>
+                : null}
+            >
             {!resultsActive ? (
               <div className="text-center py-8">
                 <p className="text-sm text-gray-500 mb-1">Results will appear once your campaign begins.</p>
@@ -1134,9 +1235,7 @@ function Workspace({
                       onChange={e => set('enrolled_count', e.target.value)} placeholder="0" />
                   </div>
                 </div>
-                ) : (
-                  <EditBar onEdit={() => setEditing('results')} label="Update results" />
-                )}
+                ) : null}
 
                 <div className="rounded-xl px-4 py-3.5" style={{ backgroundColor: '#faf7f5', border: '0.5px solid #e8e0d8' }}>
                   <div className="flex items-center justify-between gap-3 mb-1.5 flex-wrap">
@@ -1170,12 +1269,21 @@ function Workspace({
                 {editing === 'results' && <EditActions />}
               </div>
             )}
+            </SectionCard>
           </div>
         )}
 
         {/* ── Review tab ── */}
         {tab === 'Review' && (
-          <div role="tabpanel" className="space-y-4">
+          <div role="tabpanel">
+            <SectionCard
+              title="Review"
+              subtitle="What worked, and what you would change next time."
+              action={editing !== 'review'
+                ? <button onClick={() => setEditing('review')} className="btn-brand-outline flex-shrink-0">Edit</button>
+                : null}
+            >
+            <div className="space-y-4">
             {editing === 'review' ? (
               <>
                 {REVIEW_PROMPTS.map(([key, label]) => (
@@ -1189,7 +1297,6 @@ function Workspace({
               </>
             ) : (
               <>
-                <EditBar onEdit={() => setEditing('review')} />
                 {REVIEW_PROMPTS.map(([key, label]) => (
                   <ReadField key={key} label={label} value={campaign[key]} muted="Not answered yet" />
                 ))}
@@ -1202,6 +1309,8 @@ function Workspace({
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{campaign.notes}</p>
               </div>
             )}
+            </div>
+            </SectionCard>
           </div>
         )}
 
@@ -1235,6 +1344,30 @@ export default function Launches() {
   const [filter, setFilter] = useState('All')
   const [openId, setOpenId] = useState(null)
   const [showWizard, setShowWizard] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [prefill, setPrefill] = useState(null)
+  const [years, setYears] = useState([THIS_YEAR])
+
+  // Every year the member has campaigns in, plus this year and the one coming.
+  const loadYears = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase.from('launches').select('year').eq('user_id', user.id)
+    const found = (data || []).map(r => r.year).filter(Boolean)
+    setYears([...new Set([...found, THIS_YEAR, THIS_YEAR + 1])].sort((a, b) => a - b))
+  }, [user])
+
+  useEffect(() => { loadYears() }, [loadYears])
+
+  // Arriving from Convert to Launch Campaign: open the wizard with the event's
+  // details already in it, then drop the handover so a refresh starts clean.
+  useEffect(() => {
+    const incoming = location.state?.prefillCampaign
+    if (!incoming) return
+    setPrefill(incoming)
+    setShowWizard(true)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location, navigate])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
 
@@ -1298,7 +1431,7 @@ export default function Launches() {
 
   // ── Create ───────────────────────────────────────────────────────────────────
 
-  const handleCreate = async (form, draftOptions) => {
+  const handleCreate = async (form, draftOptions, creativeDirection) => {
     const year = form.start_date
       ? new Date(form.start_date + 'T00:00:00').getFullYear()
       : selectedYear
@@ -1322,6 +1455,7 @@ export default function Launches() {
       revenue_achieved: 0,
       enrolled_count:   0,
       notes:            '',
+      creative_direction: creativeDirection || null,
     }
 
     const { data, error } = await supabase.from('launches').insert(payload).select().single()
@@ -1349,6 +1483,7 @@ export default function Launches() {
       else setOptionsByLaunch(prev => ({ ...prev, [data.id]: savedOpts || [] }))
     }
 
+    if (!years.includes(year)) loadYears()
     if (year === selectedYear) setLaunches(prev => [...prev, data])
     setShowWizard(false)
     setOpenId(year === selectedYear ? data.id : null)
@@ -1380,6 +1515,7 @@ export default function Launches() {
       review_hesitation:  draft.review_hesitation || null,
       review_repeat:      draft.review_repeat || null,
       review_change:      draft.review_change || null,
+      creative_direction: cleanCreative(draft.creative_direction),
       year,
       updated_at: new Date().toISOString(),
     }
@@ -1546,7 +1682,7 @@ export default function Launches() {
 
         {/* Year toggle */}
         <div className="flex gap-1.5 flex-shrink-0">
-          {YEAR_OPTIONS.map(y => (
+          {years.map(y => (
             <button
               key={y}
               onClick={() => handleYearSwitch(y)}
@@ -1645,8 +1781,9 @@ export default function Launches() {
             {showWizard && (
               <CreateWizard
                 onCreate={handleCreate}
-                onCancel={() => setShowWizard(false)}
+                onCancel={() => { setShowWizard(false); setPrefill(null) }}
                 defaultCurrency={defaultCurrency}
+                prefill={prefill}
               />
             )}
 
