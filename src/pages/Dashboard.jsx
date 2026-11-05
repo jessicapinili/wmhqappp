@@ -512,24 +512,21 @@ export default function Dashboard() {
 
       {/* Announcement */}
       <div role="status" className="rounded-lg px-4 py-3"
-        style={{ backgroundColor: '#eef2e2', border: '1.5px dotted #6b7d3f', color: '#3f4a23' }}>
-        <p className="font-bold" style={{ fontSize: '13px' }}>WMHQ 30-Day Content Challenge is live!</p>
+        style={{ backgroundColor: '#fdf0f0', border: '1.5px dotted #c98a8a', color: '#3d0c0c' }}>
+        <p className="font-bold" style={{ fontSize: '13px' }}>
+          Please watch the WMHQ Personal Portal Video inside the{' '}
+          <a href="https://www.jessicapinili.com/login" target="_blank" rel="noopener noreferrer"
+            className="underline" style={{ color: '#3d0c0c', textUnderlineOffset: '2px' }}>
+            WMHQ Vault
+          </a>.
+        </p>
         <p className="mt-1 leading-relaxed" style={{ fontSize: '12px' }}>
-          Navigate to the VISIBILITY tab and then click{' '}
-          <Link to="/visibility/content-challenge" className="font-semibold underline"
-            style={{ color: '#3f4a23', textUnderlineOffset: '2px' }}>
-            Content Challenge
-          </Link>. Please read the details.
+          It brings your strategy, planning and weekly audits into one place, so you can apply what you’re learning inside WMHQ to your actual business.
         </p>
       </div>
 
       {/* Pinned quick links */}
       <PinnedLinks userId={user.id} />
-
-      {/* Portal video notice */}
-      <div style={{ backgroundColor: '#fdf8f5', border: '0.5px solid rgba(240,208,208,0.5)', borderLeft: '2px solid rgba(240,208,208,0.7)', borderRadius: '4px', padding: '13px 16px', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '11px', fontWeight: 300, color: '#3d0c0c' }}>
-        <HeartIcon /> Please watch the WMHQ Personal Portal Video inside the WMHQ Vault
-      </div>
 
       {/* Insight of the Day */}
       <div className="card-section" style={{ border: `1.5px dotted ${BRAND}` }}>
