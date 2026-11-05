@@ -117,6 +117,12 @@ export default function Sidebar({ onClose }) {
       <nav className="flex-1 py-3 space-y-0.5">
         <NavItem to="/dashboard" icon="💻" label="Dashboard" onClose={onClose} />
         <NavItem
+          to="https://www.jessicapinili.com/products/communities/v2/womanmasteryhq/channel/b310547b-5d2a-494c-b862-7b393bec76ff?type=forum"
+          icon="🥸"
+          label="ASK JP Audits"
+          external
+        />
+        <NavItem
           to="https://womanmasteryhq.com/onboarding-plan/"
           icon="🗒️"
           label="Onboard HERE"
