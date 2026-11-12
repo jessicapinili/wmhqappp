@@ -35,31 +35,60 @@ const ls = {
 }
 const localKeys = () => ls.keys().filter(k => k.startsWith(PREFIX))
 
-export async function startWorkshopSync(userId) {
-  if (!userId || syncUserId === userId) return
-  syncUserId = null
-  syncReady = false
-  // Never show one member's answers to another on a shared browser.
-  let owner = null
-  try { owner = localStorage.getItem(OWNER_KEY) } catch {}
-  const keepLocal = owner === userId || owner === null
-  if (!keepLocal) localKeys().forEach(k => { try { localStorage.removeItem(k) } catch {} })
-  const { data, error } = await supabase.from('workshop_entries').select('entry_key, value').eq('user_id', userId)
-  if (error) { console.error('Workshop load failed', error.message) }
-  const remote = new Map((data || []).map(r => [PREFIX + r.entry_key, r.value]))
-  // Anything only in this browser (saved before syncing existed) gets uploaded once.
-  const toUpload = keepLocal && !error ? localKeys().filter(k => !remote.has(k)) : []
-  remote.forEach((v, k) => { try { localStorage.setItem(k, v) } catch {} })
-  if (!error) localKeys().filter(k => !remote.has(k) && !toUpload.includes(k)).forEach(k => { try { localStorage.removeItem(k) } catch {} })
-  try { localStorage.setItem(OWNER_KEY, userId) } catch {}
+let syncInFlight = null
+const withTimeout = (promise, ms) => Promise.race([
+  promise,
+  new Promise(resolve => setTimeout(() => resolve({ data: null, error: { message: 'timed out' }, timedOut: true }), ms)),
+])
+function markReady(userId) {
   syncUserId = userId
-  if (toUpload.length) {
-    const rows = toUpload.map(k => ({ user_id: userId, entry_key: remoteKey(k), value: localStorage.getItem(k) }))
-    supabase.from('workshop_entries').upsert(rows, { onConflict: 'user_id,entry_key' })
-      .then(({ error: e }) => { if (e) console.error('Workshop upload failed', e.message) })
-  }
   syncReady = true
   window.dispatchEvent(new Event(WORKSHOP_SYNC_EVENT))
+}
+
+export function startWorkshopSync(userId) {
+  if (!userId) return Promise.resolve()
+  if (syncUserId === userId && syncReady) return Promise.resolve()
+  if (syncInFlight && syncInFlight.userId === userId) return syncInFlight.promise
+  syncReady = false
+  const promise = (async () => {
+    let owner = null
+    try { owner = localStorage.getItem(OWNER_KEY) } catch {}
+    const keepLocal = owner === userId || owner === null
+    try {
+      // Never show one member's answers to another on a shared browser.
+      if (!keepLocal) localKeys().forEach(k => { try { localStorage.removeItem(k) } catch {} })
+      // Don't let a slow or stuck request hold the page on "Loading" forever.
+      const res = await withTimeout(
+        supabase.from('workshop_entries').select('entry_key, value').eq('user_id', userId),
+        8000,
+      )
+      const { data, error } = res || {}
+      if (error) {
+        console.error('Workshop load failed', error.message)
+        try { localStorage.setItem(OWNER_KEY, userId) } catch {}
+        return // fall back to what this browser already has
+      }
+      const remote = new Map((data || []).map(r => [PREFIX + r.entry_key, r.value]))
+      // Anything only in this browser (saved before syncing existed) gets uploaded once.
+      const toUpload = keepLocal ? localKeys().filter(k => !remote.has(k)) : []
+      remote.forEach((v, k) => { try { localStorage.setItem(k, v) } catch {} })
+      localKeys().filter(k => !remote.has(k) && !toUpload.includes(k)).forEach(k => { try { localStorage.removeItem(k) } catch {} })
+      try { localStorage.setItem(OWNER_KEY, userId) } catch {}
+      if (toUpload.length) {
+        const rows = toUpload.map(k => ({ user_id: userId, entry_key: remoteKey(k), value: localStorage.getItem(k) }))
+        supabase.from('workshop_entries').upsert(rows, { onConflict: 'user_id,entry_key' })
+          .then(({ error: e }) => { if (e) console.error('Workshop upload failed', e.message) })
+      }
+    } catch (e) {
+      console.error('Workshop sync error', e)
+    } finally {
+      syncInFlight = null
+      markReady(userId) // always release the page, even if loading failed
+    }
+  })()
+  syncInFlight = { userId, promise }
+  return promise
 }
 export function useWorkshopReady() {
   const [ready, setReady] = React.useState(syncReady)
