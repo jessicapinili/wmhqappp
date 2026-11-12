@@ -525,3 +525,13 @@ h1, h2, h3, h4, h5, h6,
   font-size: 12px; line-height: 1; display: inline-flex; align-items: center; justify-content: center;
 }
 .focus-step:hover { background: #faf1f1; }
+
+/* Influence: sections inside a fold-away card drop their own card chrome and heading */
+.fold-body > .card-section,
+.fold-body > div > .card-section {
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.fold-body .section-title { display: none !important; }

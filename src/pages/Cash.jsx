@@ -1409,7 +1409,7 @@ export default function Cash() {
       <div className="rounded-lg px-4 py-3"
         style={{ backgroundColor: '#eef2e2', border: '1.5px dotted #6b7d3f', color: '#1a0606' }}>
         <p className="font-bold" style={{ fontSize: '13px', color: '#4a5a24' }}>
-          WMHQ Vault Resources [Under CEO Cash]
+          <a href="https://www.jessicapinili.com/login" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: "inherit", textUnderlineOffset: "2px" }}>WMHQ Vault Resources [Under CEO Cash] ↗</a>
         </p>
         <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
           <li>📓 Business Health Checker Checklist</li>
@@ -1419,7 +1419,7 @@ export default function Cash() {
         </ul>
 
         <p className="font-bold mt-3" style={{ fontSize: '13px', color: '#4a5a24' }}>
-          WMHQ Tools [Under WMHQ Tools]
+          <a href="https://tools.womanmasteryhqportal.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: "inherit", textUnderlineOffset: "2px" }}>WMHQ Tools [Under WMHQ Tools] ↗</a>
         </p>
         <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
           <li>🤳🏽 Conversion Calculator</li>

@@ -782,7 +782,7 @@ export default function Identity() {
       <div className="rounded-lg px-4 py-3"
         style={{ backgroundColor: '#f1edf8', border: '1.5px dotted #6a4c93', color: '#1a0606' }}>
         <p className="font-bold" style={{ fontSize: '13px', color: '#4f3577' }}>
-          WMHQ Vault Resources [Under Subconscious Mastery]
+          <a href="https://www.jessicapinili.com/login" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: "inherit", textUnderlineOffset: "2px" }}>WMHQ Vault Resources [Under Subconscious Mastery] ↗</a>
         </p>
         <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
           <li>📓 Subconscious Identity</li>
@@ -792,7 +792,7 @@ export default function Identity() {
         </ul>
 
         <p className="font-bold mt-3" style={{ fontSize: '13px', color: '#4f3577' }}>
-          WMHQ Tools [Under WMHQ Tools]
+          <a href="https://tools.womanmasteryhqportal.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: "inherit", textUnderlineOffset: "2px" }}>WMHQ Tools [Under WMHQ Tools] ↗</a>
         </p>
         <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
           <li>🤳🏽 Capacity Breakthrough Method</li>

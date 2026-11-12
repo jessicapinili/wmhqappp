@@ -102,7 +102,7 @@ function CoreOneLiner({ userId }) {
             rows={3}
             value={value}
             onChange={e => setValue(e.target.value)}
-            placeholder="e.g. I help ambitious women coaches build consistent $10K+ months through identity-led marketing."
+            placeholder="Type your answer…"
           />
           <div className="flex gap-2">
             {editing && <button onClick={() => setEditing(false)} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
@@ -216,7 +216,7 @@ function ProductOneLiners({ userId }) {
                 className="input-field"
                 value={offerName}
                 onChange={e => setOfferName(e.target.value)}
-                placeholder="Offer name (e.g. 1:1 Coaching)"
+                placeholder="Offer name…"
               />
               <textarea
                 className="textarea-field"
@@ -349,7 +349,7 @@ function ObjectionBank({ userId }) {
                   className="input-field"
                   value={objection}
                   onChange={e => setObjection(e.target.value)}
-                  placeholder="e.g. I can't afford it right now."
+                  placeholder="Type your answer…"
                 />
               </div>
               <div>
@@ -359,7 +359,7 @@ function ObjectionBank({ userId }) {
                   rows={2}
                   value={reframe}
                   onChange={e => setReframe(e.target.value)}
-                  placeholder="e.g. The cost of staying where you are is higher than the investment."
+                  placeholder="Type your answer…"
                 />
               </div>
               <div className="flex gap-2">
@@ -432,11 +432,11 @@ function BuyerAvatar({ userId }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="label">Name (optional)</label>
-              <input className="input-field" value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} placeholder="e.g. Sarah" />
+              <input className="input-field" value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} placeholder="Type your answer…" />
             </div>
             <div>
               <label className="label">Age Range</label>
-              <input className="input-field" value={form.age_range} onChange={e => setForm(p => ({...p, age_range: e.target.value}))} placeholder="e.g. 28–40" />
+              <input className="input-field" value={form.age_range} onChange={e => setForm(p => ({...p, age_range: e.target.value}))} placeholder="Type your answer…" />
             </div>
           </div>
           <div>
@@ -535,13 +535,13 @@ function BuyerPsychology({ userId }) {
 
 /* ─── Brand Worldview ─── */
 const WORLDVIEW_PROMPTS = [
-  { key: 'believe',           label: 'We/I believe…',                  placeholder: 'e.g. Every woman deserves a business that funds the life she actually wants.' },
-  { key: 'not_believe',       label: 'We/I do not believe…',           placeholder: 'e.g. That working harder is the only way to grow.' },
-  { key: 'industry_wrong',    label: 'The industry gets this wrong…',  placeholder: 'e.g. It sells more content instead of clearer strategy.' },
-  { key: 'customers_deserve', label: 'Our customers deserve…',         placeholder: 'e.g. Honest guidance and a path that fits their season of life.' },
-  { key: 'old_way',           label: 'The old way is…',                placeholder: 'e.g. Push harder, post more, and hope it works.' },
-  { key: 'new_way',           label: 'The new way is…',                placeholder: 'e.g. Build a simple system that holds steady when life shifts.' },
-  { key: 'future',            label: 'The future we want to create is…', placeholder: 'e.g. A world where more women lead profitable, spacious businesses.' },
+  { key: 'believe',           label: 'We/I believe…',                  placeholder: 'Type your answer…' },
+  { key: 'not_believe',       label: 'We/I do not believe…',           placeholder: 'Type your answer…' },
+  { key: 'industry_wrong',    label: 'The industry gets this wrong…',  placeholder: 'Type your answer…' },
+  { key: 'customers_deserve', label: 'Our customers deserve…',         placeholder: 'Type your answer…' },
+  { key: 'old_way',           label: 'The old way is…',                placeholder: 'Type your answer…' },
+  { key: 'new_way',           label: 'The new way is…',                placeholder: 'Type your answer…' },
+  { key: 'future',            label: 'The future we want to create is…', placeholder: 'Type your answer…' },
 ]
 const BLANK_WORLDVIEW = { believe: '', not_believe: '', industry_wrong: '', customers_deserve: '', old_way: '', new_way: '', future: '' }
 
@@ -796,7 +796,7 @@ function BuyingTriggers({ userId }) {
                   className="input-field"
                   value={trigger}
                   onChange={e => setTrigger(e.target.value)}
-                  placeholder="e.g. Their latest launch did not meet its sales goal."
+                  placeholder="Type your answer…"
                 />
               </div>
               <div>
@@ -806,7 +806,7 @@ function BuyingTriggers({ userId }) {
                   rows={3}
                   value={looks}
                   onChange={e => setLooks(e.target.value)}
-                  placeholder="e.g. They have tried posting more, changing their offer and lowering the price, but revenue is still inconsistent. They are now actively looking for a clearer sales system."
+                  placeholder="Type your answer…"
                 />
               </div>
               <div className="flex gap-2">
@@ -824,6 +824,63 @@ function BuyingTriggers({ userId }) {
 }
 
 /* ─── Page ─── */
+/* ─── Fold-away section with a ? tip ─── */
+const FOLD_KEY = 'wmhq-influence-open'
+function readOpen() { try { return JSON.parse(localStorage.getItem(FOLD_KEY) || '{}') } catch { return {} } }
+
+function TipIcon({ children }) {
+  const [show, setShow] = useState(false)
+  return (
+    <span className="relative inline-flex" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}
+      onClick={e => { e.stopPropagation(); setShow(v => !v) }}>
+      <span className="inline-flex items-center justify-center cursor-help"
+        style={{ width: 16, height: 16, borderRadius: '50%', border: '1px solid #b8a898', color: '#b8a898', fontSize: '10px', lineHeight: 1 }}>?</span>
+      {show && (
+        <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 z-30 text-left"
+          style={{ backgroundColor: '#3d0c0c', color: '#f5ece0', fontSize: '12px', fontWeight: 300, lineHeight: 1.5, padding: '10px 12px', borderRadius: '6px', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+          {children}
+        </span>
+      )}
+    </span>
+  )
+}
+
+function FoldSection({ id, title, tip, children }) {
+  const [open, setOpen] = useState(() => !!readOpen()[id])
+  const toggle = () => {
+    const next = !open
+    setOpen(next)
+    try { localStorage.setItem(FOLD_KEY, JSON.stringify({ ...readOpen(), [id]: next })) } catch {}
+  }
+  return (
+    <div className="card-section fold-section" style={{ padding: open ? undefined : '14px 20px' }}>
+      <div role="button" tabIndex={0} onClick={toggle} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle() } }}
+        className="flex items-center gap-2 cursor-pointer select-none">
+        <span className="w-3 h-3 rounded-full inline-block flex-shrink-0" style={{ backgroundColor: '#c6def2' }} />
+        <h2 className="section-title" style={{ margin: 0 }}>{title}</h2>
+        <TipIcon>{tip}</TipIcon>
+        <span className="ml-auto text-xs" style={{ color: '#b8a898' }}>{open ? 'Close ▴' : 'Open ▾'}</span>
+      </div>
+      {open && <div className="fold-body mt-3">{children}</div>}
+    </div>
+  )
+}
+
+const TIPS = {
+  avatar: 'Your ideal buyer is the one person your business is built for. Be specific: who they are, where they’re at, and what they want. The clearer this is, the easier every other section on this page becomes.',
+  psychology: 'Map what your buyer feels, fears and wants. When your content speaks to these in their own words, people feel understood and trust you faster.',
+  core: 'One sentence that says who you help, how, and the result they get. Use it in your bio, on calls and when someone asks “what do you do?” If it takes more than a breath to say, simplify it.',
+  products: 'A one-liner for each offer, so people instantly get what it is and who it’s for. Write them like you’d say them out loud.',
+  worldview: 'The beliefs your brand stands for again and again. A clear worldview attracts the right people and repels the wrong ones, so your content stops sounding like everyone else’s.',
+  objections: 'The doubts that stop people buying, like price, time or “is this for me?” Write each one with a calm reframe so you’re ready on calls, in DMs and in your content.',
+  triggers: (
+    <>
+      The moments that make your buyer more likely to act now. Examples:
+      <ul className="mt-1.5 space-y-0.5">{TRIGGER_EXAMPLES.slice(0, 5).map(x => <li key={x}>• {x}</li>)}</ul>
+    </>
+  ),
+}
+
 export default function Influence() {
   const { user } = useAuth()
 
@@ -844,30 +901,30 @@ export default function Influence() {
       <div className="rounded-lg px-4 py-3"
         style={{ backgroundColor: '#eef5fb', border: '1.5px dotted #3f6f9a', color: '#1a0606' }}>
         <p className="font-bold" style={{ fontSize: '13px', color: '#244a6e' }}>
-          WMHQ Vault Resources [Under CEO Influence]
+          <a href="https://www.jessicapinili.com/login" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: "inherit", textUnderlineOffset: "2px" }}>WMHQ Vault Resources [Under CEO Influence] ↗</a>
         </p>
         <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
-          <li>📝 Ideal Buyer Avatar Worksheet</li>
-          <li>📝 USP One-Liner Worksheet</li>
           <li>🎧 Take messaging from vague → tangible</li>
         </ul>
 
         <p className="font-bold mt-3" style={{ fontSize: '13px', color: '#244a6e' }}>
-          WMHQ Tools [Under WMHQ Tools]
+          <a href="https://tools.womanmasteryhqportal.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: "inherit", textUnderlineOffset: "2px" }}>WMHQ Tools [Under WMHQ Tools] ↗</a>
         </p>
         <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
+          <li>🤳🏽 Ideal Buyer Avatar ⭐️</li>
+          <li>🤳🏽 One Liner Builder ⭐️</li>
           <li>🤳🏽 Offer Generator</li>
           <li>🤳🏽 Influence Research Builder</li>
         </ul>
       </div>
 
-      <CoreOneLiner userId={user.id} />
-      <ProductOneLiners userId={user.id} />
-      <BrandWorldview userId={user.id} />
-      <ObjectionBank userId={user.id} />
-      <BuyingTriggers userId={user.id} />
-      <BuyerAvatar userId={user.id} />
-      <BuyerPsychology userId={user.id} />
+      <FoldSection id="core" title="Your Core One-Liner" tip={TIPS.core}><CoreOneLiner userId={user.id} /></FoldSection>
+      <FoldSection id="products" title="Product / Service One-Liners" tip={TIPS.products}><ProductOneLiners userId={user.id} /></FoldSection>
+      <FoldSection id="worldview" title="Brand Worldview" tip={TIPS.worldview}><BrandWorldview userId={user.id} /></FoldSection>
+      <FoldSection id="objections" title="Objection Bank" tip={TIPS.objections}><ObjectionBank userId={user.id} /></FoldSection>
+      <FoldSection id="triggers" title="Buying Triggers" tip={TIPS.triggers}><BuyingTriggers userId={user.id} /></FoldSection>
+      <FoldSection id="avatar" title="Your Ideal Buyer Avatar" tip={TIPS.avatar}><BuyerAvatar userId={user.id} /></FoldSection>
+      <FoldSection id="psychology" title="Buyer Psychology Map" tip={TIPS.psychology}><BuyerPsychology userId={user.id} /></FoldSection>
     </div>
   )
 }

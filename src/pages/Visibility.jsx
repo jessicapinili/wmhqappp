@@ -14,10 +14,45 @@ const weekStart = format(startOfWeek(now, { weekStartsOn: 1 }), 'dd MMM')
 const weekEnd = format(endOfWeek(now, { weekStartsOn: 1 }), 'dd MMM yyyy')
 
 const WEEKLY_RESET_NOTICE = (
-  <div className="insight-box mb-4">
+  <div className="insight-box mb-4" style={{ border: '1.5px dotted #c98a8a', borderLeft: '1.5px dotted #c98a8a' }}>
     ⚠ This section resets every Sunday at midnight. Current week: {weekStart} – {weekEnd}
   </div>
 )
+
+/* Small ? with a hover / tap tip */
+const MY_STORY_TIP = 'This one is about you: your experiences, lessons, values and life behind the business. It must always connect back to your business, brand or offers, so your story builds trust and leads people towards buying from you.'
+function StoryTip({ light }) {
+  const [show, setShow] = useState(false)
+  return (
+    <span className="relative inline-flex align-middle ml-1.5" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}
+      onClick={e => { e.stopPropagation(); setShow(v => !v) }}>
+      <span className="inline-flex items-center justify-center cursor-help"
+        style={{ width: 15, height: 15, borderRadius: '50%', border: `1px solid ${light ? 'rgba(255,255,255,0.6)' : '#b8a898'}`, color: light ? 'rgba(255,255,255,0.8)' : '#b8a898', fontSize: '9px', lineHeight: 1, fontWeight: 400 }}>?</span>
+      {show && (
+        <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 z-30 text-left normal-case tracking-normal"
+          style={{ backgroundColor: '#3d0c0c', color: '#f5ece0', fontSize: '12px', fontWeight: 300, lineHeight: 1.5, padding: '10px 12px', borderRadius: '6px', boxShadow: '0 4px 14px rgba(0,0,0,0.15)' }}>
+          {MY_STORY_TIP}
+        </span>
+      )}
+    </span>
+  )
+}
+
+/* Grows taller as you type so the full text stays visible */
+function AutoGrow({ value, onChange, className, placeholder }) {
+  const ref = React.useRef(null)
+  React.useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [value])
+  return (
+    <textarea ref={ref} rows={1} value={value} onChange={onChange} placeholder={placeholder}
+      onKeyDown={e => { if (e.key === 'Enter') e.preventDefault() }}
+      className={className} style={{ resize: 'none', overflow: 'hidden', lineHeight: 1.4 }} />
+  )
+}
 
 /* ══════════════════ CONTENT SYSTEM ══════════════════ */
 const COLUMN_DEFAULTS = [
@@ -95,7 +130,7 @@ function ContentSystem({ userId }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="insight-box flex-1">
+        <p className="insight-box flex-1" style={{ border: '1.5px dotted #c98a8a', borderLeft: '1.5px dotted #c98a8a' }}>
           Content System never resets. Your framework stays here permanently.
         </p>
         <button
@@ -137,7 +172,7 @@ function ContentSystem({ userId }) {
             return (
               <div key={idx} className={`rounded-xl p-4 ${isMyStory ? 'text-white' : 'border'}`} style={isMyStory ? { backgroundColor: BRAND } : { backgroundColor: '#FFF8F8', borderColor: 'rgba(107,16,16,0.15)' }}>
                 <p className={`font-black text-sm mb-3 ${isMyStory ? 'text-white' : 'text-gray-900'}`}>
-                  {col.theme_name || (isMyStory ? colDef.name : 'Name this theme')}
+                  {col.theme_name || (isMyStory ? colDef.name : 'Name this theme')}{isMyStory && <StoryTip light />}
                 </p>
                 <p className="label" style={isMyStory ? { color: 'rgba(255,255,255,0.6)' } : {}}>Topics</p>
                 <div className="space-y-2">
@@ -155,19 +190,20 @@ function ContentSystem({ userId }) {
 
           return (
             <div key={idx} className={`rounded-xl p-4 border ${isMyStory ? 'border-brand/30' : 'border-gray-100 bg-gray-50'}`} style={isMyStory ? { backgroundColor: '#FFF8F8' } : {}}>
-              <div className="mb-3">
-                <label className="label">Theme Name</label>
-                <input className="input-field text-sm" value={col.theme_name} onChange={e => updateCol(idx, 'theme_name', e.target.value)} placeholder={colDef.name} />
-                <p className="text-xs text-gray-400 mt-1">The broader conversation you want to be known for.</p>
+              <div className="mb-4">
+                {isMyStory && <p className="mb-2" style={{ fontSize: '14px', fontWeight: 700, color: '#3d0c0c' }}>My Story<StoryTip /></p>}
+                <label className="label" style={{ color: '#3d0c0c', fontWeight: 700 }}>Theme Name</label>
+                <AutoGrow className="input-field text-sm" value={col.theme_name} onChange={e => updateCol(idx, 'theme_name', e.target.value)} placeholder={colDef.name} />
               </div>
-              <p className="label">Topics</p>
-              <p className="text-xs text-gray-400 mb-2">The repeatable subjects that sit underneath each theme.</p>
+              <div style={{ borderTop: '1px dashed rgba(61,12,12,0.15)', paddingTop: '14px' }}>
+              <p className="label mb-3" style={{ color: '#3d0c0c', fontWeight: 700 }}>Topics</p>
               {[0, 1, 2, 3].map(ti => (
-                <div key={ti} className="mb-2">
-                  <label className="label text-[10px]">Topic {ti + 1}</label>
-                  <input className="input-field text-xs" value={col.topics[ti]} onChange={e => updateTopic(idx, ti, e.target.value)} placeholder="Add a repeatable subject" />
+                <div key={ti} className="mb-2.5">
+                  <label className="block mb-1" style={{ fontSize: '10px', color: '#b8a898', letterSpacing: '0.08em' }}>Topic {ti + 1}</label>
+                  <AutoGrow className="input-field text-xs" value={col.topics[ti]} onChange={e => updateTopic(idx, ti, e.target.value)} placeholder="Add a repeatable subject" />
                 </div>
               ))}
+              </div>
               <button onClick={() => saveColumn(idx)} className="mt-2 btn-brand text-xs py-1.5 px-3 rounded-lg">Save Theme</button>
             </div>
           )
@@ -212,6 +248,15 @@ function ContentTracker({ userId }) {
   const [editId, setEditId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selectedDay, setSelectedDay] = useState(todayDayName)
+  const GOAL_KEY = `wmhq-content-goal:${userId}`
+  const [goal, setGoal] = useState(() => { try { return Number(localStorage.getItem(GOAL_KEY)) || 0 } catch { return 0 } })
+  const [editingGoal, setEditingGoal] = useState(false)
+  const [goalDraft, setGoalDraft] = useState('')
+  const saveGoal = v => {
+    const n = Math.max(0, Math.min(99, parseInt(v, 10) || 0))
+    setGoal(n); setEditingGoal(false)
+    try { if (n) localStorage.setItem(GOAL_KEY, String(n)); else localStorage.removeItem(GOAL_KEY) } catch {}
+  }
 
   useEffect(() => {
     supabase.from('content_tracker_entries').select('*').eq('user_id', userId).eq('week_key', weekKey)
@@ -250,8 +295,67 @@ function ContentTracker({ userId }) {
   return (
     <div>
       {/* Week status bar */}
-      <div className="insight-box mb-5">
+      <div className="insight-box mb-5" style={{ border: '1.5px dotted #c98a8a', borderLeft: '1.5px dotted #c98a8a' }}>
         ⚠ Resets every Sunday at midnight. Current week: {weekStart} – {weekEnd}
+      </div>
+
+      {/* Weekly snapshot */}
+      <div className="grid gap-3 sm:grid-cols-3 mb-5">
+        <div className="card" style={{ padding: '12px 14px' }}>
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Posts this week</p>
+            {!editingGoal && (
+              <button type="button" onClick={() => { setGoalDraft(goal ? String(goal) : ''); setEditingGoal(true) }}
+                className="text-[10px] hover:underline" style={{ color: '#9c7070' }}>{goal ? 'Edit goal' : '+ Weekly goal'}</button>
+            )}
+          </div>
+          {editingGoal ? (
+            <div className="flex items-center gap-2 mt-2">
+              <input type="number" min="0" max="99" autoFocus value={goalDraft} onChange={e => setGoalDraft(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') saveGoal(goalDraft); if (e.key === 'Escape') setEditingGoal(false) }}
+                placeholder="5" className="textarea-field" style={{ width: '70px', padding: '6px 8px' }} />
+              <span className="text-xs text-gray-400">posts a week</span>
+              <button type="button" onClick={() => saveGoal(goalDraft)} className="text-xs font-semibold" style={{ color: BRAND }}>Save</button>
+            </div>
+          ) : (
+            <>
+              <p className="mt-1" style={{ fontSize: '20px', fontWeight: 600, color: BRAND }}>
+                {stats.total}{goal ? <span className="text-sm text-gray-400 font-normal"> / {goal}</span> : null}
+              </p>
+              {goal > 0 && (
+                <div className="mt-1.5" style={{ height: '4px', borderRadius: '999px', backgroundColor: '#f0e8e4' }}>
+                  <div style={{ height: '100%', width: `${Math.min(100, (stats.total / goal) * 100)}%`, borderRadius: '999px', backgroundColor: stats.total >= goal ? '#7fa36b' : BRAND }} />
+                </div>
+              )}
+              {goal > 0 && stats.total >= goal && <p className="text-[10px] mt-1" style={{ color: '#5f8a4c' }}>✓ Goal hit this week</p>}
+            </>
+          )}
+        </div>
+        <div className="card" style={{ padding: '12px 14px' }}>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Led to action</p>
+          <p className="mt-1" style={{ fontSize: '20px', fontWeight: 600, color: BRAND }}>
+            {stats.led}<span className="text-sm text-gray-400 font-normal"> of {stats.total}{stats.total ? ` · ${Math.round((stats.led / stats.total) * 100)}%` : ''}</span>
+          </p>
+        </div>
+        <div className="card" style={{ padding: '12px 14px' }}>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Funnel mix</p>
+          {stats.total ? (
+            <>
+              <div className="flex mt-2 overflow-hidden" style={{ height: '8px', borderRadius: '999px' }}>
+                {FUNNEL_STAGES.map(st => {
+                  const n = entries.filter(e => e.funnel_stage === st).length
+                  return n ? <div key={st} title={`${st}: ${n}`} style={{ width: `${(n / stats.total) * 100}%`, backgroundColor: STAGE_COLORS[st].sel }} /> : null
+                })}
+              </div>
+              <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 mt-1.5">
+                {FUNNEL_STAGES.map(st => {
+                  const n = entries.filter(e => e.funnel_stage === st).length
+                  return <span key={st} className="text-[10px]" style={{ color: STAGE_COLORS[st].text }}>● {st} {n}</span>
+                })}
+              </div>
+            </>
+          ) : <p className="text-xs text-gray-400 mt-2">Log a post to see your mix.</p>}
+        </div>
       </div>
 
       {/* Day selector */}
@@ -261,12 +365,12 @@ function ContentTracker({ userId }) {
           const isSelected = selectedDay === day
           return (
             <button key={day} onClick={() => setSelectedDay(day)}
-              className="flex-1 py-2.5 rounded-lg text-xs font-semibold border transition-colors flex flex-col items-center gap-1"
+              className="relative flex-1 py-3 rounded-lg text-xs font-semibold border transition-colors flex items-center justify-center"
               style={isSelected
                 ? { backgroundColor: BRAND, borderColor: BRAND, color: 'white' }
                 : { backgroundColor: 'white', borderColor: 'var(--card-border)', color: '#6B7280' }}>
               {day}
-              <span className="w-1.5 h-1.5 rounded-full" style={{
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-1 w-1 h-1 rounded-full" style={{
                 backgroundColor: hasEntry ? (isSelected ? 'rgba(255,255,255,0.6)' : BRAND) : 'transparent'
               }} />
             </button>
@@ -311,6 +415,12 @@ function ContentTracker({ userId }) {
           </div>
         </div>
 
+        <div className="mb-4">
+          <label className="label">What was it about? <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
+          <input className="textarea-field" value={form.content_about} maxLength={200}
+            onChange={e => setForm(p => ({ ...p, content_about: e.target.value }))} placeholder="Type your answer…" />
+        </div>
+
         <div className="flex justify-end gap-2">
           {editId && (
             <button onClick={() => { setEditId(null); resetForm() }}
@@ -332,7 +442,13 @@ function ContentTracker({ userId }) {
               const entryDay = entryDayName(e)
               return (
                 <div key={e.id} className="group flex items-center gap-3 px-4 py-3 rounded-xl border" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
-                  <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm truncate" style={{ color: e.content_about ? BRAND : '#b8a898', fontWeight: e.content_about ? 600 : 400, fontStyle: e.content_about ? 'normal' : 'italic' }}
+                      title={e.content_about || ''}>
+                      {e.content_about || 'No topic added'}
+                    </p>
+                    {e.reflection && <p className="text-[11px] text-gray-400 truncate mt-0.5" title={e.reflection}>{e.reflection}</p>}
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
                     {e.platform && (
                       <span className="tag-btn text-white border-transparent text-[10px] py-0.5 px-2" style={{ backgroundColor: BRAND }}>{e.platform}</span>
                     )}
@@ -342,6 +458,7 @@ function ContentTracker({ userId }) {
                     {e.led_to_action && (
                       <span className="tag-btn text-[10px] py-0.5 px-2" style={{ backgroundColor: ACTION_COLORS[e.led_to_action]?.bg || '#F2F0EE', color: '#1a1a1a', borderColor: ACTION_COLORS[e.led_to_action]?.border || '#CEC8C2' }}>{e.led_to_action}</span>
                     )}
+                  </div>
                   </div>
                   <span className="text-xs text-gray-400 font-medium shrink-0">{entryDay}</span>
                   <div className="flex gap-1 transition-opacity shrink-0">
@@ -372,7 +489,9 @@ const FUNNEL_CARDS = [
 const REVENUE_LEVELS = [
   { label: 'Under $3K/month', data: { Attract: 40, Nurture: 30, Position: 20, Convert: 10 } },
   { label: '$3K to $10K/month', data: { Attract: 30, Nurture: 30, Position: 20, Convert: 20 } },
-  { label: '$10K+ per month', data: { Attract: 20, Nurture: 25, Position: 25, Convert: 30 } },
+  { label: '$10K to $30K/month', data: { Attract: 20, Nurture: 25, Position: 25, Convert: 30 } },
+  { label: '$30K to $50K/month', data: { Attract: 20, Nurture: 20, Position: 25, Convert: 35 } },
+  { label: '$50K+ per month', data: { Attract: 15, Nurture: 20, Position: 25, Convert: 40 } },
 ]
 
 function FunnelView({ userId }) {
@@ -411,14 +530,17 @@ function FunnelView({ userId }) {
         ))}
       </div>
 
-      <div className="insight-box mb-6">
-        <p className="font-bold text-xs mb-1">Pattern Insight <HeartIcon /></p>
-        <p>{getInsight()}</p>
-      </div>
+      <p className="mb-6 text-xs" style={{ color: '#6b5a5a' }}>
+        <span style={{ color: '#9c7070', fontWeight: 700, marginRight: '6px' }}>→</span>
+        {getInsight()}
+      </p>
 
       {/* Revenue level reference */}
-      <div>
-        <p className="section-title text-sm mb-3">Content % by Revenue Level <span className="text-xs font-normal text-gray-400">(static reference — does not reset)</span></p>
+      <details className="group">
+        <summary className="section-title text-sm mb-3 cursor-pointer list-none flex items-center gap-2 select-none">
+          <span className="text-xs text-gray-400 transition-transform group-open:rotate-90">▸</span>
+          Content % by Revenue Level <span className="text-xs font-normal text-gray-400">(static reference, does not reset)</span>
+        </summary>
         <div className="space-y-4">
           {REVENUE_LEVELS.map(level => (
             <div key={level.label} className="card">
@@ -438,7 +560,7 @@ function FunnelView({ userId }) {
             </div>
           ))}
         </div>
-      </div>
+      </details>
     </div>
   )
 }
@@ -467,7 +589,7 @@ export default function Visibility() {
       <div className="rounded-lg px-4 py-3"
         style={{ backgroundColor: '#fef3e8', border: '1.5px dotted #c2692a', color: '#1a0606', marginBottom: '16px' }}>
         <p className="font-bold" style={{ fontSize: '13px', color: '#9a4d17' }}>
-          WMHQ Vault Resources [Under CEO Visibility]
+          <a href="https://www.jessicapinili.com/login" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: "inherit", textUnderlineOffset: "2px" }}>WMHQ Vault Resources [Under CEO Visibility] ↗</a>
         </p>
         <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
           <li>💻 Creating Content Pillars</li>
@@ -477,7 +599,7 @@ export default function Visibility() {
         </ul>
 
         <p className="font-bold mt-3" style={{ fontSize: '13px', color: '#9a4d17' }}>
-          WMHQ Tools [Under WMHQ Tools]
+          <a href="https://tools.womanmasteryhqportal.com/" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: "inherit", textUnderlineOffset: "2px" }}>WMHQ Tools [Under WMHQ Tools] ↗</a>
         </p>
         <ul className="mt-1.5 space-y-1" style={{ fontSize: '12px' }}>
           <li>🤳🏽 Signature Series Builder</li>
