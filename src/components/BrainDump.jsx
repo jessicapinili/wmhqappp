@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { format } from 'date-fns'
 import { supabase } from '../lib/supabase'
-import { EditIcon } from '../lib/icons'
+import { EditIcon, DeleteIcon } from '../lib/icons'
 
 const BRAND = '#3d0c0c'
 const BODY_MAX = 120
@@ -56,6 +56,15 @@ export default function BrainDump({ userId }) {
   const [editDraft, setEditDraft] = useState('')
   const [hoverId, setHoverId] = useState(null)
   const [, setTick] = useState(0)
+  const [copied, setCopied] = useState(false)
+  const copyAll = async () => {
+    const text = entries.map(e => `• ${e.body}`).join('\n')
+    if (!text) return
+    try { await navigator.clipboard.writeText(text) } catch {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove()
+    }
+    setCopied(true); setTimeout(() => setCopied(false), 2000)
+  }
   const freshIds = useRef(new Set())
 
   /* Load today's entries only */
@@ -164,10 +173,18 @@ export default function BrainDump({ userId }) {
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-1">
         <h2 className="section-title">Brain dump</h2>
-        <span className="flex items-center gap-1.5 text-[10px] font-semibold flex-shrink-0 mt-1" style={{ color: '#b8a898' }}>
-          <MoonIcon />
-          Clears at midnight · {hrs}h {mins}m
-        </span>
+        <div className="flex flex-col items-end gap-1 flex-shrink-0 mt-1">
+          <span className="flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: '#b8a898' }}>
+            <MoonIcon />
+            Clears at midnight · {hrs}h {mins}m
+          </span>
+          {entries.length > 0 && (
+            <button type="button" onClick={copyAll} className="text-[10px] font-semibold hover:underline" style={{ color: copied ? '#6b8f5a' : '#9c7070', textUnderlineOffset: '2px' }}
+              title="Copy everything as dot points">
+              {copied ? '✓ Copied as dot points' : '⧉ Copy all'}
+            </button>
+          )}
+        </div>
       </div>
       <p className="section-subtitle">Get it out of your head so it stops taking up space. Gone by morning.</p>
 
@@ -182,32 +199,12 @@ export default function BrainDump({ userId }) {
           placeholder={PLACEHOLDERS[phIdx]}
         />
         <button onClick={add} className="btn-brand flex-shrink-0" disabled={!input.trim()}>Dump it</button>
-        <button
-          onClick={toggleEditMode}
-          className="flex-shrink-0 flex items-center justify-center"
-          style={{
-            width: 36, height: 36, borderRadius: 4,
-            color: editMode ? '#f5ece0' : '#b8a898',
-            backgroundColor: editMode ? BRAND : 'transparent',
-            border: editMode ? 'none' : '0.5px solid #e8e0d8',
-          }}
-          title={editMode ? 'Exit edit mode' : 'Edit entries'}
-        >
-          <EditIcon />
-        </button>
       </div>
 
       {/* Tally */}
       <p className="text-[11px] mt-2" style={{ color: '#b8a898' }}>
         {total} {total === 1 ? 'thought' : 'thoughts'} out of your head · {doneCount} dealt with
       </p>
-
-      {/* Edit mode hint */}
-      {editMode && (
-        <p className="text-[11px] mt-2" style={{ color: BRAND }}>
-          Edit mode: tap the slip you want to change. Tap the pencil again to exit.
-        </p>
-      )}
 
       {/* Pile */}
       <div className="mt-4">
@@ -216,69 +213,45 @@ export default function BrainDump({ userId }) {
             Clear head. Nothing in the pile.
           </p>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {entries.map((e, i) => {
-              const tint = TINTS[i % TINTS.length]
-              const rot = ROTS[i % ROTS.length]
+          <ul style={{ borderTop: '1px solid #f3ece8' }}>
+            {entries.map(e => {
               const isFresh = freshIds.current.has(e.id)
-
-              if (editMode && editingId === e.id) {
+              if (editingId === e.id) {
                 return (
-                  <div key={e.id} className="form-card w-full space-y-3" style={{ padding: '14px 16px' }}>
+                  <li key={e.id} className="flex items-center gap-2 py-2" style={{ borderBottom: '1px solid #f3ece8' }}>
                     <input
-                      className="input-field"
+                      className="input-field flex-1"
                       value={editDraft}
                       maxLength={BODY_MAX}
                       autoFocus
                       onChange={ev => setEditDraft(ev.target.value)}
-                      onKeyDown={ev => { if (ev.key === 'Enter') saveEdit(e.id) }}
+                      onKeyDown={ev => { if (ev.key === 'Enter') saveEdit(e.id); if (ev.key === 'Escape') { setEditingId(null); setEditDraft('') } }}
                     />
-                    <div className="flex gap-2 justify-end">
-                      <button onClick={() => deleteEntry(e.id)} className="text-xs font-semibold px-3 py-2 rounded" style={{ color: '#9c3034' }}>Delete</button>
-                      <button onClick={() => saveEdit(e.id)} className="btn-brand" disabled={!editDraft.trim()}>Save</button>
-                    </div>
-                  </div>
+                    <button onClick={() => { setEditingId(null); setEditDraft('') }} className="btn-cancel flex-shrink-0">Cancel</button>
+                    <button onClick={() => saveEdit(e.id)} className="btn-brand flex-shrink-0" disabled={!editDraft.trim()}>Save</button>
+                  </li>
                 )
               }
-
-              const raised = editMode && hoverId === e.id
-              const opacity = editMode ? (raised ? 1 : 0.45) : (e.done ? 0.45 : 1)
               return (
-                <span
-                  key={e.id}
-                  style={{ display: 'inline-block', animation: isFresh ? 'bdDropIn 0.3s ease' : 'none' }}
-                >
-                  <button
-                    onClick={() => (editMode ? openEditor(e) : toggleDone(e.id))}
-                    onMouseEnter={() => setHoverId(e.id)}
-                    onMouseLeave={() => setHoverId(null)}
-                    onFocus={() => setHoverId(e.id)}
-                    onBlur={() => setHoverId(null)}
-                    className="text-xs"
-                    style={{
-                      transform: `rotate(${rot}deg)`,
-                      backgroundColor: tint.bg,
-                      color: tint.text,
-                      opacity,
-                      padding: '7px 13px',
-                      borderRadius: 999,
-                      fontWeight: 500,
-                      lineHeight: 1.3,
-                      maxWidth: 320,
-                      textAlign: 'left',
-                      whiteSpace: 'normal',
-                      outline: raised ? `1.5px solid ${BRAND}` : 'none',
-                      textDecoration: (!editMode && e.done) ? 'line-through' : 'none',
-                      transition: 'opacity 0.15s ease',
-                    }}
-                    title={editMode ? 'Tap to edit' : (e.done ? 'Tap to undo' : 'Tap when dealt with')}
-                  >
-                    {e.body}
+                <li key={e.id} className="group flex items-center gap-3 py-2.5"
+                  style={{ borderBottom: '1px solid #f3ece8', animation: isFresh ? 'bdDropIn 0.3s ease' : 'none' }}>
+                  <button type="button" onClick={() => toggleDone(e.id)}
+                    className="flex-shrink-0 flex items-center justify-center rounded-full"
+                    style={{ width: 18, height: 18, border: `1.5px solid ${e.done ? BRAND : '#d8cfc6'}`, backgroundColor: e.done ? BRAND : 'transparent', color: '#f5ece0', fontSize: '10px' }}
+                    title={e.done ? 'Mark not dealt with' : 'Mark dealt with'}>
+                    {e.done ? '✓' : ''}
                   </button>
-                </span>
+                  <span className="flex-1 min-w-0" style={{ fontSize: '13.5px', color: BRAND, lineHeight: 1.45, textDecoration: e.done ? 'line-through' : 'none', opacity: e.done ? 0.5 : 1 }}>
+                    {e.body}
+                  </span>
+                  <div className="flex gap-1 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
+                    <button type="button" onClick={() => openEditor(e)} className="edit-btn" title="Edit"><EditIcon /></button>
+                    <button type="button" onClick={() => deleteEntry(e.id)} className="delete-btn" title="Delete"><DeleteIcon /></button>
+                  </div>
+                </li>
               )
             })}
-          </div>
+          </ul>
         )}
       </div>
     </div>

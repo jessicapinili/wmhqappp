@@ -3,13 +3,19 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { getMonthKey, todayFormatted } from '../lib/utils'
-import { getTodaysInsight } from '../lib/insights'
 import YourFocus from '../components/YourFocus'
+import YourFocusNew from '../components/YourFocusNew'
 import BrainDump from '../components/BrainDump'
 import PinnedLinks from '../components/PinnedLinks'
 import { HeartIcon } from '../lib/icons'
 
 const BRAND = '#3d0c0c'
+
+const SEASON_PASTEL = {
+  bloom: { bg: '#fde4ee', edge: '#f2b8cd', ink: '#9b3f5c' },
+  integration: { bg: '#dbe9f3', edge: '#a9c8de', ink: '#3f5f93' },
+  sprint: { bg: '#e2ecdc', edge: '#a9c39a', ink: '#3f6b46' },
+}
 
 const SEASONS = {
   bloom: {
@@ -82,16 +88,16 @@ const CAPACITY_MODES = [
 ]
 
 const ENERGY_CAPTIONS = {
-  1: 'Empty — be gentle with yourself today.',
-  2: 'Very low — basics only.',
-  3: 'Low — pick one thing.',
-  4: 'Below average — conserve and pace.',
-  5: 'Steady — good foundation day.',
-  6: 'Above average — solid output day.',
-  7: 'Strong — lean into focused work.',
-  8: 'High-output — lean in fully.',
-  9: 'Peak — make significant moves.',
-  10: 'Overflow — make it count.',
+  1: 'Empty → be gentle with yourself today.',
+  2: 'Very low → basics only.',
+  3: 'Low → pick one thing.',
+  4: 'Below average → conserve and pace.',
+  5: 'Steady → good foundation day.',
+  6: 'Above average → solid output day.',
+  7: 'Strong → lean into focused work.',
+  8: 'High-output → lean in fully.',
+  9: 'Peak → make significant moves.',
+  10: 'Overflow → make it count.',
 }
 
 const MODE_BAR_COLORS = {
@@ -161,34 +167,26 @@ function scoreToBarHeight(score) {
 function WeeklyTracker({ weekDays, weekLogs, todayKey }) {
   const todayDate = new Date()
   todayDate.setHours(0, 0, 0, 0)
-
   return (
-    <div>
-      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">This Week</p>
-      <div className="grid grid-cols-7 gap-1">
+    <div className="flex items-end gap-3">
+      <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 pb-0.5 flex-shrink-0">This week</p>
+      <div className="grid grid-cols-7 gap-1.5 flex-1">
         {weekDays.map((d, i) => {
           const dKey = toLocalDateKey(d)
           const log = weekLogs[dKey]
           const isToday = dKey === todayKey
           const isFuture = d > todayDate
           const barColor = log ? (MODE_BAR_COLORS[log.mode] || '#d4b0b0') : null
-          const barH = log ? scoreToBarHeight(log.energy) : 0
-          console.log(`[WeeklyTracker] ${DAY_LABELS[i]} (${dKey}): energy=${log?.energy ?? 'none'}, barH=${barH}px`)
-
           return (
-            <div key={dKey} className="flex flex-col items-center gap-1">
-              <div className="flex items-end justify-center" style={{ height: `${BAR_CONTAINER_H}px`, width: '100%' }}>
-                {isFuture ? null : log ? (
-                  <div className="w-full rounded-sm" style={{ height: `${barH}px`, backgroundColor: barColor }} />
+            <div key={dKey} className="flex flex-col items-center gap-1" title={log ? `${DAY_LABELS[i]}: ${log.energy}/10` : DAY_LABELS[i]}>
+              <div className="w-full flex items-end" style={{ height: '14px' }}>
+                {log ? (
+                  <div className="w-full rounded-full" style={{ height: `${4 + log.energy}px`, backgroundColor: barColor }} />
                 ) : (
-                  <div className="w-full" style={{ height: '14px', borderBottom: '1.5px dashed #e4d4d4' }} />
+                  <div className="w-full rounded-full" style={{ height: '3px', backgroundColor: isFuture ? '#f5efec' : '#ece2de' }} />
                 )}
               </div>
-              {log && <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: barColor }} />}
-              <p className="text-[9px] font-semibold" style={{ color: isToday ? '#3d0c0c' : '#b0a0a0' }}>
-                {DAY_LABELS[i]}
-              </p>
-              {log && <p className="text-[9px] font-bold" style={{ color: '#9c7070' }}>{log.energy}</p>}
+              <p className="text-[9px]" style={{ color: isToday ? '#3d0c0c' : '#b0a0a0', fontWeight: isToday ? 700 : 500 }}>{DAY_LABELS[i]}</p>
             </div>
           )
         })}
@@ -286,111 +284,51 @@ function CapacityCheckin() {
   const trackPct = ((energy - 1) / 9) * 100
 
   return (
-    <div className="card-section">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="section-title">Today's Capacity Check-in</h2>
-          <p className="section-subtitle">Set your mode and energy level for the day.</p>
-        </div>
-        {locked && (
-          <button
-            onClick={() => setLocked(false)}
-            className="btn-brand-outline"
-          >
-            Edit
-          </button>
-        )}
-      </div>
-
+    <div className="card-section" style={{ padding: '16px 20px' }}>
       {locked && !lockFlash ? (
-        <div>
-          <div className="flex items-center gap-5 p-4 rounded mb-5"
-            style={{ backgroundColor: '#faf1f1', border: '1px solid #f0e0e0' }}>
-            <div className="flex items-center gap-2.5">
-              <span style={{ color: '#3d0c0c' }}>{selectedMode ? MODE_ICON_MAP[selectedMode.key] : null}</span>
-              <div>
-                <p className="text-xs font-bold text-gray-700">{selectedMode?.label || '—'}</p>
-                <p className="text-[10px] text-gray-400">{selectedMode?.descriptor}</p>
-              </div>
-            </div>
-            <div className="w-px self-stretch" style={{ backgroundColor: '#e8d8d8' }} />
-            <div>
-              <span style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '28px', fontWeight: 300, fontStyle: 'italic', color: '#3d0c0c' }}>{energy}</span>
-              <span className="text-sm text-gray-400"> / 10</span>
-              <p className="text-[10px] text-gray-400 mt-0.5">{ENERGY_CAPTIONS[energy]}</p>
-            </div>
-          </div>
-          <div style={{ borderTop: '1px solid #f0ebe8', paddingTop: '16px' }}>
-            <WeeklyTracker weekDays={weekDays} weekLogs={weekLogs} todayKey={todayKey} />
-          </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#b8a898' }}>Today</p>
+          <span className="inline-flex items-center gap-2" style={{ fontSize: '14px', color: '#3d0c0c' }}>
+            <span style={{ display: 'inline-flex', transform: 'scale(0.8)' }}>{selectedMode ? MODE_ICON_MAP[selectedMode.key] : null}</span>
+            <span style={{ fontWeight: 600 }}>{selectedMode?.label || '—'} · {energy}/10</span>
+          </span>
+          {selectedMode && <span className="text-xs flex-1 min-w-[180px]" style={{ color: '#6b5a5a' }}>→ {selectedMode.insight}</span>}
+          <button type="button" onClick={() => setLocked(false)} className="text-xs underline" style={{ color: '#9c7070' }}>Edit</button>
+          <div className="w-full"><WeeklyTracker weekDays={weekDays} weekLogs={weekLogs} todayKey={todayKey} /></div>
         </div>
       ) : (
-        <div>
-          {/* Section A: Mode selector */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
-            {CAPACITY_MODES.map(m => {
-              const isSelected = mode === m.key
-              return (
-                <button
-                  key={m.key}
-                  onClick={() => setMode(m.key)}
-                  className="rounded p-3 text-left transition-all"
-                  style={isSelected
-                    ? { backgroundColor: '#faf1f1', border: '1.5px solid #c49090' }
-                    : { backgroundColor: '#fdf9f7', border: '1.5px solid #ede6e1' }}
-                >
-                  <span style={{ color: isSelected ? '#3d0c0c' : '#c4b5af' }}>{MODE_ICON_MAP[m.key]}</span>
-                  <p className="text-xs font-bold mt-2" style={{ color: isSelected ? '#3d0c0c' : '#374151' }}>{m.label}</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: isSelected ? '#9c7070' : '#9ca3af' }}>{m.descriptor}</p>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Section B: Energy slider */}
-          <div className="mb-5">
-            <div className="flex justify-between items-baseline mb-2">
-              <label className="label mb-0">How full is your tank right now?</label>
-              <span className="text-[10px] text-gray-400">Drag to set — your gut knows.</span>
+        <div className="space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest flex-shrink-0" style={{ color: '#b8a898' }}>Today’s check-in</p>
+            <select value={mode || ''} onChange={e => setMode(e.target.value || null)}
+              style={{ backgroundColor: '#faf7f3', border: '1px solid rgba(61,12,12,0.12)', borderRadius: '999px', padding: '6px 12px', fontSize: '12.5px', color: '#3d0c0c', minWidth: '170px' }}>
+              <option value="" disabled>Choose your mode…</option>
+              {CAPACITY_MODES.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
+            </select>
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-widest flex-shrink-0" style={{ color: '#9c7070' }}>Score</span>
+              <input
+                type="range" min={1} max={10} step={1}
+                value={energy}
+                onChange={e => { setEnergy(parseInt(e.target.value)); setLocked(false) }}
+                className="flex-1 capacity-slider"
+                style={{ background: `linear-gradient(to right, #3d0c0c ${trackPct}%, #f0e0e0 ${trackPct}%)` }}
+              />
+              <span className="flex-shrink-0" style={{ fontSize: '13px', fontWeight: 600, color: '#3d0c0c' }}>{energy}<span className="text-gray-400 font-normal">/10</span></span>
             </div>
-            <input
-              type="range" min={1} max={10} step={1}
-              value={energy}
-              onChange={e => { setEnergy(parseInt(e.target.value)); setLocked(false) }}
-              className="w-full capacity-slider"
-              style={{ background: `linear-gradient(to right, #3d0c0c ${trackPct}%, #f0e0e0 ${trackPct}%)` }}
-            />
-            <div className="flex items-baseline gap-2 mt-3">
-              <span style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '34px', fontWeight: 300, fontStyle: 'italic', color: '#3d0c0c' }}>{energy}</span>
-              <span className="text-sm text-gray-400">/ 10</span>
-              <span className="text-xs text-gray-500 ml-1">{ENERGY_CAPTIONS[energy]}</span>
-            </div>
-          </div>
-
-          {/* Section C: Insight box */}
-          {mode && selectedMode && (
-            <div className="rounded p-4 mb-5" style={{ backgroundColor: '#faf1f1', border: '1.5px dotted #3d0c0c' }}>
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#9c7070' }}>Today's Focus</p>
-              <p className="text-sm text-gray-700">{selectedMode.insight}</p>
-            </div>
-          )}
-
-          {/* Section D: Lock in button */}
-          <div className="flex justify-end mb-5">
             <button
               onClick={handleLockIn}
               disabled={!mode || lockFlash}
-              className="btn-brand"
+              className="btn-brand flex-shrink-0 self-start md:self-auto"
               style={{ opacity: mode || lockFlash ? 1 : 0.5, cursor: mode && !lockFlash ? 'pointer' : 'default' }}
             >
-              {lockFlash ? 'Locked in ✓' : 'Lock in check-in'}
+              {lockFlash ? 'Locked in ✓' : 'Lock in'}
             </button>
           </div>
-
-          {/* Section E: Weekly tracker */}
-          <div style={{ borderTop: '1px solid #f0ebe8', paddingTop: '16px' }}>
-            <WeeklyTracker weekDays={weekDays} weekLogs={weekLogs} todayKey={todayKey} />
-          </div>
+          <p className="text-[11px]" style={{ color: '#9c7070' }}>
+            <span style={{ fontWeight: 700, color: '#3d0c0c' }}>{ENERGY_CAPTIONS[energy]}</span>{selectedMode ? `  ·  ${selectedMode.insight}` : ''}
+          </p>
+          <WeeklyTracker weekDays={weekDays} weekLogs={weekLogs} todayKey={todayKey} />
         </div>
       )}
     </div>
@@ -400,7 +338,6 @@ function CapacityCheckin() {
 /* ─── Main Dashboard ─── */
 export default function Dashboard() {
   const { user, firstName } = useAuth()
-  const { insight } = getTodaysInsight()
   const today = todayFormatted()
   const monthKey = getMonthKey()
   const localMonthName = new Date().toLocaleString('default', { month: 'long' })
@@ -499,134 +436,53 @@ export default function Dashboard() {
           <h1 className="page-title">Welcome back, {firstName} <span style={{ fontFamily: 'inherit', fontSize: '0.85em', opacity: 0.6 }}><HeartIcon /></span></h1>
           <p className="text-sm text-gray-400 mt-0.5">{today}</p>
         </div>
+        <div className="flex flex-col sm:items-end gap-1.5 flex-shrink-0">
         <a
           href="https://www.jessicapinili.com/login"
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-brand flex-shrink-0"
-          style={{ backgroundColor: BRAND }}
+          className="login-wmhq flex-shrink-0"
         >
-          Login to WMHQ ↗
+          <span className="login-wmhq-dot" />
+          Log in to WMHQ
+          <span aria-hidden="true">↗</span>
         </a>
-      </div>
-
-      {/* Announcement */}
-      <div role="status" className="rounded-lg px-4 py-3"
-        style={{ backgroundColor: '#fdf0f0', border: '1.5px dotted #c98a8a', color: '#3d0c0c' }}>
-        <p className="font-bold" style={{ fontSize: '13px' }}>
-          Please watch the WMHQ Personal Portal Video inside the{' '}
           <a href="https://www.jessicapinili.com/login" target="_blank" rel="noopener noreferrer"
-            className="underline" style={{ color: '#3d0c0c', textUnderlineOffset: '2px' }}>
-            WMHQ Vault
-          </a>.
-        </p>
-        <p className="mt-1 leading-relaxed" style={{ fontSize: '12px' }}>
-          It brings your strategy, planning and weekly audits into one place, so you can apply what you’re learning inside WMHQ to your actual business.
-        </p>
+            title="It brings your strategy, planning and weekly audits into one place, so you can apply what you’re learning inside WMHQ to your actual business."
+            className="text-[11px] hover:underline" style={{ color: '#9c7070', textUnderlineOffset: '2px' }}>
+            ▶ Please watch the Personal Portal Video in the Vault
+          </a>
+        </div>
       </div>
 
       {/* Pinned quick links */}
       <PinnedLinks userId={user.id} />
 
-      {/* Insight of the Day */}
-      <div className="card-section" style={{ border: `1.5px dotted ${BRAND}` }}>
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: BRAND }}>
-          JP x WMHQ [INSIGHT OF YOUR DAY]
-        </p>
-        <p className="text-gray-800 font-medium text-base leading-relaxed">
-          "{insight}"
-        </p>
-      </div>
-
-      {/* Brain dump */}
-      <BrainDump userId={user.id} />
-
-      {/* Your Season This Month */}
-      <div className="card-section">
-        <div className="flex items-start justify-between mb-5">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">YOUR SEASON THIS MONTH</p>
-            {season ? (
-              <>
-                <h2 className="text-xl font-extrabold text-gray-900 leading-tight">{SEASONS[season].label}</h2>
-                <p className="text-sm italic mt-0.5" style={{ color: '#8a8a8a' }}>{SEASONS[season].sub}</p>
-              </>
-            ) : (
-              <h2 className="text-lg font-bold text-gray-900 leading-tight">Choose Your Monthly Mode</h2>
-            )}
-            <p className="text-xs text-gray-400 mt-1.5">
-              {localMonthName} {new Date().getFullYear()}. Select once and it locks for the month.
-            </p>
-          </div>
-          {seasonLocked && (
-            <button
-              onClick={resetSeason}
-              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-lg transition-colors flex-shrink-0 mt-1"
-              style={{ border: '1px solid rgba(0,0,0,0.08)', backgroundColor: '#faf7f5' }}
-            >
-              <span>↺</span> Reset
-            </button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {Object.entries(SEASONS).map(([key, s]) => {
-            const isSelected = season === key
-            // Disable all non-selected cards while locked, loading, or mid-save.
-            // The selected card is intentionally NOT disabled so it keeps full visual styling.
-            // saveSeason() guards against re-clicking via seasonLocked check.
-            const isDisabled = !seasonLoaded || seasonSaving || (seasonLocked && !isSelected)
-            return (
-              <button
-                key={key}
-                onClick={() => saveSeason(key)}
-                disabled={isDisabled}
-                className="p-4 rounded-xl text-left transition-all"
-                style={
-                  isSelected
-                    ? { border: `1px solid ${s.color}`, backgroundColor: s.bg, boxShadow: `0 2px 10px ${s.color}55` }
-                    : isDisabled
-                    ? { border: '1px solid rgba(0,0,0,0.06)', backgroundColor: '#f9f7f5', opacity: 0.42, cursor: 'not-allowed' }
-                    : { border: '1px solid rgba(0,0,0,0.06)', backgroundColor: '#faf7f5' }
-                }
-              >
-                <div className="w-3 h-3 rounded-full mb-2.5" style={{ backgroundColor: s.color }} />
-                <p className="font-bold text-xs leading-tight" style={{ color: isSelected ? '#2a2a2a' : '#6b6b6b' }}>{s.label}</p>
-                <p className="text-xs mt-0.5" style={{ color: isSelected ? '#5a5a5a' : '#b0b0b0' }}>{s.sub}</p>
-              </button>
-            )
-          })}
-        </div>
-
-        {seasonError && (
-          <p className="mt-3 text-xs text-red-600 font-medium">
-            Could not save monthly mode — {seasonError}
-          </p>
-        )}
-
-        {season && (() => {
-          const text = SEASONS[season].text
-          const modeIdx = text.indexOf('MODE:')
-          const bodyText = modeIdx > -1 ? text.slice(0, modeIdx).trim() : text
-          const modeText = modeIdx > -1 ? text.slice(modeIdx) : null
-          return (
-            <div className="mt-4 p-4 rounded-xl" style={{ backgroundColor: SEASONS[season].bg }}>
-              <p className="text-sm text-gray-600 mb-2">{bodyText}</p>
-              {modeText && (
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: SEASONS[season].color }}>
-                  {modeText}
-                </p>
-              )}
-            </div>
-          )
-        })()}
-      </div>
-
       {/* Today's Capacity Check-in */}
       <CapacityCheckin />
 
       {/* Your Focus */}
-      <YourFocus userId={user.id} />
+      <YourFocusNew userId={user.id} seasonSlot={
+        season ? (
+          <span className="inline-flex items-center gap-1.5" title={SEASONS[season].text}
+            style={{ backgroundColor: SEASON_PASTEL[season].bg, border: `1px solid ${SEASON_PASTEL[season].edge}`, borderRadius: '999px', padding: '3px 4px 3px 10px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: SEASON_PASTEL[season].ink }}>🔒 {SEASONS[season].label.charAt(0) + SEASONS[season].label.slice(1).toLowerCase()}</span>
+            <button type="button" onClick={resetSeason} title="Change season"
+              style={{ fontSize: '10px', borderRadius: '999px', padding: '1px 6px', backgroundColor: 'rgba(255,255,255,0.75)', color: '#3d0c0c' }}>↺</button>
+          </span>
+        ) : (
+          <select value="" disabled={!seasonLoaded || seasonSaving} onChange={e => e.target.value && saveSeason(e.target.value)}
+            style={{ fontSize: '11px', fontWeight: 600, color: '#3d0c0c', backgroundColor: '#fff', border: '1px dashed rgba(61,12,12,0.3)', borderRadius: '999px', padding: '3px 10px' }}>
+            <option value="" disabled>{seasonSaving ? 'Saving…' : 'Choose your season…'}</option>
+            {Object.entries(SEASONS).map(([key, x]) => <option key={key} value={key}>{x.label.charAt(0) + x.label.slice(1).toLowerCase()} · {x.sub}</option>)}
+          </select>
+        )
+      } />
+
+      {/* Brain dump */}
+      <BrainDump userId={user.id} />
+
+
     </div>
   )
 }

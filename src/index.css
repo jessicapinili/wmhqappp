@@ -490,3 +490,38 @@ h1, h2, h3, h4, h5, h6,
   transition: background-color 0.15s ease;
 }
 .btn-pdf:hover { background-color: #f3e6dd; }
+
+/* Dashboard: minimal "Log in to WMHQ" pill that still stands out */
+.login-wmhq {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: #3d0c0c;
+  background-color: #fbe9ec;
+  border: 1px solid #e8b9c2;
+  border-radius: 999px;
+  padding: 8px 16px;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.login-wmhq:hover {
+  background-color: #f7dbe1;
+  box-shadow: 0 4px 12px rgba(61, 12, 12, 0.12);
+  transform: translateY(-1px);
+}
+.login-wmhq-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background-color: #3d0c0c;
+}
+
+/* Your Focus (new): number +/- buttons */
+.focus-step {
+  width: 20px; height: 20px; border-radius: 999px;
+  border: 1px solid rgba(61, 12, 12, 0.15); background: #fff; color: #3d0c0c;
+  font-size: 12px; line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+}
+.focus-step:hover { background: #faf1f1; }
