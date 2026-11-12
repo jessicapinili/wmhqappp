@@ -378,6 +378,11 @@ export default function OfferSuite() {
         </div>
       </div>
 
+      {/* Yearly reset note */}
+      <div className="insight-box" style={{ border: '1.5px dotted #c98a8a', borderLeft: '1.5px dotted #c98a8a' }}>
+        ⚠ Your offer suite clears at the beginning of every new year, so you can map a fresh lineup each January.
+      </div>
+
       {/* Year reset notice */}
       {yearNotice && (
         <div className="insight-box flex items-center justify-between gap-3">

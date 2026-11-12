@@ -7,7 +7,7 @@ import YourFocus from '../components/YourFocus'
 import YourFocusNew from '../components/YourFocusNew'
 import BrainDump from '../components/BrainDump'
 import PinnedLinks from '../components/PinnedLinks'
-import { HeartIcon } from '../lib/icons'
+import { HeartIcon, EditIcon } from '../lib/icons'
 
 const BRAND = '#3d0c0c'
 
@@ -169,7 +169,7 @@ function WeeklyTracker({ weekDays, weekLogs, todayKey }) {
   todayDate.setHours(0, 0, 0, 0)
   return (
     <div className="flex items-end gap-3">
-      <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 pb-0.5 flex-shrink-0">This week</p>
+      <p className="hidden sm:block text-[9px] font-bold uppercase tracking-widest text-gray-400 pb-0.5 flex-shrink-0">This week</p>
       <div className="grid grid-cols-7 gap-1.5 flex-1">
         {weekDays.map((d, i) => {
           const dKey = toLocalDateKey(d)
@@ -196,6 +196,77 @@ function WeeklyTracker({ weekDays, weekLogs, todayKey }) {
 }
 
 /* ─── Capacity Check-In component ─── */
+/* ─── Story image (1080×1920 PNG) of today's check-in ─── */
+async function downloadCheckinStory({ mode, energy }) {
+  try { await document.fonts.ready } catch { /* fonts optional */ }
+  const S = 2                       // retina sharpness
+  const W = 560, pad = 28
+  const HEAD = "'Manrope', system-ui, sans-serif"
+  const BODY = "'DM Sans', system-ui, sans-serif"
+  const BRAND = '#3d0c0c'
+
+  // measure the focus line first so the card fits it
+  const m = document.createElement('canvas').getContext('2d')
+  m.font = `400 15px ${BODY}`
+  const words = `→ ${mode.insight}`.split(' '); const lines = []; let line = ''
+  words.forEach(w => { const t = line ? `${line} ${w}` : w; if (m.measureText(t).width > W - pad * 2 && line) { lines.push(line); line = w } else line = t })
+  if (line) lines.push(line)
+  const H = pad + 30 + 18 + lines.length * 22 + 26 + 44 + 20 + pad
+
+  const c = document.createElement('canvas')
+  c.width = W * S; c.height = H * S
+  const x = c.getContext('2d')
+  x.scale(S, S)
+
+  // card
+  x.fillStyle = '#ffffff'
+  x.beginPath(); x.roundRect(0.5, 0.5, W - 1, H - 1, 14); x.fill()
+  x.strokeStyle = '#ece4df'; x.lineWidth = 1
+  x.beginPath(); x.roundRect(0.5, 0.5, W - 1, H - 1, 14); x.stroke()
+  // light dotted frame around the content
+  x.save()
+  x.strokeStyle = '#d9b3ad'; x.lineWidth = 1.2; x.setLineDash([2, 3])
+  x.beginPath(); x.roundRect(10, 10, W - 20, H - 20, 10); x.stroke()
+  x.restore()
+
+  let y = pad + 20
+  x.textAlign = 'left'
+  x.fillStyle = '#b8a898'; x.font = `700 11px ${BODY}`
+  x.fillText("TODAY'S CAPACITY CHECK-IN", pad, y)
+  const labelW = x.measureText("TODAY'S CAPACITY CHECK-IN").width
+  x.fillStyle = BRAND; x.font = `700 21px ${HEAD}`
+  x.fillText(`${mode.label} · ${energy}/10`, pad + labelW + 16, y + 3)
+
+  y += 18 + 22
+  x.fillStyle = '#6b5a5a'; x.font = `400 15px ${BODY}`
+  lines.forEach((l, i) => x.fillText(l, pad, y + i * 22))
+  y += (lines.length - 1) * 22 + 34
+
+  // week row: only today highlighted
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const todayIdx = (new Date().getDay() + 6) % 7
+  const colW = (W - pad * 2) / 7
+  days.forEach((d, i) => {
+    const cx = pad + colW * i + colW / 2
+    const on = i === todayIdx
+    x.fillStyle = on ? '#c49090' : '#f1e9e5'
+    x.beginPath(); x.roundRect(cx - colW * 0.36, y - (on ? 7 : 3), colW * 0.72, on ? 14 : 6, on ? 7 : 3); x.fill()
+    x.textAlign = 'center'
+    x.fillStyle = on ? BRAND : '#b8a898'; x.font = `${on ? 700 : 500} 12px ${BODY}`
+    x.fillText(d, cx, y + 24)
+  })
+
+  // handle, bottom right inside the card
+  x.textAlign = 'right'
+  x.fillStyle = '#b8a898'; x.font = `600 11px ${BODY}`
+  x.fillText('@womanmasteryhq', W - pad, H - 14)
+
+  const a = document.createElement('a')
+  a.download = `capacity-check-in-${new Date().toISOString().slice(0, 10)}.png`
+  a.href = c.toDataURL('image/png')
+  document.body.appendChild(a); a.click(); a.remove()
+}
+
 function CapacityCheckin() {
   const { user } = useAuth()
   // todayKey is the actual calendar date for today's check-in record
@@ -286,15 +357,23 @@ function CapacityCheckin() {
   return (
     <div className="card-section" style={{ padding: '16px 20px' }}>
       {locked && !lockFlash ? (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#b8a898' }}>Today</p>
-          <span className="inline-flex items-center gap-2" style={{ fontSize: '14px', color: '#3d0c0c' }}>
-            <span style={{ display: 'inline-flex', transform: 'scale(0.8)' }}>{selectedMode ? MODE_ICON_MAP[selectedMode.key] : null}</span>
-            <span style={{ fontWeight: 600 }}>{selectedMode?.label || '—'} · {energy}/10</span>
-          </span>
-          {selectedMode && <span className="text-xs flex-1 min-w-[180px]" style={{ color: '#6b5a5a' }}>→ {selectedMode.insight}</span>}
-          <button type="button" onClick={() => setLocked(false)} className="text-xs underline" style={{ color: '#9c7070' }}>Edit</button>
-          <div className="w-full"><WeeklyTracker weekDays={weekDays} weekLogs={weekLogs} todayKey={todayKey} /></div>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#b8a898' }}>Today’s capacity check-in</p>
+            <span className="inline-flex items-center gap-2" style={{ fontSize: '15px', color: '#3d0c0c' }}>
+              <span style={{ display: 'inline-flex', transform: 'scale(0.8)' }}>{selectedMode ? MODE_ICON_MAP[selectedMode.key] : null}</span>
+              <span style={{ fontWeight: 700 }}>{selectedMode?.label || '—'} · {energy}/10</span>
+            </span>
+            <div className="flex items-center gap-1.5 ml-auto">
+              <button type="button" onClick={() => selectedMode && downloadCheckinStory({ mode: selectedMode, energy })}
+                className="login-wmhq" style={{ fontSize: '11px', padding: '4px 12px' }} title="Download an image of today's check-in">
+                Share on your story! <span aria-hidden="true">↓</span>
+              </button>
+              <button type="button" onClick={() => setLocked(false)} className="edit-btn" title="Edit check-in"><EditIcon /></button>
+            </div>
+          </div>
+          {selectedMode && <p className="text-xs leading-relaxed" style={{ color: '#6b5a5a' }}>→ {selectedMode.insight}</p>}
+          <WeeklyTracker weekDays={weekDays} weekLogs={weekLogs} todayKey={todayKey} />
         </div>
       ) : (
         <div className="space-y-3">

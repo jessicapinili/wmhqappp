@@ -825,8 +825,6 @@ function BuyingTriggers({ userId }) {
 
 /* ─── Page ─── */
 /* ─── Fold-away section with a ? tip ─── */
-const FOLD_KEY = 'wmhq-influence-open'
-function readOpen() { try { return JSON.parse(localStorage.getItem(FOLD_KEY) || '{}') } catch { return {} } }
 
 function TipIcon({ children }) {
   const [show, setShow] = useState(false)
@@ -845,23 +843,15 @@ function TipIcon({ children }) {
   )
 }
 
-function FoldSection({ id, title, tip, children }) {
-  const [open, setOpen] = useState(() => !!readOpen()[id])
-  const toggle = () => {
-    const next = !open
-    setOpen(next)
-    try { localStorage.setItem(FOLD_KEY, JSON.stringify({ ...readOpen(), [id]: next })) } catch {}
-  }
+function FoldSection({ title, tip, children }) {
   return (
-    <div className="card-section fold-section" style={{ padding: open ? undefined : '14px 20px' }}>
-      <div role="button" tabIndex={0} onClick={toggle} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle() } }}
-        className="flex items-center gap-2 cursor-pointer select-none">
+    <div className="card-section fold-section">
+      <div className="flex items-center gap-2">
         <span className="w-3 h-3 rounded-full inline-block flex-shrink-0" style={{ backgroundColor: '#c6def2' }} />
         <h2 className="section-title" style={{ margin: 0 }}>{title}</h2>
         <TipIcon>{tip}</TipIcon>
-        <span className="ml-auto text-xs" style={{ color: '#b8a898' }}>{open ? 'Close ▴' : 'Open ▾'}</span>
       </div>
-      {open && <div className="fold-body mt-3">{children}</div>}
+      <div className="fold-body mt-3">{children}</div>
     </div>
   )
 }
