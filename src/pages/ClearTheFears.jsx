@@ -219,7 +219,7 @@ function exportPNG(dayNum, benefits, drawbacks) {
 
   ctx.fillStyle = '#9ca3af'
   ctx.font = '300 14px Arial, sans-serif'
-  ctx.fillText('This work is the sole property of Jessica Pinili. All rights reserved.', PAD, footerLineY + 30)
+  ctx.fillText('This work is the sole property of Jessica Marie Holdings Pty Ltd. All rights reserved.', PAD, footerLineY + 30)
 
   const link = document.createElement('a')
   link.download = `clear-your-fears-day-${dayNum}.png`
@@ -618,7 +618,7 @@ export default function ClearYourFears() {
 
           <div className="p-5 rounded-xl" style={{ backgroundColor: '#FFF8F8', border: `1.5px solid ${BRAND}28` }}>
             <p style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontFamily: "'Manrope', system-ui, sans-serif",
               fontSize: '19px',
               fontWeight: 400,
               fontStyle: 'italic',
@@ -645,7 +645,7 @@ export default function ClearYourFears() {
               {timerSec > 0 ? (
                 <>
                   <p style={{
-                    fontFamily: "'Cormorant Garamond', Georgia, serif",
+                    fontFamily: "'Manrope', system-ui, sans-serif",
                     fontSize: '54px',
                     fontWeight: 300,
                     fontStyle: 'italic',
@@ -775,7 +775,7 @@ export default function ClearYourFears() {
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
             <p style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontFamily: "'Manrope', system-ui, sans-serif",
               fontSize: '17px',
               fontStyle: 'italic',
               fontWeight: 300,
@@ -850,7 +850,7 @@ export default function ClearYourFears() {
       {showResetConfirm && (
         <div className="modal-overlay" onClick={() => setShowResetConfirm(false)}>
           <div className="modal-box p-6" onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '20px', fontWeight: 500, color: '#1a0606', marginBottom: '8px' }}>
+            <h3 style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '20px', fontWeight: 500, color: '#1a0606', marginBottom: '8px' }}>
               Reset Clear Your Fears?
             </h3>
             <p className="text-sm text-gray-500 mb-5 leading-relaxed">

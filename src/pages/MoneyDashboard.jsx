@@ -22,7 +22,7 @@ function ModelPickerModal({ onSelect, loading }) {
       padding: '24px',
     }}>
       <div style={{ maxWidth: '560px', width: '100%', textAlign: 'center' }}>
-        <h1 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '26px', fontWeight: 500, color: '#1A1A1A', marginBottom: '10px' }}>
+        <h1 style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '26px', fontWeight: 500, color: '#1A1A1A', marginBottom: '10px' }}>
           Welcome to your Money Dashboard.
         </h1>
         <p style={{ fontSize: '14px', color: 'rgba(0,0,0,0.6)', lineHeight: 1.6, marginBottom: '28px' }}>
@@ -32,7 +32,7 @@ function ModelPickerModal({ onSelect, loading }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '20px' }}>
           {/* Service card */}
           <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px', border: '0.5px solid #e8e0d8', textAlign: 'left' }}>
-            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '8px' }}>Service-based</p>
+            <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, marginBottom: '8px' }}>Service-based</p>
             <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.6)', lineHeight: 1.6, marginBottom: '16px' }}>
               Coaches, consultants, service providers, agencies. You charge for your time or expertise.
             </p>
@@ -47,7 +47,7 @@ function ModelPickerModal({ onSelect, loading }) {
 
           {/* Product card */}
           <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px', border: '0.5px solid #e8e0d8', textAlign: 'left' }}>
-            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '8px' }}>Product-based</p>
+            <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, marginBottom: '8px' }}>Product-based</p>
             <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.6)', lineHeight: 1.6, marginBottom: '16px' }}>
               Physical or digital products, e-commerce, courses, software. You charge per unit sold or download.
             </p>
@@ -74,7 +74,7 @@ function ChangeModelModal({ currentModel, onConfirm, onCancel, loading }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', padding: '24px' }}>
       <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '24px', maxWidth: '400px', width: '100%' }}>
-        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '8px' }}>Change business model?</p>
+        <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, marginBottom: '8px' }}>Change business model?</p>
         <p style={{ fontSize: '14px', color: 'rgba(0,0,0,0.6)', lineHeight: 1.6, marginBottom: '20px' }}>
           Switching to <strong>{other}</strong> will change the labels and fields shown going forward. Your existing data is preserved.
         </p>
@@ -235,7 +235,7 @@ export default function MoneyDashboard() {
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <span style={{ width: '16px', height: '16px', borderRadius: '50%', flexShrink: 0, backgroundColor: CASH_DOT }} />
-              <h1 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '28px', fontWeight: 500, color: '#1A1A1A' }}>Money Dashboard</h1>
+              <h1 style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '28px', fontWeight: 500, color: '#1A1A1A' }}>Money Dashboard</h1>
             </div>
             <p style={{ fontSize: '14px', color: 'rgba(0,0,0,0.5)' }}>Track the financial health of your business based on how you actually sell.</p>
           </div>
@@ -273,7 +273,7 @@ export default function MoneyDashboard() {
       {/* ── Footer disclaimer ── */}
       <div style={{ marginTop: '40px', paddingTop: '24px', borderTop: '0.5px solid rgba(0,0,0,0.08)' }}>
         <p style={{ fontSize: '11px', color: 'rgba(0,0,0,0.35)', lineHeight: 1.6, marginBottom: '8px' }}>
-          This work is the sole property of Jessica Pinili. You do not have permission to share, sublicense, distribute, duplicate, sell, license, or create derivative works in any capacity. All intellectual property within this digital product is proprietary and reserved exclusively for Jessica Pinili.
+          This work is the sole property of Jessica Marie Holdings Pty Ltd. You do not have permission to share, sublicense, distribute, duplicate, sell, licence, reproduce, or create derivative works from this material in any capacity. All intellectual property rights relating to this digital product are proprietary and reserved exclusively by Jessica Marie Holdings Pty Ltd. © 2026 Jessica Marie Holdings Pty Ltd. All rights reserved.
         </p>
         <p style={{ fontSize: '11px', color: 'rgba(0,0,0,0.35)', lineHeight: 1.6 }}>
           This dashboard provides directional clarity only and does not constitute financial advice. Jessica Pinili is not a financial advisor. Use this tool to identify patterns, pressure points, and more profitable next moves.

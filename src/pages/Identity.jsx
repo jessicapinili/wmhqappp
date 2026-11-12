@@ -445,7 +445,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
               <div className="flex justify-between text-xs text-gray-400 mb-2">
                 <span>0 — Neutral</span><span>5</span><span>10 — Extremely Charged</span>
               </div>
-              <p className="text-center" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '34px', fontWeight: 300, fontStyle: 'italic', color: '#8B5CF6' }}>{charge}/10</p>
+              <p className="text-center" style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '34px', fontWeight: 300, fontStyle: 'italic', color: '#8B5CF6' }}>{charge}/10</p>
 
               {charge <= 2 ? (
                 <div className="insight-box mt-3">

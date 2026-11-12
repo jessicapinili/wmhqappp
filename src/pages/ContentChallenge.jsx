@@ -226,7 +226,7 @@ function LogModal({ date, existing, onSave, onClear, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box p-6" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-1">
-          <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '20px', color: '#1a0606' }}>
+          <h3 style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '20px', color: '#1a0606' }}>
             {fmtLong(date)}
           </h3>
           <button onClick={onClose} className="edit-btn" title="Close">×</button>
@@ -465,7 +465,7 @@ function JoinCard({ onJoin }) {
 
   return (
     <div className="card-section">
-      <h2 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '26px',
+      <h2 style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '26px',
         lineHeight: 1.25, color: '#1a0606' }}>
         Join the WMHQ 30 Day Content Challenge?
       </h2>
@@ -893,7 +893,7 @@ export default function ContentChallenge() {
               borderLeft: '0.5px solid #e8e0d8', overflowY: 'auto', padding: '24px',
             }}>
             <div className="flex items-start justify-between mb-1">
-              <h3 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '22px', color: '#1a0606' }}>
+              <h3 style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '22px', color: '#1a0606' }}>
                 Past rounds
               </h3>
               <button onClick={() => setShowPast(false)} className="edit-btn" title="Close">×</button>

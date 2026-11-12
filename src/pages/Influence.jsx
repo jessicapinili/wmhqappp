@@ -38,7 +38,7 @@ function CopyButton({ text }) {
 }
 
 /* ─── Generic single-item save/display card ─── */
-function SingleCard({ value, onEdit, onDelete, renderContent, copyText }) {
+export function SingleCard({ value, onEdit, onDelete, renderContent, copyText }) {
   return (
     <div className="card group">
       <div className="flex items-start justify-between">
@@ -105,7 +105,7 @@ function CoreOneLiner({ userId }) {
             placeholder="e.g. I help ambitious women coaches build consistent $10K+ months through identity-led marketing."
           />
           <div className="flex gap-2">
-            {editing && <button onClick={() => setEditing(false)} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
+            {editing && <button onClick={() => setEditing(false)} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
             <button onClick={handleSave} className="btn-brand">Save One-Liner</button>
           </div>
         </div>
@@ -173,7 +173,7 @@ function ProductOneLiners({ userId }) {
           Product / Service One-Liners
         </h2>
         {items.length > 0 && !showingForm && (
-          <button onClick={() => setShowForm(true)} className="btn-brand">
+          <button onClick={() => setShowForm(true)} className="btn-brand btn-add">
             Add Offer
           </button>
         )}
@@ -183,7 +183,7 @@ function ProductOneLiners({ userId }) {
       {items.length === 0 && !showingForm ? (
         <div className="flex flex-col items-center justify-center py-10 border border-dashed rounded-xl" style={{ borderColor: '#e8ddd8', backgroundColor: '#fdf9f7' }}>
           <p className="text-sm text-gray-400 mb-4">No offers added yet.</p>
-          <button onClick={() => setShowForm(true)} className="btn-brand">
+          <button onClick={() => setShowForm(true)} className="btn-brand btn-add">
             Add your first offer
           </button>
         </div>
@@ -226,7 +226,7 @@ function ProductOneLiners({ userId }) {
                 placeholder="One-liner for this offer"
               />
               <div className="flex gap-2">
-                <button onClick={handleCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+                <button onClick={handleCancel} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
                 <button onClick={handleSave} className="btn-brand">
                   {editId ? 'Update Offer' : 'Save Offer'}
                 </button>
@@ -298,7 +298,7 @@ function ObjectionBank({ userId }) {
           Objection Bank
         </h2>
         {items.length > 0 && !showingForm && (
-          <button onClick={() => setShowForm(true)} className="btn-brand">
+          <button onClick={() => setShowForm(true)} className="btn-brand btn-add">
             Add Objection
           </button>
         )}
@@ -308,7 +308,7 @@ function ObjectionBank({ userId }) {
       {items.length === 0 && !showingForm ? (
         <div className="flex flex-col items-center justify-center py-10 border border-dashed rounded-xl" style={{ borderColor: '#e8ddd8', backgroundColor: '#fdf9f7' }}>
           <p className="text-sm text-gray-400 mb-4">No objections added yet.</p>
-          <button onClick={() => setShowForm(true)} className="btn-brand">
+          <button onClick={() => setShowForm(true)} className="btn-brand btn-add">
             Add your first objection
           </button>
         </div>
@@ -363,7 +363,7 @@ function ObjectionBank({ userId }) {
                 />
               </div>
               <div className="flex gap-2">
-                <button onClick={handleCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+                <button onClick={handleCancel} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
                 <button onClick={handleSave} className="btn-brand">
                   {editId ? 'Update' : 'Save'}
                 </button>
@@ -444,7 +444,7 @@ function BuyerAvatar({ userId }) {
             <textarea className="textarea-field" rows={4} value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} placeholder="Female, 30-45, service-based business owner, 1-3 years in business, $3K–$8K months, wants to scale to consistent $15K+..." />
           </div>
           <div className="flex gap-2">
-            {editing && <button onClick={() => setEditing(false)} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
+            {editing && <button onClick={() => setEditing(false)} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
             <button onClick={handleSave} className="btn-brand">Save Avatar</button>
           </div>
         </div>
@@ -524,7 +524,7 @@ function BuyerPsychology({ userId }) {
             </div>
           </div>
           <div className="flex gap-2">
-            {editing && <button onClick={() => setEditing(false)} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
+            {editing && <button onClick={() => setEditing(false)} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
             <button onClick={handleSave} className="btn-brand">Save / Update</button>
           </div>
         </div>
@@ -625,7 +625,7 @@ function BrandWorldview({ userId }) {
             </div>
           ))}
           <div className="flex gap-2">
-            {editing && <button onClick={() => setEditing(false)} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
+            {editing && <button onClick={() => setEditing(false)} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>}
             <button onClick={handleSave} className="btn-brand">Save Worldview</button>
           </div>
         </div>
@@ -743,7 +743,7 @@ function BuyingTriggers({ userId }) {
           <HelpPopover />
         </h2>
         {items.length > 0 && !showingForm && (
-          <button onClick={() => setShowForm(true)} className="btn-brand">
+          <button onClick={() => setShowForm(true)} className="btn-brand btn-add">
             Add Trigger
           </button>
         )}
@@ -753,7 +753,7 @@ function BuyingTriggers({ userId }) {
       {items.length === 0 && !showingForm ? (
         <div className="flex flex-col items-center justify-center py-10 border border-dashed rounded-xl" style={{ borderColor: '#e8ddd8', backgroundColor: '#fdf9f7' }}>
           <p className="text-sm text-gray-400 mb-4">No buying triggers added yet.</p>
-          <button onClick={() => setShowForm(true)} className="btn-brand">
+          <button onClick={() => setShowForm(true)} className="btn-brand btn-add">
             Add your first trigger
           </button>
         </div>
@@ -810,7 +810,7 @@ function BuyingTriggers({ userId }) {
                 />
               </div>
               <div className="flex gap-2">
-                <button onClick={handleCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+                <button onClick={handleCancel} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
                 <button onClick={handleSave} className="btn-brand">
                   {editId ? 'Update' : 'Save'}
                 </button>

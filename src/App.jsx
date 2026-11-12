@@ -7,6 +7,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import QuickLinks from './pages/QuickLinks'
+import { WorkshopPart, WorkshopPartOne, WorkshopPartTwo, WorkshopGate } from './pages/Workshop'
 import Influence from './pages/Influence'
 import DailyMarketingChecklist from './pages/DailyMarketingChecklist'
 import Visibility from './pages/Visibility'
@@ -61,6 +62,9 @@ function AppRoutes() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="quick-links" element={<QuickLinks />} />
+        <Route path="workshop" element={<WorkshopGate />} />
+        <Route path="workshop/review-and-diagnose" element={<WorkshopPartOne />} />
+        <Route path="workshop/decide-and-build" element={<WorkshopPartTwo />} />
         <Route path="influence" element={<Influence />} />
         <Route path="influence/daily-marketing-checklist" element={<DailyMarketingChecklist />} />
         <Route path="visibility" element={<Visibility />} />

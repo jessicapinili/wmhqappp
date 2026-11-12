@@ -45,7 +45,7 @@ function PillarRatingBox({ pillar, value, onChange, disabled }) {
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
           <p className="text-xs font-black uppercase tracking-wide text-gray-700">{pillar}</p>
         </div>
-        <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '32px', fontWeight: 300, fontStyle: 'italic', color: value ? color : '#D1D5DB' }}>
+        <p style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '32px', fontWeight: 300, fontStyle: 'italic', color: value ? color : '#D1D5DB' }}>
           {value !== null ? `${value}/10` : '—'}
         </p>
       </button>
@@ -105,7 +105,7 @@ const ReviewDownloadCard = React.forwardRef(({ review, monday, sunday, year }, r
       ))}
 
       <p style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '32px', borderTop: '1px solid #F3F4F6', paddingTop: '16px' }}>
-        This work is the sole property of Jessica Pinili. All rights reserved.
+        This work is the sole property of Jessica Marie Holdings Pty Ltd. All rights reserved.
       </p>
     </div>
   )

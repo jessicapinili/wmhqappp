@@ -447,7 +447,7 @@ function EventForm({ onSave, onCancel, onConvert, initial, selectedYear }) {
           </div>
         ) : <span />}
         <div className="flex gap-3">
-          <button onClick={onCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+          <button onClick={onCancel} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
             Cancel
           </button>
           <button onClick={save} className="btn-brand">
@@ -819,7 +819,7 @@ export default function RevenueEvents() {
             ['Next Event',         nextEvent?.offer_name || '—'],
           ].map(([label, val]) => (
             <div key={label} className="text-center">
-              <p className="truncate" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '26px', fontWeight: 300, fontStyle: 'italic' }}>{val}</p>
+              <p className="truncate" style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '26px', fontWeight: 300, fontStyle: 'italic' }}>{val}</p>
               <p className="text-xs text-white/60 mt-1">{label}</p>
             </div>
           ))}

@@ -187,7 +187,7 @@ function RevenueSnapshot({ userId }) {
                 <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
                   {label}
                 </p>
-                <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '22px', fontWeight: 300, fontStyle: 'italic', color: '#ffffff' }}>{value}</p>
+                <p style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '22px', fontWeight: 300, fontStyle: 'italic', color: '#ffffff' }}>{value}</p>
               </div>
             ))}
           </div>
@@ -992,7 +992,7 @@ function LaunchOverview({ userId }) {
               <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>
                 {label}
               </p>
-              <p className="truncate" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '20px', fontWeight: 300, fontStyle: 'italic', color: '#ffffff' }}>{value}</p>
+              <p className="truncate" style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '20px', fontWeight: 300, fontStyle: 'italic', color: '#ffffff' }}>{value}</p>
               <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{sub}</p>
             </div>
           ))}

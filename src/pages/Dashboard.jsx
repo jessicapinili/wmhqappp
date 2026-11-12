@@ -315,7 +315,7 @@ function CapacityCheckin() {
             </div>
             <div className="w-px self-stretch" style={{ backgroundColor: '#e8d8d8' }} />
             <div>
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '28px', fontWeight: 300, fontStyle: 'italic', color: '#3d0c0c' }}>{energy}</span>
+              <span style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '28px', fontWeight: 300, fontStyle: 'italic', color: '#3d0c0c' }}>{energy}</span>
               <span className="text-sm text-gray-400"> / 10</span>
               <p className="text-[10px] text-gray-400 mt-0.5">{ENERGY_CAPTIONS[energy]}</p>
             </div>
@@ -361,7 +361,7 @@ function CapacityCheckin() {
               style={{ background: `linear-gradient(to right, #3d0c0c ${trackPct}%, #f0e0e0 ${trackPct}%)` }}
             />
             <div className="flex items-baseline gap-2 mt-3">
-              <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '34px', fontWeight: 300, fontStyle: 'italic', color: '#3d0c0c' }}>{energy}</span>
+              <span style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '34px', fontWeight: 300, fontStyle: 'italic', color: '#3d0c0c' }}>{energy}</span>
               <span className="text-sm text-gray-400">/ 10</span>
               <span className="text-xs text-gray-500 ml-1">{ENERGY_CAPTIONS[energy]}</span>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { isWorkshopUnlocked, WORKSHOP_UNLOCK_EVENT, WORKSHOP_SYNC_EVENT } from '../pages/Workshop'
 
 const SIDEBAR_BG = '#3d0c0c'
 const AVATAR_BG = '#2a0808'
@@ -13,7 +14,7 @@ const PHASE_COLORS = {
 }
 
 const NAV_FONT = "'DM Sans', system-ui, sans-serif"
-const DISPLAY_FONT = "'Cormorant Garamond', Georgia, serif"
+const DISPLAY_FONT = "'Manrope', system-ui, sans-serif"
 
 function NavItem({ to, icon, label, dot, dotColor, external, onClose }) {
   if (external) {
@@ -70,6 +71,19 @@ export default function Sidebar({ onClose }) {
   const [visibilityOpen, setVisibilityOpen] = useState(false)
   const [cashOpen, setCashOpen] = useState(false)
   const [identityOpen, setIdentityOpen] = useState(false)
+  const [workshopOpen, setWorkshopOpen] = useState(() => window.location.pathname.startsWith('/workshop') && isWorkshopUnlocked())
+  const [workshopUnlocked, setWorkshopUnlocked] = useState(() => isWorkshopUnlocked())
+  React.useEffect(() => {
+    const onUnlock = () => { setWorkshopUnlocked(true); setWorkshopOpen(true) }
+    const onSync = () => {
+      const u = isWorkshopUnlocked()
+      setWorkshopUnlocked(u)
+      if (u && window.location.pathname.startsWith('/workshop')) setWorkshopOpen(true)
+    }
+    window.addEventListener(WORKSHOP_UNLOCK_EVENT, onUnlock)
+    window.addEventListener(WORKSHOP_SYNC_EVENT, onSync)
+    return () => { window.removeEventListener(WORKSHOP_UNLOCK_EVENT, onUnlock); window.removeEventListener(WORKSHOP_SYNC_EVENT, onSync) }
+  }, [])
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -129,6 +143,51 @@ export default function Sidebar({ onClose }) {
           external
         />
         <NavItem to="/quick-links" icon="🔗" label="Quick Links" onClose={onClose} />
+        <div className="mx-2 py-1">
+          <button
+            type="button"
+            onClick={() => { if (workshopUnlocked) setWorkshopOpen(!workshopOpen); else { navigate('/workshop'); onClose?.() } }}
+            className="w-full flex items-center justify-center text-center px-3 py-2.5 transition-all"
+            style={(isActive => ({
+              border: `1px dashed ${isActive ? '#f0d0d0' : 'rgba(245,236,224,0.35)'}`,
+              borderRadius: '4px',
+              color: isActive ? '#ffffff' : 'rgba(245,236,224,0.75)',
+              backgroundColor: isActive ? 'rgba(0,0,0,0.20)' : 'transparent',
+              fontFamily: NAV_FONT,
+              fontSize: '11px',
+              fontWeight: 400,
+              letterSpacing: '0.02em',
+              lineHeight: 1.35,
+            }))(location.pathname.startsWith('/workshop'))}
+          >
+            WMHQ Biannual Workshop
+          </button>
+          {workshopUnlocked && workshopOpen && (
+            <div className="mt-1 space-y-0.5" style={{ marginLeft: '20px' }}>
+              {[
+                { to: '/workshop/review-and-diagnose', label: 'Part One: Review & Diagnose' },
+                { to: '/workshop/decide-and-build',    label: 'Part Two: Decide & Build' },
+              ].map(({ to, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={onClose}
+                  className="flex items-center px-3 py-1.5 transition-all"
+                  style={({ isActive }) => ({
+                    fontFamily: NAV_FONT,
+                    fontSize: '10px',
+                    fontWeight: 300,
+                    color: isActive ? '#ffffff' : 'rgba(245,236,224,0.40)',
+                    backgroundColor: isActive ? 'rgba(0,0,0,0.15)' : 'transparent',
+                    borderRadius: '2px',
+                  })}
+                >
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Phases section label */}
         <div className="px-5 pt-5 pb-1.5">

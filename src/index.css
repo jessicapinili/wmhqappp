@@ -36,7 +36,7 @@
     font-weight: 300;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Manrope', system-ui, sans-serif;
   }
 }
 
@@ -207,7 +207,7 @@
 
   /* ── Page title ─────────────────────────────────── */
   .page-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Manrope', system-ui, sans-serif;
     font-size: 28px;
     font-weight: 400;
     color: #1a0606;
@@ -217,7 +217,7 @@
 
   /* ── Stat number ─────────────────────────────────── */
   .stat-number {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Manrope', system-ui, sans-serif;
     font-size: 26px;
     font-weight: 300;
     font-style: italic;
@@ -227,7 +227,7 @@
 
   /* ── Section heading ─────────────────────────────── */
   .section-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Manrope', system-ui, sans-serif;
     font-size: 18px;
     font-weight: 500;
     color: #1a0606;
@@ -428,3 +428,65 @@ input[type="range"]::-moz-range-thumb {
   padding: 1.5rem 1.5rem 2rem;
   border-top: 0.5px solid #e8e0d8;
 }
+
+
+/* All Manrope headings use semibold */
+h1, h2, h3, h4, h5, h6,
+.page-title,
+.section-title,
+.stat-number,
+.font-serif,
+[style*="Manrope"] {
+  font-weight: 600 !important;
+}
+
+/* Button style: pill, Manrope semibold, sentence-style (app-wide) */
+.btn-brand,
+.btn-brand-outline,
+.btn-cancel {
+  font-family: 'Manrope', system-ui, sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  border-radius: 999px !important;
+  padding: 9px 20px !important;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.btn-brand:hover {
+  background-color: #5c1414;
+  box-shadow: 0 4px 12px rgba(61, 12, 12, 0.18);
+  transform: translateY(-1px);
+}
+.btn-add,
+.btn-brand-outline,
+.btn-cancel {
+  background-color: #ffffff !important;
+  color: #3d0c0c !important;
+  border: 1px solid #3d0c0c !important;
+}
+.btn-add::before {
+  content: '+';
+  font-size: 15px;
+  line-height: 1;
+}
+.btn-add:hover,
+.btn-brand-outline:hover,
+.btn-cancel:hover {
+  background-color: #faf3ee !important;
+  box-shadow: none;
+}
+
+/* PDF download button: soft dashed style */
+.btn-pdf {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 999px;
+  padding: 9px 20px;
+  color: #3d0c0c;
+  background-color: #faf3ee;
+  border: 1px dashed #3d0c0c;
+  transition: background-color 0.15s ease;
+}
+.btn-pdf:hover { background-color: #f3e6dd; }

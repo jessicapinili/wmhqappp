@@ -213,7 +213,7 @@ function ComparisonCard({ title, subtitle, currentTotal, change, previousTotal, 
       </p>
       <p style={{ fontSize: '11px', color: 'rgba(0,0,0,0.4)', marginBottom: '8px' }}>{subtitle}</p>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: soft ? '20px' : '24px', fontWeight: 500, color: soft ? 'rgba(0,0,0,0.55)' : '#1A1A1A' }}>
+        <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: soft ? '20px' : '24px', fontWeight: 500, color: soft ? 'rgba(0,0,0,0.55)' : '#1A1A1A' }}>
           {currentTotal}
         </p>
         {hasChange && (
@@ -268,7 +268,7 @@ function TrendDebriefBlock({ watch, nextMove }) {
 function ProfitLeverCard({ title, description }) {
   return (
     <div style={{ borderRadius: '5px', padding: '16px 18px', background: '#FFFFFF', border: '0.5px solid rgba(0,0,0,0.08)' }}>
-      <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500, marginBottom: '6px' }}>{title}</p>
+      <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '16px', fontWeight: 500, marginBottom: '6px' }}>{title}</p>
       <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.55)', lineHeight: 1.6 }}>{description}</p>
     </div>
   )
@@ -404,7 +404,7 @@ export default function MoneyDashboardTrends({ settings }) {
   if (entries.length === 0) {
     return (
       <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '40px 20px', border: '0.5px solid #e8e0d8', textAlign: 'center' }}>
-        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '20px', fontWeight: 500, marginBottom: '8px' }}>No data yet</p>
+        <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '20px', fontWeight: 500, marginBottom: '8px' }}>No data yet</p>
         <p style={{ fontSize: '14px', color: 'rgba(0,0,0,0.5)' }}>Save your first weekly entry on the Weekly tab to start seeing trends.</p>
       </div>
     )
@@ -426,7 +426,7 @@ export default function MoneyDashboardTrends({ settings }) {
         <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: BRAND, marginBottom: '8px' }}>
           MOMENTUM RIGHT NOW
         </p>
-        <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '28px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
+        <h2 style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '28px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
           {trendDebrief.momentumHeadline}
         </h2>
         <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)', marginBottom: '8px' }}>{trendDebrief.momentumSubtitle}</p>
@@ -458,7 +458,7 @@ export default function MoneyDashboardTrends({ settings }) {
         {/* Chart header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '16px', flexWrap: 'wrap' }}>
           <div>
-            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Trend chart</p>
+            <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Trend chart</p>
             <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)' }}>{periods[activePeriod].label}</p>
           </div>
 
@@ -486,12 +486,12 @@ export default function MoneyDashboardTrends({ settings }) {
         <div style={{ background: BEIGE, borderRadius: '4px', padding: '12px 16px', marginBottom: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
           <div>
             <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>Period total</p>
-            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A' }}>{periodStatLabel}</p>
+            <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A' }}>{periodStatLabel}</p>
           </div>
           <div>
             <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>Vs previous</p>
             <p style={{
-              fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500,
+              fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500,
               color: periodStats.vsPercent === null ? '#9CA3AF' : periodStats.vsPercent >= 0 ? '#27500A' : '#A32D2D',
             }}>
               {periodStats.vsPercent === null ? '—' : `${periodStats.vsPercent >= 0 ? '↑' : '↓'} ${Math.abs(periodStats.vsPercent * 100).toFixed(0)}%`}
@@ -499,7 +499,7 @@ export default function MoneyDashboardTrends({ settings }) {
           </div>
           <div>
             <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>Weekly avg</p>
-            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A' }}>{weeklyAvgLabel}</p>
+            <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A' }}>{weeklyAvgLabel}</p>
           </div>
         </div>
 
@@ -536,14 +536,14 @@ export default function MoneyDashboardTrends({ settings }) {
 
       {/* ── WMHQ Trend Debrief ── */}
       <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
-        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>WMHQ trend debrief</p>
+        <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>WMHQ trend debrief</p>
         <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)', marginBottom: '16px' }}>A read of your recent trajectory.</p>
         <TrendDebriefBlock watch={trendDebrief.watch} nextMove={trendDebrief.nextMove} />
       </div>
 
       {/* ── Profit Levers ── */}
       <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
-        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Profit levers</p>
+        <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Profit levers</p>
         <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)', marginBottom: '16px' }}>The highest-leverage moves for your business model right now.</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {profitLevers.map((lever, i) => (

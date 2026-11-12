@@ -176,7 +176,7 @@ function WeeklyBaselineBanner({ costs, currency }) {
         <p style={{ fontSize: '12px', color: 'rgba(0,0,0,0.6)' }}>Auto-includes in every weekly review.</p>
       </div>
       <div style={{ textAlign: 'right' }}>
-        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '22px', fontWeight: 500, color: '#1A1A1A' }}>
+        <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '22px', fontWeight: 500, color: '#1A1A1A' }}>
           {currency} ${Math.round(weeklyTotal).toLocaleString()} <span style={{ fontSize: '14px', color: 'rgba(0,0,0,0.5)' }}>/ week</span>
         </p>
         <p style={{ fontSize: '12px', color: 'rgba(0,0,0,0.5)', marginTop: '2px' }}>
@@ -305,7 +305,7 @@ export default function MoneyDashboardBaseline({ settings }) {
         <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '6px' }}>
           WMHQ TOOLS · MONEY DASHBOARD
         </p>
-        <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '24px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
+        <h2 style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '24px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
           Your baseline numbers
         </h2>
         <p style={{ fontSize: '14px', color: 'rgba(0,0,0,0.6)', lineHeight: 1.6 }}>

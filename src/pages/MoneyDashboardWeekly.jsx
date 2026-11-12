@@ -102,7 +102,7 @@ function StepCard({ step, title, subtitle, children, extraLabel, extraChildren }
     <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
         <div>
-          <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
+          <h3 style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
             {step}. {title}
           </h3>
           <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)' }}>{subtitle}</p>
@@ -141,7 +141,7 @@ function AtAGlancePanel({ revenue, grossProfit, netProfit, netMargin, directCost
   const fmtPct = (v) => `${(Number(v || 0) * 100).toFixed(1)}%`
 
   const metricStyle = (val, isNet = false) => ({
-    fontFamily: 'Cormorant Garamond, serif',
+    fontFamily: 'Manrope, system-ui, sans-serif',
     fontSize: '20px',
     fontWeight: 500,
     color: isNet ? (val >= 0 ? '#27500A' : '#A32D2D') : '#1A1A1A',
@@ -186,7 +186,7 @@ function AtAGlancePanel({ revenue, grossProfit, netProfit, netMargin, directCost
         ].map(({ label, value }) => (
           <div key={label}>
             <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>{label}</p>
-            <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A' }}>{value}</p>
+            <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A' }}>{value}</p>
           </div>
         ))}
       </div>
@@ -204,7 +204,7 @@ function SnapshotCard({ label, value, metricKey, metricValue, explanation, simpl
     <div style={{ borderRadius: '5px', overflow: 'hidden', background: '#fff', border: '1px solid rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.14em', color: '#9ca3af' }}>{label}</p>
-        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '22px', fontWeight: 500, color: '#1A1A1A' }}>{value}</p>
+        <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '22px', fontWeight: 500, color: '#1A1A1A' }}>{value}</p>
         {htag && (
           <span style={{ fontSize: '10px', fontWeight: 500, padding: '2px 8px', borderRadius: '14px', width: 'fit-content', color: htag.color, background: htag.bg }}>
             {htag.label}
@@ -314,7 +314,7 @@ function OperatingExpensesStep({ baselineCosts, variableExpenses, onAddExpense, 
     <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
         <div>
-          <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
+          <h3 style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '4px' }}>
             4. Operating expenses
           </h3>
           <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)' }}>Everything else it costs to run the business.</p>
@@ -623,7 +623,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '20px' }}>
             <div>
               <p style={{ fontSize: '10px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.16em', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>{activeWeek.label}</p>
-              <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '2px' }}>This week's read</p>
+              <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, color: '#1A1A1A', marginBottom: '2px' }}>This week's read</p>
               <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)' }}>Your numbers, interpreted.</p>
             </div>
             <button
@@ -646,7 +646,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
         <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <div>
-              <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500, marginBottom: '2px' }}>Revenue trend</p>
+              <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '16px', fontWeight: 500, marginBottom: '2px' }}>Revenue trend</p>
               <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.4)' }}>
                 {recentEntries.length > 0 ? `Your last ${recentEntries.length} saved week${recentEntries.length !== 1 ? 's' : ''}.` : 'Appears here once you save your first week.'}
               </p>
@@ -675,7 +675,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
         <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
             <div>
-              <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Ready when you are</p>
+              <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, marginBottom: '4px' }}>Ready when you are</p>
               <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)' }}>Enter your numbers for {activeWeek.label}.</p>
             </div>
             <button onClick={() => setReviewStarted(true)} className="btn-brand" style={{ flexShrink: 0 }}>
@@ -687,7 +687,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
         {recentEntries.length > 0 && (
           <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500 }}>Revenue trend</p>
+              <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '16px', fontWeight: 500 }}>Revenue trend</p>
               <button onClick={onViewTrends} className="btn-brand-outline">
                 View full trends →
               </button>
@@ -845,7 +845,7 @@ export default function MoneyDashboardWeekly({ settings, onViewTrends, onGoToBas
 
       {/* ── Week notes ── */}
       <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
-        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '16px', fontWeight: 500, marginBottom: '4px' }}>Week notes</p>
+        <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '16px', fontWeight: 500, marginBottom: '4px' }}>Week notes</p>
         <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)', marginBottom: '12px' }}>Optional context for this week.</p>
         <textarea
           rows={2}
@@ -922,7 +922,7 @@ function BackfillModal({ missedWeeks, onConfirm, onCancel }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)', padding: '24px' }}>
       <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '24px', maxWidth: '440px', width: '100%' }}>
-        <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '20px', fontWeight: 500, marginBottom: '6px' }}>Log a missed week</p>
+        <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '20px', fontWeight: 500, marginBottom: '6px' }}>Log a missed week</p>
         <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)', marginBottom: '20px' }}>Pick which one you want to add.</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
           {missedWeeks.map((w) => (
@@ -1040,7 +1040,7 @@ function FinancialSnapshot({ snapshot, isProduct, currency, fmtC, simpleMode, on
     <div style={{ background: '#FFFFFF', borderRadius: '5px', padding: '20px 22px', border: '0.5px solid #e8e0d8' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '4px' }}>
         <div>
-          <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '18px', fontWeight: 500, marginBottom: '2px' }}>Financial snapshot</p>
+          <p style={{ fontFamily: 'Manrope, system-ui, sans-serif', fontSize: '18px', fontWeight: 500, marginBottom: '2px' }}>Financial snapshot</p>
           <p style={{ fontSize: '13px', color: 'rgba(0,0,0,0.5)' }}>Updates as you enter.</p>
         </div>
         {onToggleSimpleMode && (

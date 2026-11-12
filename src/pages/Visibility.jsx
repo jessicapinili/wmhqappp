@@ -405,7 +405,7 @@ function FunnelView({ userId }) {
           <div key={f.stage} className="rounded-xl p-4 text-center border" style={{ backgroundColor: f.bg, borderColor: f.color + '40' }}>
             <div className="w-3 h-3 rounded-full mx-auto mb-2" style={{ backgroundColor: f.dot }} />
             <p className="font-bold text-xs text-gray-900">{f.stage}</p>
-            <p className="mt-1" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '28px', fontWeight: 300, fontStyle: 'italic', color: f.color }}>{pcts[f.stage]}%</p>
+            <p className="mt-1" style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '28px', fontWeight: 300, fontStyle: 'italic', color: f.color }}>{pcts[f.stage]}%</p>
             <p className="text-xs text-gray-500">{counts[f.stage]} post{counts[f.stage] !== 1 ? 's' : ''}</p>
           </div>
         ))}

@@ -1,13 +1,17 @@
 import React, { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
+import { useAuth } from '../contexts/AuthContext'
+import { startWorkshopSync } from '../pages/Workshop'
 
-const COPYRIGHT = "This work is the sole property of Jessica Pinili. You do not have permission to share, sublicense, distribute, duplicate, sell, licence, or create derivative works in any capacity. All rights on intellectual property of this digital product are proprietary and reserved for exclusive use by Jessica Pinili alone."
+const COPYRIGHT = "This work is the sole property of Jessica Marie Holdings Pty Ltd. You do not have permission to share, sublicense, distribute, duplicate, sell, licence, reproduce, or create derivative works from this material in any capacity. All intellectual property rights relating to this digital product are proprietary and reserved exclusively by Jessica Marie Holdings Pty Ltd. © 2026 Jessica Marie Holdings Pty Ltd. All rights reserved."
 
 export default function Layout() {
   const location = useLocation()
   const isMoneyDashboard = location.pathname === '/cash/money-dashboard'
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { user } = useAuth()
+  React.useEffect(() => { if (user?.id) startWorkshopSync(user.id) }, [user?.id])
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f2f2f2' }}>
@@ -57,7 +61,7 @@ export default function Layout() {
             <span style={{ display: 'block', width: '18px', height: '1.5px', backgroundColor: 'currentColor' }} />
           </button>
           <p style={{
-            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontFamily: "'Manrope', system-ui, sans-serif",
             fontSize: '13px',
             fontWeight: 400,
             color: '#f5ece0',

@@ -212,7 +212,7 @@ export default function BrainDump({ userId }) {
       {/* Pile */}
       <div className="mt-4">
         {total === 0 ? (
-          <p className="text-sm italic" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: '#b8a898' }}>
+          <p className="text-sm italic" style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: '#b8a898' }}>
             Clear head. Nothing in the pile.
           </p>
         ) : (

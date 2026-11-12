@@ -386,7 +386,7 @@ function PurchaseOptionModal({ initial, currency, onSave, onCancel }) {
           {error && <p className="text-xs text-red-500">{error}</p>}
 
           <div className="flex gap-3 justify-end pt-1">
-            <button onClick={onCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+            <button onClick={onCancel} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
               Cancel
             </button>
             <button onClick={save} className="btn-brand">Save Option</button>
@@ -739,13 +739,13 @@ function CreateWizard({ onCreate, onCancel, defaultCurrency, prefill }) {
 
       <div className="flex flex-wrap items-center gap-3 pt-1">
         {step > 1 && (
-          <button onClick={() => setStep(step - 1)} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+          <button onClick={() => setStep(step - 1)} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
             Back
           </button>
         )}
         {step === 1 && (
           <>
-            <button onClick={onCancel} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+            <button onClick={onCancel} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
               Cancel
             </button>
             <button onClick={next} className="btn-brand">Continue</button>
@@ -919,7 +919,7 @@ function Workspace({
   // Cancel / Save pair shown at the bottom of an open section.
   const EditActions = () => (
     <div className="flex gap-3 pt-1">
-      <button onClick={cancelEdit} className="py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+      <button onClick={cancelEdit} className="btn-cancel py-2 px-4 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
         Cancel
       </button>
       <button onClick={saveSection} className="btn-brand">Save Changes</button>
@@ -1722,7 +1722,7 @@ export default function Launches() {
             ['Next Campaign', summary.next?.offer_name || 'None scheduled'],
           ].map(([label, value]) => (
             <div key={label} className="text-center min-w-0">
-              <p className="truncate" style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '22px', fontWeight: 300, fontStyle: 'italic' }}>
+              <p className="truncate" style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '22px', fontWeight: 300, fontStyle: 'italic' }}>
                 {value}
               </p>
               <p className="text-xs text-white/60 mt-1">{label}</p>
