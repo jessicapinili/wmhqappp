@@ -130,40 +130,44 @@ function LinkForm({ initial, onSave, onCancel, onDelete }) {
   }
 
   return (
-    <div className="form-card space-y-4">
-      <div>
-        <label className="label">Name</label>
-        <input className="input-field" value={name} maxLength={NAME_MAX}
-          onChange={e => setName(e.target.value)} placeholder="e.g. Stripe dashboard" autoFocus />
+    <div className="rounded-lg" style={{ backgroundColor: '#ffffff', border: '1px solid #d9cec6' }}>
+      <div className="px-4 py-3" style={{ backgroundColor: '#f3ece6', borderBottom: '1px solid #d9cec6', borderTopLeftRadius: 7, borderTopRightRadius: 7 }}>
+        <p className="text-sm font-bold" style={{ color: '#1a0606' }}>{initial ? 'Edit link' : 'Link details'}</p>
+        <p className="text-xs mt-0.5" style={{ color: '#6b5a52' }}>Name it, paste the link, and choose where it lives.</p>
       </div>
-      <div>
-        <label className="label">Link</label>
-        <input className="input-field" value={url}
-          onChange={e => setUrl(e.target.value)} placeholder="https://..." />
-      </div>
-      <div>
-        <label className="label">Business or personal</label>
-        <div className="flex gap-2">
-          {SIDES.map(s => {
-            const on = side === s.key
-            return (
-              <button key={s.key} onClick={() => setSide(s.key)} className="tag-btn"
-                style={on
-                  ? { backgroundColor: BRAND, color: '#f5ece0', borderColor: BRAND }
-                  : { backgroundColor: '#faf7f3', color: '#b8a898', borderColor: '#e8e0d8' }}>
-                {s.label}
-              </button>
-            )
-          })}
+      <div className="px-4 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="label">Name</label>
+          <input className="input-field" value={name} maxLength={NAME_MAX}
+            onChange={e => setName(e.target.value)} placeholder="Type your answer…" autoFocus />
         </div>
-      </div>
-      <div className="flex items-center justify-between pt-1">
-        {onDelete ? (
-          <button onClick={onDelete} className="text-xs font-semibold px-3 py-2 rounded" style={{ color: '#9c3034' }}>Delete</button>
-        ) : <span />}
-        <div className="flex gap-2">
-          <button onClick={onCancel} className="btn-brand-outline">Cancel</button>
-          <button onClick={save} className="btn-brand" disabled={!name.trim()}>Save link</button>
+        <div>
+          <label className="label">Link</label>
+          <input className="input-field" value={url}
+            onChange={e => setUrl(e.target.value)} placeholder="https://" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="label">Business or personal</label>
+          <div className="flex gap-2">
+            {SIDES.map(s => {
+              const on = side === s.key
+              return (
+                <button key={s.key} type="button" onClick={() => setSide(s.key)}
+                  style={{ fontSize: '12px', fontWeight: 600, padding: '7px 16px', borderRadius: '999px', border: `1.5px solid ${on ? '#c49090' : 'rgba(61,12,12,0.15)'}`, backgroundColor: on ? '#faf1f1' : '#ffffff', color: on ? '#3d0c0c' : '#9c8a80' }}>
+                  {on ? '✓ ' : ''}{s.label.charAt(0) + s.label.slice(1).toLowerCase()}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+        <div className="sm:col-span-2 flex items-center justify-between pt-1">
+          {onDelete ? (
+            <button onClick={onDelete} className="text-xs font-semibold px-3 py-2 rounded" style={{ color: '#9c3034' }}>Delete</button>
+          ) : <span />}
+          <div className="flex gap-2">
+            <button onClick={onCancel} className="btn-cancel">Cancel</button>
+            <button onClick={save} className="btn-brand" disabled={!name.trim()}>Save link</button>
+          </div>
         </div>
       </div>
     </div>
@@ -377,8 +381,8 @@ export default function QuickLinks() {
       </div>
 
       {/* Pin announcement */}
-      <div style={{ backgroundColor: '#fdf8f5', border: '0.5px solid rgba(240,208,208,0.5)', borderLeft: '2px solid rgba(240,208,208,0.7)', borderRadius: '4px', padding: '13px 16px', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '11px', fontWeight: 300, color: '#3d0c0c' }}>
-        <HeartIcon /> You can pin up to {MAX_PINNED} links to your Dashboard for one-tap access. Tap the pin on any link.
+      <div className="flex items-center gap-2" style={{ backgroundColor: '#fdf8f5', border: '1.5px dotted #c98a8a', borderRadius: '4px', padding: '13px 16px', fontFamily: "'DM Sans', system-ui, sans-serif", fontSize: '11px', fontWeight: 300, color: '#3d0c0c' }}>
+        <span className="inline-flex flex-shrink-0" style={{ color: '#3d0c0c' }}><PinIcon filled /></span> You can pin up to {MAX_PINNED} links to your Dashboard for one-tap access. Tap the pin on any link.
       </div>
 
       {/* Add link */}

@@ -63,7 +63,7 @@ function StatusPill({ status }) {
   const s = STATUS_STYLES[status] || STATUS_STYLES['Active']
   return (
     <span
-      className="text-xs font-semibold px-2.5 py-1 rounded-full"
+      className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
       style={{ backgroundColor: s.bg, color: s.color }}
     >
       {status}
@@ -75,32 +75,18 @@ function StatusPill({ status }) {
 
 function OfferCard({ offer, onDelete }) {
   return (
-    <div className="card group">
-      <div className="flex items-start justify-between">
+    <div className="group py-2.5" style={{ borderBottom: '1px solid #f3ece8' }}>
+      <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm text-gray-900">{offer.name}</p>
-          {offer.description && (
-            <p className="text-gray-600 text-sm mt-1 italic">"{offer.description}"</p>
-          )}
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            {offer.price && (
-              <span className="text-xs font-bold" style={{ color: BRAND }}>{offer.price}</span>
-            )}
-            {offer.format && (
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500">{offer.format}</span>
-            )}
+          <p className="text-sm" style={{ fontWeight: 600, color: BRAND }}>{offer.name}</p>
+          {offer.description && <p className="text-xs mt-0.5" style={{ color: '#6b5a5a', lineHeight: 1.45 }}>{offer.description}</p>}
+          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+            {offer.price && <span className="text-xs font-bold" style={{ color: BRAND }}>{offer.price}</span>}
+            {offer.format && <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ backgroundColor: '#f5efec', color: '#6b5a5a' }}>{offer.format}</span>}
             <StatusPill status={offer.status} />
           </div>
         </div>
-        <div className="flex gap-1 ml-3 transition-opacity">
-          <button
-            onClick={() => onDelete(offer.id)}
-            className="delete-btn"
-            title="Delete offer"
-          >
-            <DeleteIcon />
-          </button>
-        </div>
+        <button onClick={() => onDelete(offer.id)} className="delete-btn flex-shrink-0 opacity-60 group-hover:opacity-100" title="Delete offer"><DeleteIcon /></button>
       </div>
     </div>
   )
@@ -125,48 +111,21 @@ function AddForm({ tierKey, isProduct, onSave, onCancel }) {
   }
 
   return (
-    <div
-      className="rounded-xl p-4 space-y-3"
-      style={{ border: '1.5px dashed var(--card-border)', backgroundColor: 'var(--form-bg)' }}
-    >
-      {/* Name */}
-      <div>
-        <label className="label">{noun} Name</label>
-        <input
-          className="input-field"
-          value={name}
-          onChange={e => { setName(e.target.value); setNameError(null) }}
-          placeholder={isProduct ? 'e.g. My Flagship Course' : 'e.g. 1:1 Coaching'}
-          autoFocus
-        />
-        {nameError && <p className="text-xs text-red-500 mt-1">{nameError}</p>}
+    <div className="rounded-lg" style={{ backgroundColor: '#ffffff', border: '1px solid #d9cec6' }}>
+      <div className="px-4 py-3" style={{ backgroundColor: '#f3ece6', borderBottom: '1px solid #d9cec6', borderTopLeftRadius: 7, borderTopRightRadius: 7 }}>
+        <p className="text-sm font-bold" style={{ color: '#1a0606' }}>{isProduct ? 'Product' : 'Offer'} details</p>
+        <p className="text-xs mt-0.5" style={{ color: '#6b5a52' }}>The what, how much and where it’s at.</p>
       </div>
-
-      {/* Description */}
-      <div>
-        <label className="label">Short Description</label>
-        <textarea
-          className="textarea-field"
-          rows={2}
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          placeholder="What is this about?"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* Price */}
-        <div>
-          <label className="label">Price</label>
-          <input
-            className="input-field"
-            value={price}
-            onChange={e => setPrice(e.target.value)}
-            placeholder="e.g. $297/mo"
-          />
+      <div className="px-4 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2">
+          <label className="label">{noun} Name</label>
+          <input className="input-field" value={name} onChange={e => { setName(e.target.value); setNameError(null) }} autoFocus />
+          {nameError && <p className="text-xs text-red-500 mt-1">{nameError}</p>}
         </div>
-
-        {/* Format */}
+        <div className="sm:col-span-2">
+          <label className="label">Short Description (optional)</label>
+          <textarea className="textarea-field" rows={2} value={description} onChange={e => setDescription(e.target.value)} />
+        </div>
         <div>
           <label className="label">Format</label>
           <select className="input-field" value={format} onChange={e => setFormat(e.target.value)}>
@@ -174,27 +133,20 @@ function AddForm({ tierKey, isProduct, onSave, onCancel }) {
             {formats?.map(f => <option key={f}>{f}</option>)}
           </select>
         </div>
-
-        {/* Status */}
         <div>
           <label className="label">Status</label>
           <select className="input-field" value={status} onChange={e => setStatus(e.target.value)}>
             {STATUS_OPTIONS.map(s => <option key={s}>{s}</option>)}
           </select>
         </div>
-      </div>
-
-      <div className="flex gap-2 justify-end pt-1">
-        <button
-          onClick={onCancel}
-          className="py-1.5 px-4 border rounded-lg text-sm text-gray-500 hover:bg-gray-50 transition-colors"
-          style={{ borderColor: 'var(--card-border)' }}
-        >
-          Cancel
-        </button>
-        <button onClick={handleSave} className="btn-brand">
-          Save {noun}
-        </button>
+        <div className="sm:col-span-2">
+          <label className="label">Price (optional)</label>
+          <input className="input-field" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" />
+        </div>
+        <div className="sm:col-span-2 flex gap-2 justify-end pt-1">
+          <button onClick={onCancel} className="btn-cancel">Cancel</button>
+          <button onClick={handleSave} className="btn-brand">Save {noun}</button>
+        </div>
       </div>
     </div>
   )
@@ -202,84 +154,56 @@ function AddForm({ tierKey, isProduct, onSave, onCancel }) {
 
 // ─── Tier section ──────────────────────────────────────────────────────────────
 
-function TierSection({ tier, offers, isProduct, onAdd, onDelete }) {
+function TierSection({ tier, step, offers, isProduct, onAdd, onDelete, view }) {
   const [open, setOpen] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const noun = isProduct ? 'product' : 'offer'
+  const count = offers.length
+  const handleSave = (fields) => { onAdd({ tierKey: tier.key, ...fields }); setShowForm(false) }
 
-  const handleSave = (fields) => {
-    onAdd({ tierKey: tier.key, ...fields })
-    setShowForm(false)
+  const header = (
+    <div className="flex items-start gap-3">
+      <div className="flex-1 min-w-0">
+        <p style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontWeight: 600, fontSize: '15px', color: BRAND }}>{tier.label}</p>
+        <p className="text-xs mt-0.5" style={{ color: '#b8a898' }}>{tier.descriptor}</p>
+      </div>
+      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#f5efec', color: '#9c7070' }}>
+        {count} {noun}{count !== 1 ? 's' : ''}
+      </span>
+    </div>
+  )
+
+  const body = (
+    <div className="mt-2">
+      {offers.map(offer => <OfferCard key={offer.id} offer={offer} onDelete={onDelete} />)}
+      {showForm ? (
+        <div className="mt-3"><AddForm tierKey={tier.key} isProduct={isProduct} onSave={handleSave} onCancel={() => setShowForm(false)} /></div>
+      ) : (
+        <button onClick={() => setShowForm(true)} className="mt-2 text-xs font-semibold hover:underline" style={{ color: '#9c7070', textUnderlineOffset: '2px' }}>
+          + Add {noun}
+        </button>
+      )}
+    </div>
+  )
+
+  if (view === 'cards') {
+    return (
+      <div className="flex flex-col" style={{ backgroundColor: `${tier.color}12`, border: `1.5px dashed ${tier.color}`, borderRadius: '8px', padding: '16px 18px' }}>
+        {header}
+        {body}
+      </div>
+    )
   }
 
-  const count = offers.length
-
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: `2px solid ${tier.color}` }}>
-      {/* Header — clicking expands/collapses */}
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center bg-[#f7f7f7] hover:bg-[#f7f7f7] transition-colors text-left"
-      >
-        <div className="flex-1 flex items-center justify-between px-4 py-3.5">
-          <div>
-            <p className="font-bold text-sm text-gray-900">{tier.label}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{tier.descriptor}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span
-              className="text-xs px-2 py-0.5 rounded-full font-medium"
-              style={{ backgroundColor: 'var(--card-bg)', color: '#888', border: '1px solid var(--card-border)' }}
-            >
-              {count} {noun}{count !== 1 ? 's' : ''}
-            </span>
-            <svg
-              width="12" height="12" viewBox="0 0 24 24" fill="none"
-              stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-              style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </div>
+    <div style={{ backgroundColor: `${tier.color}12`, border: `1.5px dashed ${tier.color}`, borderRadius: '8px', padding: '14px 16px' }}>
+      <button onClick={() => setOpen(o => !o)} className="w-full text-left">
+        <div className="flex items-center gap-2">
+          <div className="flex-1">{header}</div>
+          <span className="text-xs flex-shrink-0" style={{ color: '#b8a898' }}>{open ? '▴' : '▾'}</span>
         </div>
       </button>
-
-      {/* Expanded body */}
-      {open && (
-        <div
-          className="border-t space-y-2.5 p-4"
-          style={{ borderColor: 'var(--card-border)', backgroundColor: tier.bg }}
-        >
-          {/* Existing offers */}
-          {offers.map(offer => (
-            <OfferCard key={offer.id} offer={offer} onDelete={onDelete} />
-          ))}
-
-          {/* Add form */}
-          {showForm ? (
-            <AddForm
-              tierKey={tier.key}
-              isProduct={isProduct}
-              onSave={handleSave}
-              onCancel={() => setShowForm(false)}
-            />
-          ) : (
-            <button
-              onClick={() => setShowForm(true)}
-              className="w-full py-1.5 rounded-lg text-xs font-semibold text-center transition-colors"
-              style={{
-                border: '1.5px dashed var(--card-border)',
-                backgroundColor: 'transparent',
-                color: '#aaa',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#7a2535'; e.currentTarget.style.borderColor = '#7a2535' }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#aaa'; e.currentTarget.style.borderColor = 'var(--card-border)' }}
-            >
-              + Add {noun}
-            </button>
-          )}
-        </div>
-      )}
+      {open && body}
     </div>
   )
 }
@@ -289,7 +213,7 @@ function TierSection({ tier, offers, isProduct, onAdd, onDelete }) {
 function SectionHeader({ label, descriptor }) {
   return (
     <div className="mb-3">
-      <p className="font-black text-sm text-gray-900 uppercase tracking-wide">{label}</p>
+      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#b8a898' }}>{label}</p>
       <p className="text-xs text-gray-400 mt-0.5">{descriptor}</p>
     </div>
   )
@@ -302,6 +226,7 @@ export default function OfferSuite() {
 
   const [offers, setOffers] = useState([])
   const [mode, setMode] = useState('services')           // 'services' | 'products' | 'both'
+  const [view, setView] = useState('cards')              // 'cards' | 'list'
   const [yearNotice, setYearNotice] = useState(null)     // dismissible banner text or null
   const [saveErrorMsg, setSaveErrorMsg] = useState(null) // auto-dismiss banner
   const saveErrorTimer = useRef(null)
@@ -314,6 +239,8 @@ export default function OfferSuite() {
     if (!userId) return
 
     // Load persisted mode
+    const savedView = ls.get(`offerView:${userId}`)
+    if (savedView === 'cards' || savedView === 'list') setView(savedView)
     const savedMode = ls.get(`offerMode:${userId}`)
     if (savedMode === 'services' || savedMode === 'products' || savedMode === 'both') {
       setMode(savedMode)
@@ -361,6 +288,11 @@ export default function OfferSuite() {
   }
 
   // ── Mode toggle with persistence ─────────────────────────────────────────────
+
+  const handleViewChange = (v) => {
+    setView(v)
+    try { ls.set(`offerView:${userId}`, v) } catch { /* silent */ }
+  }
 
   const handleModeChange = (newMode) => {
     setMode(newMode)
@@ -419,8 +351,9 @@ export default function OfferSuite() {
           </p>
         </div>
 
+        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
         {/* Mode toggle */}
-        <div className="flex gap-1.5 p-1 rounded-xl bg-[#f2f2f2] flex-shrink-0">
+        <div className="inline-flex rounded-full p-0.5" style={{ backgroundColor: '#ebe4e0' }}>
           {[
             { key: 'services', label: 'Services' },
             { key: 'products', label: 'Products' },
@@ -429,15 +362,19 @@ export default function OfferSuite() {
             <button
               key={key}
               onClick={() => handleModeChange(key)}
-              className="px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors"
-              style={mode === key
-                ? { backgroundColor: '#f7f7f7', color: BRAND, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
-                : { backgroundColor: 'transparent', color: '#9CA3AF' }
-              }
+              style={{ fontSize: '12px', fontWeight: 600, padding: '5px 14px', borderRadius: '999px', color: mode === key ? BRAND : '#9c8a80', backgroundColor: mode === key ? '#fff' : 'transparent', boxShadow: mode === key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}
             >
               {label}
             </button>
           ))}
+        </div>
+        {/* View toggle */}
+        <div className="inline-flex rounded-full p-0.5" style={{ backgroundColor: '#ebe4e0' }}>
+          {[['cards', 'Cards'], ['list', 'List']].map(([k, l]) => (
+            <button key={k} onClick={() => handleViewChange(k)}
+              style={{ fontSize: '12px', fontWeight: 600, padding: '5px 14px', borderRadius: '999px', color: view === k ? BRAND : '#9c8a80', backgroundColor: view === k ? '#fff' : 'transparent', boxShadow: view === k ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}>{l}</button>
+          ))}
+        </div>
         </div>
       </div>
 
@@ -463,41 +400,49 @@ export default function OfferSuite() {
 
       {/* Services tiers */}
       {(mode === 'services' || mode === 'both') && (
-        <div className="card-section space-y-3">
+        <div>
           <SectionHeader
             label="Services"
             descriptor="Your time-for-value offers, coaching, and programs"
           />
-          {SERVICE_TIERS.map(tier => (
+          <div className={view === 'cards' ? 'grid gap-3 md:grid-cols-2 items-start' : 'space-y-2.5'}>
+          {SERVICE_TIERS.map((tier, i) => (
             <TierSection
               key={tier.key}
               tier={tier}
+              step={i + 1}
+              view={view}
               offers={offersFor('services', tier.key)}
               isProduct={false}
               onAdd={(fields) => handleAdd('services', fields)}
               onDelete={handleDelete}
             />
           ))}
+          </div>
         </div>
       )}
 
       {/* Products tiers */}
       {(mode === 'products' || mode === 'both') && (
-        <div className="card-section space-y-3">
+        <div>
           <SectionHeader
             label="Products"
             descriptor="Your scalable digital offers and recurring revenue streams"
           />
-          {PRODUCT_TIERS.map(tier => (
+          <div className={view === 'cards' ? 'grid gap-3 md:grid-cols-2 items-start' : 'space-y-2.5'}>
+          {PRODUCT_TIERS.map((tier, i) => (
             <TierSection
               key={tier.key}
               tier={tier}
+              step={i + 1}
+              view={view}
               offers={offersFor('products', tier.key)}
               isProduct={true}
               onAdd={(fields) => handleAdd('products', fields)}
               onDelete={handleDelete}
             />
           ))}
+          </div>
         </div>
       )}
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { EditIcon, DeleteIcon } from '../lib/icons'
@@ -116,6 +116,14 @@ const resumeStep = (saved) => {
 }
 
 /* ── Toggle select helpers ── */
+/* One look for every "selected" state in the map */
+const SELECTED_STYLE = { backgroundColor: '#faf1f1', border: '1.5px solid #c49090', color: '#3d0c0c' }
+const SelectedNote = ({ children }) => (
+  <div className="mt-4 px-4 py-3 rounded-xl text-sm" style={SELECTED_STYLE}>
+    <span style={{ fontWeight: 700, marginRight: '6px' }}>✓</span>{children}
+  </div>
+)
+
 const ToggleGrid = ({ options, selected, onToggle, max = 3 }) => (
   <div className="flex flex-wrap gap-2">
     {options.map(opt => {
@@ -127,8 +135,8 @@ const ToggleGrid = ({ options, selected, onToggle, max = 3 }) => (
             if (isSelected) onToggle(selected.filter(x => x !== opt))
             else if (selected.length < max) onToggle([...selected, opt])
           }}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${isSelected ? 'text-white border-transparent' : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'}`}
-          style={isSelected ? { backgroundColor: BRAND } : {}}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${isSelected ? 'font-semibold' : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'}`}
+          style={isSelected ? SELECTED_STYLE : {}}
         >{opt}</button>
       )
     })}
@@ -136,14 +144,75 @@ const ToggleGrid = ({ options, selected, onToggle, max = 3 }) => (
 )
 
 /* ── In-Page 7-Step Wizard ── */
-function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }) {
-  const [step, setStep] = useState(() => resumeStep(initial))
+const ID_STAGES = [
+  {
+    col: 'old', label: 'Old Identity', bg: '#f4f2f0', edge: '#d6d0cb', ink: '#5f5650',
+    intro: 'Who you’ve been. The patterns, beliefs and habits you’re moving away from.',
+    qs: [
+      ['oldQ1', 'What patterns from your old identity are still showing up?'],
+      ['oldQ2', 'What beliefs did this old identity hold about success, money, or who you get to be?'],
+      ['oldQ3', 'What behaviours do you notice yourself slipping into when things feel stretchy?'],
+    ],
+  },
+  {
+    col: 'in', label: 'In Between', bg: '#fbeeee', edge: '#ebc3c3', ink: '#8a3f45',
+    intro: 'Where you are now. Part of you is changing, part of you is still catching up.',
+    qs: [
+      ['inQ1', 'Where are you currently conflicted or split between old patterns and new standards?'],
+      ['inQ2', 'What new beliefs or behaviours are you practising but not fully owning yet?'],
+      ['inQ3', 'What does your body/nervous system do in this in-between phase?'],
+    ],
+  },
+  {
+    col: 'new', label: 'New Identity', bg: '#f4effb', edge: '#d3c4ec', ink: '#5b4690',
+    intro: 'Who you’re becoming. Describe her as if she’s already here.',
+    qs: [
+      ['newQ1', 'Who is the woman you\'re growing into? Describe her without centring anyone else.'],
+      ['newQ2', 'What beliefs does this version of you hold that you are learning to adopt?'],
+      ['newQ3', 'What behaviours would this identity normalise immediately?'],
+    ],
+  },
+]
+
+function GrowBox({ value, onChange }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.max(110, el.scrollHeight)}px`
+  }, [value])
+  return <textarea ref={ref} className="textarea-field" value={value} onChange={onChange} placeholder="Type your answer…"
+    style={{ resize: 'none', overflow: 'hidden', fontSize: '14px', lineHeight: 1.55, minHeight: '110px', backgroundColor: '#ffffff', border: '1px solid #ebe3de' }} />
+}
+
+function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose, mapMode = false }) {
+  const [step, setStep] = useState(() => (mapMode ? 7 : resumeStep(initial)))
   const [data, setData] = useState(() => mergeWithEmpty(initial))
   const [sessionId, setSessionId] = useState(initSessionId || null)
   const chargeTimer = useRef(null)
+  const [idStage, setIdStage] = useState(0)
+  const stageDone = i => ID_STAGES[i].qs.every(([f]) => !!data.step5[f])
 
   const setS = (stepKey, field, val) =>
     setData(prev => ({ ...prev, [stepKey]: { ...prev[stepKey], [field]: val } }))
+
+  const isStepDone = (n) => {
+    if (n === 1) return !!data.step1.primaryFear
+    if (n === 2) return !!data.step2.branchType
+    if (n === 3) return data.step2.branchType === 'infatuation'
+      ? !!(data.step3.perceivedBenefits && data.step3.hiddenDrawbacks)
+      : !!(data.step3.drawbacksOfFear && data.step3.hiddenBenefits)
+    if (n === 4) return data.step4.triggers.length > 0 && data.step4.bodyResponses.length > 0 && data.step4.protectiveBehaviours.length > 0 && !!data.step4.story
+    if (n === 5) return ['oldQ1', 'oldQ2', 'oldQ3', 'inQ1', 'inQ2', 'inQ3', 'newQ1', 'newQ2', 'newQ3'].every(f => !!data.step5[f])
+    if (n === 6) return ['q1', 'q2', 'q3', 'q4', 'q5'].every(f => !!data.step6[f])
+    return true
+  }
+  const jumpTo = async (n) => {
+    await doAutoSave(data)
+    setIdStage(0)
+    setStep(n)
+  }
 
   const canNext = () => {
     if (step === 1) return !!data.step1.primaryFear
@@ -159,8 +228,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
         data.step4.protectiveBehaviours.length > 0 &&
         !!data.step4.story
     if (step === 5)
-      return ['oldQ1', 'oldQ2', 'oldQ3', 'inQ1', 'inQ2', 'inQ3', 'newQ1', 'newQ2', 'newQ3']
-        .every(f => !!data.step5[f])
+      return idStage < 2 ? stageDone(idStage) : [0, 1, 2].every(stageDone)
     if (step === 6)
       return ['q1', 'q2', 'q3', 'q4', 'q5'].every(f => !!data.step6[f])
     return true
@@ -175,6 +243,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
   const handleNext = async () => {
     if (!canNext()) return
     await doAutoSave(data, step === 6)
+    if (step === 5 && idStage < 2) { setIdStage(i => i + 1); return }
     setStep(s => s + 1)
   }
 
@@ -199,7 +268,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
   const charge = data.step7.charge
 
   return (
-    <div className="card" style={{ padding: 0 }}>
+    <div className="card identity-wizard" style={{ padding: 0 }}>
 
       {/* Header */}
       <div className="p-6 border-b border-gray-100">
@@ -237,9 +306,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
               {FEARS.map(f => <option key={f} value={f}>{f}</option>)}
             </select>
             {data.step1.primaryFear && (
-              <div className="p-4 rounded-xl border-2 text-sm font-medium text-gray-800" style={{ borderColor: BRAND, backgroundColor: '#FFF8F8' }}>
-                Selected: <strong>{data.step1.primaryFear}</strong>
-              </div>
+              <SelectedNote>Selected: <strong>{data.step1.primaryFear}</strong></SelectedNote>
             )}
           </div>
         )}
@@ -272,20 +339,20 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
                 <button
                   key={branch.key}
                   onClick={() => setS('step2', 'branchType', branch.key)}
-                  className={`p-4 rounded-xl border-2 text-left transition-all ${data.step2.branchType === branch.key ? 'shadow-md' : 'border-gray-100 hover:border-gray-200'}`}
-                  style={data.step2.branchType === branch.key ? { borderColor: branch.color, backgroundColor: branch.bg } : {}}
+                  className="p-4 rounded-xl text-left transition-all focus:outline-none"
+                  style={data.step2.branchType === branch.key
+                    ? { backgroundColor: '#fbe6e6', border: '2px solid #ebb9b9', outline: 'none' }
+                    : { backgroundColor: '#fff', border: '2px solid #f1ebe8', outline: 'none' }}
                 >
                   <p className="font-bold text-sm text-gray-900">{branch.title}</p>
                   <p className="text-xs text-gray-500 mb-2">{branch.sub}</p>
                   {branch.desc.map((d, i) => <p key={i} className="text-xs text-gray-600 mb-0.5">• {d}</p>)}
-                  <p className="text-xs font-bold mt-2" style={{ color: branch.color }}>This branch leads to → {branch.leads}</p>
+                  <p className="text-xs font-bold mt-2" style={{ color: BRAND }}>This branch leads to → {branch.leads}</p>
                 </button>
               ))}
             </div>
             {data.step2.branchType && (
-              <p className="text-sm font-medium mt-4 p-3 bg-gray-50 rounded-lg text-gray-700">
-                You've selected the <strong>{data.step2.branchType}</strong> → <strong>{data.step2.branchType === 'infatuation' ? 'Fantasy' : 'Fear'}</strong> branch.
-              </p>
+              <SelectedNote>Selected: <strong>{data.step2.branchType === 'infatuation' ? 'Infatuation' : 'Resentment'}</strong> → leads to <strong>{data.step2.branchType === 'infatuation' ? 'Fantasy' : 'Fear'}</strong></SelectedNote>
             )}
           </div>
         )}
@@ -365,44 +432,49 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
           <div>
             <h3 className="section-title mb-1">Identity / Self-Concept</h3>
             <p className="text-sm text-gray-500 mb-5">Map the transition from your old identity through the in-between to your new identity.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                {
-                  col: 'old', label: 'Old Identity', bg: '#FAFAF9', border: '#E5E7EB',
-                  qs: [
-                    ['oldQ1', 'What patterns from your old identity are still showing up?'],
-                    ['oldQ2', 'What beliefs did this old identity hold about success, money, or who you get to be?'],
-                    ['oldQ3', 'What behaviours do you notice yourself slipping into when things feel stretchy?'],
-                  ],
-                },
-                {
-                  col: 'in', label: 'In Between', bg: '#FAFAF9', border: '#E5E7EB',
-                  qs: [
-                    ['inQ1', 'Where are you currently conflicted or split between old patterns and new standards?'],
-                    ['inQ2', 'What new beliefs or behaviours are you practising but not fully owning yet?'],
-                    ['inQ3', 'What does your body/nervous system do in this in-between phase?'],
-                  ],
-                },
-                {
-                  col: 'new', label: 'New Identity', bg: '#FAF5FF', border: '#DDD6FE',
-                  qs: [
-                    ['newQ1', 'Who is the woman you\'re growing into? Describe her without centring anyone else.'],
-                    ['newQ2', 'What beliefs does this version of you hold that you are learning to adopt?'],
-                    ['newQ3', 'What behaviours would this identity normalise immediately?'],
-                  ],
-                },
-              ].map(col => (
-                <div key={col.col} className="rounded-xl p-4 space-y-3 border" style={{ backgroundColor: col.bg, borderColor: col.border }}>
-                  <p className="font-black text-xs uppercase tracking-wide text-gray-600">{col.label}</p>
-                  {col.qs.map(([field, q]) => (
+            {/* Journey bar */}
+            <div className="flex items-center mb-6">
+              {ID_STAGES.map((st, i) => {
+                const done = stageDone(i)
+                const current = i === idStage
+                return (
+                  <React.Fragment key={st.col}>
+                    <button type="button" onClick={() => setIdStage(i)} className="flex items-center gap-2 flex-shrink-0 focus:outline-none" style={{ outline: 'none' }}>
+                      <span className="inline-flex items-center justify-center rounded-full"
+                        style={{ width: 22, height: 22, fontSize: '11px', fontWeight: 700,
+                          backgroundColor: current || done ? st.ink : '#fff', color: current || done ? '#fff' : st.ink,
+                          border: `1.5px solid ${st.ink}` }}>
+                        {done && !current ? '✓' : i + 1}
+                      </span>
+                      <span className="text-xs sm:text-sm" style={{ fontWeight: current ? 700 : 500, color: current ? st.ink : '#9c8a80' }}>{st.label}</span>
+                    </button>
+                    {i < ID_STAGES.length - 1 && (
+                      <span className="flex-1 mx-2 sm:mx-3" style={{ height: '2px', borderRadius: '2px', backgroundColor: stageDone(i) ? ID_STAGES[i].edge : '#ece6e2' }} />
+                    )}
+                  </React.Fragment>
+                )
+              })}
+            </div>
+
+            {/* Current stage */}
+            {(() => {
+              const st = ID_STAGES[idStage]
+              return (
+                <div key={st.col} className="rounded-xl p-5 sm:p-6 space-y-5" style={{ backgroundColor: st.bg, border: `1.5px solid ${st.edge}` }}>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: st.ink }}>Stage {idStage + 1} of 3</p>
+                    <p style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontWeight: 600, fontSize: '18px', color: '#3d0c0c' }}>{st.label}</p>
+                    <p className="text-sm mt-0.5" style={{ color: '#6b5a5a' }}>{st.intro}</p>
+                  </div>
+                  {st.qs.map(([field, q]) => (
                     <div key={field}>
-                      <p className="text-xs text-gray-500 mb-1 leading-relaxed">{q}</p>
-                      <textarea className="textarea-field text-xs" rows={3} value={data.step5[field]} onChange={e => setS('step5', field, e.target.value)} />
+                      <p className="mb-2" style={{ fontSize: '14px', fontWeight: 600, color: '#3d0c0c', lineHeight: 1.45 }}>{q}</p>
+                      <GrowBox value={data.step5[field]} onChange={e => setS('step5', field, e.target.value)} />
                     </div>
                   ))}
                 </div>
-              ))}
-            </div>
+              )
+            })()}
           </div>
         )}
 
@@ -428,31 +500,61 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
         )}
 
         {step === 7 && (
-          <div>
+          <div className="id-review">
+            {mapMode && (
+              <div className="mb-6">
+                <p className="id-review-head mb-1">Your map</p>
+                <p className="text-sm mb-3" style={{ color: '#9c8a80' }}>Tap any section to go back into it and keep working towards neutralising this pattern.</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {[
+                    [1, 'Primary Fear'],
+                    [2, 'The First Experience'],
+                    [3, data.step2.branchType === 'infatuation' ? 'Future Fantasy' : 'Future Fear'],
+                    [4, 'Triggers, Body & Story'],
+                    [5, 'Identity / Self-Concept'],
+                    [6, 'Your Capacity to Hold More'],
+                  ].map(([n, label]) => {
+                    const done = isStepDone(n)
+                    return (
+                      <button key={n} type="button" onClick={() => jumpTo(n)}
+                        className="flex items-center gap-3 text-left px-4 py-3 rounded-xl transition-colors hover:bg-[#fdf6f4]"
+                        style={{ backgroundColor: '#fff', border: '1px solid #efe7e2' }}>
+                        <span className="inline-flex items-center justify-center flex-shrink-0 rounded-full"
+                          style={{ width: 22, height: 22, fontSize: '11px', fontWeight: 700, backgroundColor: done ? '#e8f1e2' : '#fbeeee', color: done ? '#3f6b46' : '#8a3f45' }}>
+                          {done ? '✓' : n}
+                        </span>
+                        <span className="flex-1 text-sm" style={{ fontWeight: 600, color: '#3d0c0c' }}>{label}</span>
+                        <span className="text-xs" style={{ color: '#9c7070' }}>{done ? 'Revisit →' : 'Finish →'}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             <h3 className="section-title mb-1">Your Subconscious Identity Review</h3>
             <p className="text-sm text-gray-500 mb-5">A complete overview of your mapping session. Set your emotional charge.</p>
 
             {/* Charge slider */}
-            <div className="card mb-5">
-              <label className="label">Emotional Charge Level</label>
-              <p className="text-sm text-gray-500 mb-3">0 = Neutral · 10 = Extremely Charged</p>
+            <div className="mb-5 p-5 rounded-xl" style={{ backgroundColor: '#fdf8f6', border: '1.5px dotted #c98a8a' }}>
+              <p style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontWeight: 700, fontSize: '16px', color: '#3d0c0c' }}>Emotional Charge Level</p>
+              <p className="text-sm mb-4" style={{ color: '#9c8a80' }}>0 = Neutral · 10 = Extremely Charged</p>
               <input
                 type="range" min={0} max={10} value={charge}
                 onChange={e => handleChargeChange(parseInt(e.target.value))}
-                className="w-full mb-2"
-                style={{ accentColor: '#8B5CF6' }}
+                className="w-full mb-2 capacity-slider"
+                style={{ background: `linear-gradient(to right, #3d0c0c ${charge * 10}%, #f0e0e0 ${charge * 10}%)` }}
               />
               <div className="flex justify-between text-xs text-gray-400 mb-2">
-                <span>0 — Neutral</span><span>5</span><span>10 — Extremely Charged</span>
+                <span>0 → Neutral</span><span>5</span><span>10 → Extremely charged</span>
               </div>
-              <p className="text-center" style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '34px', fontWeight: 300, fontStyle: 'italic', color: '#8B5CF6' }}>{charge}/10</p>
+              <p className="text-center" style={{ fontFamily: "'Manrope', system-ui, sans-serif", fontSize: '30px', fontWeight: 700, color: '#3d0c0c' }}>{charge}<span style={{ fontSize: '16px', fontWeight: 400, color: '#b8a898' }}>/10</span></p>
 
               {charge <= 2 ? (
-                <div className="insight-box mt-3">
+                <div className="mt-3 px-4 py-2.5 rounded-lg text-sm" style={{ backgroundColor: '#e8f1e2', border: '1px solid #b9d0a8', color: '#3f6b46' }}>
                   ✓ This emotional charge is under 2/10. You can now mark this as neutralised.
                 </div>
               ) : (
-                <div className="insight-box mt-3">
+                <div className="mt-3 px-4 py-2.5 rounded-lg text-sm" style={{ backgroundColor: '#fbeeee', border: '1px solid #ebc3c3', color: '#8a3f45' }}>
                   ✗ Your emotional charge is over 2/10. You cannot neutralise this pattern yet.
                 </div>
               )}
@@ -461,15 +563,15 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
             {/* Summary */}
             <div className="space-y-3">
 
-              <div className="card">
-                <p className="font-bold text-xs text-gray-500 uppercase tracking-wide mb-2">Primary Fear & Branch</p>
+              <div className="id-review-card">
+                <p className="id-review-head mb-2">Primary Fear & Branch</p>
                 <p className="text-sm text-gray-800">{data.step1.primaryFear}</p>
                 <p className="text-xs text-gray-500 mt-1 capitalize">{data.step2.branchType} branch → {data.step2.branchType === 'infatuation' ? 'Fantasy' : 'Fear'}</p>
               </div>
 
               {(data.step3.perceivedBenefits || data.step3.drawbacksOfFear) && (
-                <div className="card">
-                  <p className="font-bold text-xs text-gray-500 uppercase tracking-wide mb-2">
+                <div className="id-review-card">
+                  <p className="id-review-head mb-2">
                     Future {data.step2.branchType === 'infatuation' ? 'Fantasy' : 'Fear'}
                   </p>
                   {data.step2.branchType === 'infatuation' ? (
@@ -503,32 +605,32 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
               )}
 
               {(data.step4.triggers.length > 0 || data.step4.protectiveBehaviours.length > 0) && (
-                <div className="card">
-                  <p className="font-bold text-xs text-gray-500 uppercase tracking-wide mb-2">Key Triggers & Protective Behaviours</p>
+                <div className="id-review-card">
+                  <p className="id-review-head mb-2">Key Triggers & Protective Behaviours</p>
                   <div className="flex flex-wrap gap-1 mb-2">
-                    {data.step4.triggers.map(t => <span key={t} className="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">{t}</span>)}
+                    {data.step4.triggers.map(t => <span key={t} className="id-pill" style={{ backgroundColor: '#fdf3d1', borderColor: '#ecd894' }}>{t}</span>)}
                   </div>
                   {data.step4.bodyResponses.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-2">
-                      {data.step4.bodyResponses.map(b => <span key={b} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">{b}</span>)}
+                      {data.step4.bodyResponses.map(b => <span key={b} className="id-pill" style={{ backgroundColor: '#e4eef6', borderColor: '#b9d1e6' }}>{b}</span>)}
                     </div>
                   )}
                   <div className="flex flex-wrap gap-1">
-                    {data.step4.protectiveBehaviours.map(b => <span key={b} className="text-xs bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full">{b}</span>)}
+                    {data.step4.protectiveBehaviours.map(b => <span key={b} className="id-pill" style={{ backgroundColor: '#fbeeee', borderColor: '#ebc3c3' }}>{b}</span>)}
                   </div>
                 </div>
               )}
 
               {data.step4.story && (
-                <div className="card">
-                  <p className="font-bold text-xs text-gray-500 uppercase tracking-wide mb-1">Story You Tell Yourself</p>
+                <div className="id-review-card">
+                  <p className="id-review-head mb-1">Story You Tell Yourself</p>
                   <p className="text-sm text-gray-700 italic">"{data.step4.story}"</p>
                 </div>
               )}
 
               {data.step5.oldQ1 && (
-                <div className="card">
-                  <p className="font-bold text-xs text-gray-500 uppercase tracking-wide mb-3">Identity Map</p>
+                <div className="id-review-card">
+                  <p className="id-review-head mb-3">Identity Map</p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {[
                       { label: 'Old Identity', fields: [['oldQ1', 'Patterns still showing up'], ['oldQ2', 'Beliefs held'], ['oldQ3', 'Behaviours']] },
@@ -536,7 +638,7 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
                       { label: 'New Identity', fields: [['newQ1', 'Growing into'], ['newQ2', 'New beliefs'], ['newQ3', 'Normalised behaviours']] },
                     ].map(col => (
                       <div key={col.label}>
-                        <p className="text-xs font-black text-gray-600 uppercase tracking-wide mb-2">{col.label}</p>
+                        <p className="id-review-sub mb-2">{col.label}</p>
                         {col.fields.map(([field, label]) => data.step5[field] && (
                           <div key={field} className="mb-2">
                             <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">{label}</p>
@@ -550,8 +652,8 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
               )}
 
               {data.step6.q1 && (
-                <div className="card">
-                  <p className="font-bold text-xs text-gray-500 uppercase tracking-wide mb-3">Nervous System Capacity</p>
+                <div className="id-review-card">
+                  <p className="id-review-head mb-3">Nervous System Capacity</p>
                   <div className="space-y-3">
                     {[
                       ['q1', 'Body response when things grow'],
@@ -577,9 +679,18 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
 
       {/* Footer navigation */}
       <div className="p-6 border-t border-gray-100 flex gap-3">
+        {mapMode && step < 7 && (
+          <button
+            onClick={() => jumpTo(7)}
+            className="py-1.5 px-3.5 border rounded-lg text-sm font-semibold hover:bg-gray-50"
+            style={{ borderColor: '#ebc3c3', color: '#8a3f45' }}
+          >
+            ↺ Back to map
+          </button>
+        )}
         {step > 1 && (
           <button
-            onClick={() => setStep(s => s - 1)}
+            onClick={() => { if (step === 5 && idStage > 0) setIdStage(i => i - 1); else setStep(s => s - 1) }}
             className="py-1.5 px-3.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50"
           >
             ← Back
@@ -622,13 +733,13 @@ function WizardInPage({ initial, sessionId: initSessionId, onAutoSave, onClose }
 }
 
 /* ── Pattern Card ── */
-function PatternCard({ pattern, onMarkNeutralised, onMarkActive, onEdit, onDelete }) {
+function PatternCard({ pattern, onMarkNeutralised, onMarkActive, onEdit, onWork, onDelete }) {
   const d = pattern.data || {}
   const isNeutralised = pattern.status === 'neutralised'
   const isCompleted = pattern.status === 'completed' || pattern.status === 'neutralised'
 
   return (
-    <div className={`card border-l-4 ${isNeutralised ? 'border-l-emerald-400' : 'border-l-red-400'}`}>
+    <div className="card" style={{ border: `2px solid ${isNeutralised ? '#7fbf95' : '#e28a86'}` }}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -658,7 +769,7 @@ function PatternCard({ pattern, onMarkNeutralised, onMarkActive, onEdit, onDelet
           )}
         </div>
         <div className="flex gap-1 flex-shrink-0">
-          <button onClick={onEdit} className="edit-btn"><EditIcon /></button>
+          {isNeutralised && <button onClick={onEdit} className="edit-btn"><EditIcon /></button>}
           <button onClick={onDelete} className="delete-btn"><DeleteIcon /></button>
         </div>
       </div>
@@ -672,6 +783,13 @@ function PatternCard({ pattern, onMarkNeutralised, onMarkActive, onEdit, onDelet
             Reactivate
           </button>
         ) : (
+          <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={onWork} className="login-wmhq" style={{ fontSize: '12px', padding: '6px 14px' }}>
+            <span className="login-wmhq-dot" />
+            Work on neutralising
+            <span aria-hidden="true">→</span>
+          </button>
+          {pattern.charge <= 2 && (
           <button
             onClick={onMarkNeutralised}
             disabled={pattern.charge > 2}
@@ -684,6 +802,11 @@ function PatternCard({ pattern, onMarkNeutralised, onMarkActive, onEdit, onDelet
           >
             {pattern.charge <= 2 ? 'Mark as Neutralised' : `Neutralise (charge too high: ${pattern.charge}/10)`}
           </button>
+          )}
+          {pattern.charge > 2 && (
+            <span className="text-[11px]" style={{ color: '#9c8a80' }}>→ Bring the charge to 2 or below to neutralise</span>
+          )}
+          </div>
         )}
       </div>
     </div>
@@ -737,8 +860,10 @@ export default function Identity() {
     }
   }
 
-  const handleOpenWizard = (pattern = null) => {
+  const [mapMode, setMapMode] = useState(false)
+  const handleOpenWizard = (pattern = null, asMap = false) => {
     setEditPattern(pattern)
+    setMapMode(asMap)
     setWizardOpen(true)
   }
 
@@ -788,7 +913,7 @@ export default function Identity() {
           <li>📓 Subconscious Identity</li>
           <li>💻 The Fear Process</li>
           <li>💻 The Upside Down Y Identity framework</li>
-          <li>🎧 What is Your Subconscious Identity</li>
+          <li>💻 What is Nervous System Capacity?</li>
         </ul>
 
         <p className="font-bold mt-3" style={{ fontSize: '13px', color: '#4f3577' }}>
@@ -807,6 +932,7 @@ export default function Identity() {
           sessionId={editPattern?.id || null}
           onAutoSave={handleAutoSave}
           onClose={handleCloseWizard}
+          mapMode={mapMode}
         />
       ) : (
         <div className="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center">
@@ -814,15 +940,17 @@ export default function Identity() {
           <p className="text-xs text-gray-400 mb-4">Uncover the fears, patterns, and identity blocks running beneath the surface of your business.</p>
           <button
             onClick={() => handleOpenWizard()}
-            className="btn-brand"
+            className="login-wmhq"
           >
-            + Start a new subconscious identity map
+            <span className="login-wmhq-dot" />
+            Start a new subconscious identity map
+            <span aria-hidden="true">→</span>
           </button>
         </div>
       )}
 
       {/* Two-column patterns grid */}
-      {!loading && patterns.length > 0 && (
+      {!loading && !wizardOpen && patterns.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
           {/* Neutralised Patterns */}
@@ -864,6 +992,7 @@ export default function Identity() {
                     pattern={p}
                     onMarkNeutralised={() => handleMarkNeutralised(p.id)}
                     onEdit={() => handleOpenWizard(p)}
+                    onWork={() => handleOpenWizard(p, true)}
                     onDelete={() => handleDelete(p.id)}
                   />
                 ))}

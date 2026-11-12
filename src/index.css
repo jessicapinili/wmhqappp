@@ -535,3 +535,44 @@ h1, h2, h3, h4, h5, h6,
   background: transparent !important;
 }
 .fold-body .section-title { display: none !important; }
+
+/* Identity map: question headings readable, like the card titles */
+.identity-wizard .label {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #3d0c0c;
+  margin-bottom: 8px;
+}
+
+/* Identity map: sleeker review step */
+.id-review-card {
+  background: #ffffff;
+  border: 1px solid #efe7e2;
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.id-review-head {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #3d0c0c;
+}
+.id-review-sub {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3d0c0c;
+}
+.id-review .text-gray-700, .id-review .text-gray-800 { color: #4a3a3a; }
+.id-pill {
+  display: inline-block;
+  font-size: 12px;
+  color: #3d0c0c;
+  border: 1px solid;
+  border-radius: 999px;
+  padding: 3px 10px;
+  margin: 0 4px 4px 0;
+}

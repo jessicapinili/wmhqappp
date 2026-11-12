@@ -51,7 +51,7 @@ function NavItem({ to, icon, label, dot, dotColor, external, onClose }) {
       style={({ isActive }) => ({
         color: isActive ? '#ffffff' : 'rgba(245,236,224,0.38)',
         backgroundColor: isActive ? 'rgba(0,0,0,0.20)' : 'transparent',
-        borderLeft: isActive ? '1.5px solid #f0d0d0' : '1.5px solid transparent',
+        borderLeft: '1.5px solid transparent',
         fontFamily: NAV_FONT,
         fontSize: '11.5px',
         fontWeight: isActive ? 400 : 300,
@@ -211,7 +211,7 @@ export default function Sidebar({ onClose }) {
             style={{
               color: influenceActive ? '#ffffff' : 'rgba(245,236,224,0.38)',
               backgroundColor: influenceActive ? 'rgba(0,0,0,0.20)' : 'transparent',
-              borderLeft: influenceActive ? '1.5px solid #f0d0d0' : '1.5px solid transparent',
+              borderLeft: '1.5px solid transparent',
               fontFamily: NAV_FONT,
               fontSize: '11.5px',
               fontWeight: influenceActive ? 400 : 300,
@@ -251,7 +251,7 @@ export default function Sidebar({ onClose }) {
             style={{
               color: visibilityActive ? '#ffffff' : 'rgba(245,236,224,0.38)',
               backgroundColor: visibilityActive ? 'rgba(0,0,0,0.20)' : 'transparent',
-              borderLeft: visibilityActive ? '1.5px solid #f0d0d0' : '1.5px solid transparent',
+              borderLeft: '1.5px solid transparent',
               fontFamily: NAV_FONT,
               fontSize: '11.5px',
               fontWeight: visibilityActive ? 400 : 300,
@@ -291,7 +291,7 @@ export default function Sidebar({ onClose }) {
             style={{
               color: cashActive ? '#ffffff' : 'rgba(245,236,224,0.38)',
               backgroundColor: cashActive ? 'rgba(0,0,0,0.20)' : 'transparent',
-              borderLeft: cashActive ? '1.5px solid #f0d0d0' : '1.5px solid transparent',
+              borderLeft: '1.5px solid transparent',
               fontFamily: NAV_FONT,
               fontSize: '11.5px',
               fontWeight: cashActive ? 400 : 300,
@@ -339,7 +339,7 @@ export default function Sidebar({ onClose }) {
             style={{
               color: identityActive ? '#ffffff' : 'rgba(245,236,224,0.38)',
               backgroundColor: identityActive ? 'rgba(0,0,0,0.20)' : 'transparent',
-              borderLeft: identityActive ? '1.5px solid #f0d0d0' : '1.5px solid transparent',
+              borderLeft: '1.5px solid transparent',
               fontFamily: NAV_FONT,
               fontSize: '11.5px',
               fontWeight: identityActive ? 400 : 300,

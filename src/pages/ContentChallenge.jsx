@@ -448,11 +448,6 @@ function HowItWorks() {
         <span className="font-bold" style={{ color: '#1a0606' }}>Hold the streak.</span>{' '}
         Consistency is the mechanism, not volume.
       </p>
-      <a href={DETAILS_URL} target="_blank" rel="noopener"
-        className="block rounded-lg px-3 py-2.5 text-sm font-bold"
-        style={{ backgroundColor: '#FFF8F8', border: '1px solid rgba(61,12,12,0.18)', color: BRAND }}>
-        <HeartIcon /> Read the full rundown →
-      </a>
     </div>
   )
 }
@@ -493,7 +488,7 @@ function JoinCard({ onJoin }) {
             Pick today, an earlier day if you have already begun, or a day ahead to start later.
           </p>
           <button onClick={async () => { setBusy(true); await onJoin(date); setBusy(false) }}
-            disabled={busy || !date} className="btn-brand w-full mt-4">
+            disabled={busy || !date} className="btn-brand mt-4">
             {busy ? 'Starting' : 'Yes, start my thirty days'}
           </button>
         </div>
